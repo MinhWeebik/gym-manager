@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en" layout:decorate="~{cms_layout_1.html}"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+</head>
+<body>
+<!-- Main content -->
+<div class="content" layout:fragment="page_content">
+    <div class="container-fluid">
+        <div class="card card-default">
+            <div class="card-body">
+                <form th:action="@{/music/banner/{type}/index(type=${type})}" method="get">
+                    <div class="row">
+                        <div class="col-4" th:insert="component :: input-text(#{title}, 'title', ${bannerTitle}, 0, 255, false, false)"></div>
+                        <div class="col-4 mb-3" th:with="options=${T(java.util.Arrays).asList(
+                            '', 'All',
+                            '1', 'Active',
+                            '0', 'Inactive'
+                        )}">
+                            <div th:replace="component :: select-default-v2(#{status}, 'isActive', ${isActive}, false, false, ${options})"></div>
+                        </div>
+                        <div class="col-4 text-center mt-4">
+                            <button type="submit" style="cursor: pointer; padding: 4px 10px;" class="btn btn-primary my-0 mx-1">
+                                <i class="fas fa-search"></i><span class="px-2">Search</span>
+                            </button>
+                            <a th:href="@{/music/banner/{type}/form(type=${type})}" style="cursor: pointer;" class="btn btn-primary my-0 mx-1">
+                                <i class="fas fa-plus"></i><span class="px-2" th:text="#{create}"></span>
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card card-default">
+            <div class="card-body">
+                <div class="mb-3">
+                    <button type="button" class="btn btn-primary my-0" data-toggle="modal" data-target="#changePositionModal" th:text="#{action.change-position}">
+                    </button>
+                </div>
+                <div class="table-responsive mb-2 mt-3">
+                    <table id="table-list" class="table table-sm custom-table table-bordered table-hover text-center" style="table-layout: auto; width: 100%; font-weight: 600;">
+                        <thead class="thead-light align-content-center">
+                        <tr>
+                            <th th:text="#{id}"></th>
+                            <th th:text="#{banner}"></th>
+                            <th th:text="#{title}"></th>
+                            <th th:text="#{link}"></th>
+                            <th th:text="#{position}"></th>
+                            <th th:text="#{status}"></th>
+                            <th th:text="#{createdAt}"></th>
+                            <th th:text="#{updatedAt}"></th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="model,item : ${models}" th:attr="data-id=${model.id}">
+                            <td th:text="${model.id}" style="align-content: center;"></td>
+                            <td>
+                                <div class="dropdown">
+                                    <img class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" th:onerror="this.onerror=null; this.src=[[${@environment.getProperty('domain.nginx')}]] + '/img/no-image-square.jpg';"
+                                         style="height: 60px;width:147px;object-fit: contain" th:src="${@environment.getProperty('domain.nginx')} + ${model.image}">
+                                    <div class="dropdown-menu p-1" aria-labelledby="dropdownMenu2">
+                                        <img style="height: 200px;width:490px;object-fit: contain" th:src="${@environment.getProperty('domain.nginx')} + ${model.image}" th:onerror="this.onerror=null; this.src=[[${@environment.getProperty('domain.nginx')}]] + '/img/no-image-square.jpg';">
+                                    </div>
+                                </div>
+                            </td>
+                            <td th:text="${model.title}" style="align-content: center;"></td>
+                            <td th:text="${model.deeplink}" style="align-content: center;"></td>
+                            <td th:text="${model.orderNumber}" style="align-content: center;"></td>
+                            <td style="align-content: center;">
+                                <span th:if="${model.isActive == 0}" class="badge badge-danger" style="white-space: normal; cursor: pointer;">Inactive</span>
+                                <span th:if="${model.isActive == 1}" class="badge badge-success" style="white-space: normal; cursor: pointer">Active</span>
+                            </td>
+                            <td th:text="${#dates.format(new java.util.Date(model.createdAt), 'dd/MM/yyyy HH:mm:ss')}" style="align-content: center;"></td>
+                            <td th:text="${#dates.format(new java.util.Date(model.updatedAt), 'dd/MM/yyyy HH:mm:ss')}" style="align-content: center;"></td>
+                            <td style="align-content: center;">
+                                <div class="d-flex flex-row justify-content-center">
+                                    <a th:href="@{'/music/banner/' + ${type} + '/form?id=' + ${model.id}}" class="btn" title="Edit">
+                                        <i class="far fa-edit" style="color: #00709e;"></i>
+                                    </a>
+                                    <button type="button"
+                                            th:attr="onclick=|event.stopPropagation(); deleteRecord({action: '@{'/music/banner/' + ${type} + '/delete/' + ${model.id}}', method: 'POST'})|"
+                                            style="cursor: pointer; align-content: center;"
+                                            title="Delete"
+                                            class="btn btn-sm"
+                                            th:disabled="${model.isActive}">
+                                        <i class="fas fa-trash-alt" style="color: #ff0000;"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr th:if="${models?.size() == 0}">
+                            <td colspan="100" th:text="#{noResult}"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <hungtvt-pagination th:replace="buu-component :: pagination(${pageNo}, ${totalPage}, ${pageSize}, 'buuPageSize', 'buuPagination')"></hungtvt-pagination>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="changePositionModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <form th:action="@{/music/banner/{type}/change-position(type=${type})}" method="get">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="myModalLabel" th:text="#{action.change-position}"></h5>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="from"><span>[[#{from}]] <span style="color: red;">*</span></span></label>
+                            <input type="number" class="form-control" id="from" name="from" required min="1">
+                        </div>
+                        <div class="form-group">
+                            <label for="to"><span>[[#{to}]] <span style="color: red;">*</span></span></label>
+                            <input type="number" class="form-control" id="to" name="to" required min="1">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <!-- Button to Trigger JavaScript Action -->
+                        <button type="submit" class="btn btn-primary" th:text="#{change}"></button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal" th:text="#{close}"></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- PAGE JAVASCRIPT CODE -->
+<script layout:fragment="content_page_script">
+</script>
+</body>
+</html>

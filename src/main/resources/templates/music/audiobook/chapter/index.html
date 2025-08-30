@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en" layout:decorate="~{cms_layout_1.html}"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <style>
+    .custom-button {
+      width: 90px;  /* Set desired width */
+      padding: 10px 0;  /* Set vertical padding */
+      text-align: center;  /* Center-align text and icons */
+    }
+  </style>
+</head>
+<body>
+<!-- Main content -->
+<div class="content" layout:fragment="page_content">
+  <div class="container-fluid">
+    <div class="card card-default">
+      <div class="card-body">
+        <form th:action="@{/music/audiobook/chapter/index/{id}(id=${id})}" method="get">
+          <div class="row">
+            <div class="col-4" th:insert="component :: input-text(#{name}, 'name', ${name}, 0, 255, false, false)"></div>
+            <div class="col-4 mb-3" th:with="options=${T(java.util.Arrays).asList(
+                            '', 'All',
+                            '1', 'Active',
+                            '0', 'Inactive',
+                            '-1', 'Deleted'
+                        )}">
+              <div th:replace="component :: select-default-v2(#{status}, 'status', ${status}, false, false, ${options})"></div>
+            </div>
+            <div class="col-4 mb-3" th:insert="component :: select2-v2('GET', #{title.index.publisher}, 'publisher', ${publisher}, '/search/music/publisher/ajax-search', #{enterPublisher}, ${publisherName} , false, false, 0, null)"></div>
+            <div class="col-4 mb-3" th:insert="component :: select2-v2('GET', #{title.index.reader}, 'reader', ${reader}, '/search/music/reader/ajax-search', #{enterReader}, ${readerName} , false, false, 0, null)"></div>
+            <div class="col-4 mb-3" th:insert="component :: input-number(#{chapterNumber}, 'number', *{number}, 0, null, false, false)"></div>
+          </div>
+          <div class="row">
+            <div class="col-12 text-center mt-4">
+              <a th:if="${id!=null}" th:href="@{/music/audiobook/index}" type="button"
+                 class="btn btn-danger my-0 mx-1 custom-button">
+                <i class="fa-solid fa-arrow-left"></i><span class="px-2" th:text="#{back}"></span>
+              </a>
+              <button type="submit" class="btn btn-primary my-0 mx-1 custom-button">
+                <i class="fas fa-search"></i><span class="px-2">Search</span>
+              </button>
+              <a th:href="@{'/music/audiobook/chapter/form?audiobookId=' + ${id!=null?id : ''}}" class="btn btn-primary my-0 mx-1 custom-button">
+                <i class="fas fa-plus"></i><span class="px-2" th:text="#{create}"></span>
+              </a>
+
+
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="card card-default">
+      <div class="card-body">
+        <div class="table-responsive mb-2 mt-3">
+          <table id="table-list" class="table table-sm custom-table table-bordered table-hover text-center" style="table-layout: auto; width: 100%; font-weight: 600;">
+            <thead class="thead-light align-content-center">
+            <tr>
+              <th th:text="#{id}"></th>
+              <th th:text="#{name}"></th>
+              <th th:text="#{image}" style="width: 0%"></th>
+              <th th:text="#{status}" ></th>
+              <th th:text="#{chapterNumber}" style="width: 10%"></th>
+              <th th:text="#{media}"></th>
+              <th th:text="#{createdAt}"></th>
+              <th th:text="#{totalListens}" style="width: 10%"></th>
+              <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="model,item : ${models}" th:attr="data-id=${model.id}">
+              <td th:text="${model.id}" style="align-content: center;"></td>
+              <td th:text="${model.title}" style="align-content: center;"></td>
+              <td>
+                <div class="dropdown">
+                  <img class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" th:onerror="this.onerror=null; this.src=[[${@environment.getProperty('domain.nginx')}]] + '/img/no-image-square.jpg';"
+                       style="height: 60px;width:60px" th:src="${@environment.getProperty('domain.nginx')} + ${model.image}">
+                  <div class="dropdown-menu p-1" aria-labelledby="dropdownMenu2">
+                    <img style="height: 200px;width:200px" th:src="${@environment.getProperty('domain.nginx')} + ${model.image}" th:onerror="this.onerror=null; this.src=[[${@environment.getProperty('domain.nginx')}]] + '/img/no-image-square.jpg';">
+                  </div>
+                </div>
+              </td>
+              <td style="align-content: center;">
+                <span th:if="${model.status == 0}" class="badge badge-danger" style="white-space: normal; cursor: pointer;">Inactive</span>
+                <span th:if="${model.status == 1}" class="badge badge-success" style="white-space: normal; cursor: pointer">Active</span>
+                <span th:if="${model.status == -1}" class="badge badge-danger" style="white-space: normal; cursor: pointer;">Deleted</span>
+              </td>
+              <td th:text="${model.number}" style="align-content: center;"></td>
+              <td style="align-content: center">
+                <audio controls="" style="height: 40px; width: 180px;">
+                  <source th:src="${@environment.getProperty('domain.nginx')} + ${model.file}" type="audio/mpeg">
+                </audio>
+              </td>
+              <td th:text="${#dates.format(new java.util.Date(model.createdAt), 'dd/MM/yyyy HH:mm:ss')}" style="align-content: center;"></td>
+              <td th:text="${model.totalListen}" style="align-content: center;"></td>
+              <td style="align-content: center;">
+                <div class="d-flex flex-row justify-content-center">
+                  <a title="Detail" th:attr="onclick=|seeDetail(${model.id})|" class="btn btn-sm">
+                    <i class="fas fa-eye" style="color: #00709e;"></i>
+                  </a>
+                  <a th:href="@{'/music/audiobook/chapter/form?audiobookId=' + ${id!=null?id : ''} + '&chapterId=' + ${model.id}}" class="btn" title="Edit">
+                    <i class="far fa-edit" style="color: #00709e;"></i>
+                  </a>
+                  <a th:attr="onclick=|event.stopPropagation(); deleteRecord({action: '@{'/music/audiobook/chapter/delete/'+${model.id}}', method: 'POST'})|" style="cursor: pointer; align-content: center;" title="Delete" class="btn btn-sm">
+                    <i class="fas fa-trash-alt" style="color: #ff0000;"></i>
+                  </a>
+                </div>
+              </td>
+            </tr>
+            <tr th:if="${models?.size() == 0}">
+              <td colspan="100" th:text="#{noResult}"></td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <hungtvt-pagination th:replace="buu-component :: pagination(${pageNo}, ${totalPage}, ${pageSize}, 'buuPageSize', 'buuPagination')"></hungtvt-pagination>
+      </div>
+    </div>
+  </div>
+  <modal-detail th:replace="buu-component :: modal-detail"></modal-detail>
+</div>
+<!-- PAGE JAVASCRIPT CODE -->
+<script layout:fragment="content_page_script">
+  function seeDetail(id) {
+    toastLoading();
+    $.ajax({
+      url: "[[@{/music/audiobook/chapter/detail}]]",
+      type: 'GET',
+      data: {id},
+      success: (data) => {
+        Swal.close();
+        $('#body-detail').html(data);
+        $('#modal-detail').modal("show");
+      },
+      error: (err) => {
+        console.error(err);
+        toastError("An error has occurred!")
+      }
+    });
+  }
+</script>
+</body>
+</html>

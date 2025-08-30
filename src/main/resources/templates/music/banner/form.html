@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en" layout:decorate="~{cms_layout_1.html}"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/3.3.4/css/bootstrap3/bootstrap-switch.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/3.3.4/js/bootstrap-switch.min.js"></script>
+    <style>
+        textarea{
+            height: 172px !important;
+        }
+    </style>
+</head>
+<body>
+<div class="content" layout:fragment="page_content">
+    <div class="container-fluid">
+        <div class="card card-default">
+            <div class="card-body">
+                <form th:action="@{/music/banner/{type}/save(type = ${type})}" method="post" th:object="${form}" enctype="multipart/form-data">
+                    <div class="row">
+                        <input hidden th:field="*{id}"/>
+
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <div th:insert="component :: input-text(#{title}, 'title', *{title}, 0, 255, true, false)"></div>
+                                <p th:if="${#fields.hasErrors('title')}" th:errors="*{title}" class="text-danger m-0"></p>
+                            </div>
+                            <div class="form-group">
+                                <div th:insert="component :: input-text(#{deeplink}, 'deeplink', *{deeplink}, 0, 255, true, false)"></div>
+                                <p th:if="${#fields.hasErrors('deeplink')}" th:errors="*{deeplink}" class="text-danger m-0"></p>
+                            </div>
+                            <div th:with="options=${T(java.util.Arrays).asList(
+                            0, 'Podcast',
+                            1, 'Audiobook'
+                             )}">
+                                <div th:replace="component :: select-default-v2(#{type}, 'type', ${id == null ? (type == 'podcast' ? 0 : 1) : form.type}, true, *{id!=null}, ${options})"></div>
+                            </div>
+                            <div class="form-group mt-3">
+                                <div th:replace="component :: input-enable-v2(#{status}, 'isActive', *{isActive == null ? 0 : isActive}, false)"></div>
+                                <p th:if="${#fields.hasErrors('isActive')}" th:errors="*{isActive}" class="text-danger m-0"></p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <div style="width: 429px;" th:insert="component :: crop-image(imageUpload, #{banner}, ${image}, 175, 2.45, 1, 429, 175)"></div>
+                                <p th:if="${#fields.hasErrors('imageUpload')}" th:errors="*{imageUpload}" class="text-danger m-0"></p>
+                            </div>
+                        </div>
+                        <div class="col-12 text-center mt-2">
+                            <a th:href="@{/music/banner/{type}/index(type = ${type})}" type="button" class="btn btn-danger mx-2">
+                                <i class="fa-solid fa-arrow-left"></i><span class="px-2">Back</span>
+                            </a>
+                            <button type="submit" class="btn btn-primary mx-2">
+                                <i class="fa-regular fa-floppy-disk"></i><span class="px-2">Save</span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script layout:fragment="content_page_script">
+</script>
+</body>
+</html>

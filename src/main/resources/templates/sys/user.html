@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en" layout:decorate="~{cms_layout_1.html}"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+</head>
+<body>
+<!-- Main content -->
+<div class="content" layout:fragment="page_content">
+    <div class="container-fluid">
+        <div class="card card-default">
+            <div class="card-body">
+                <form th:action="@{/sys/user/index}" method="get">
+                    <div class="row">
+                        <div class="col-3" th:insert="component :: input-text('Username', 'username', ${username}, 0, 255, false, false)"></div>
+                        <div class="col-3" th:insert="component :: input-text('Fullname', 'fullname', ${fullname}, 0, 255, false, false)"></div>
+                        <div class="col-3" th:insert="component :: input-text('Phone number', 'phone', ${phone}, 0, 255, false, false)"></div>
+                        <div class="col-3" th:insert="component :: input-text('Email', 'email', ${email}, 0, 255, false, false)"></div>
+                        <div class="col-12 text-center mt-3">
+                            <button type="submit" style="cursor: pointer; padding: 4px 10px;" class="btn btn-primary my-0 mx-1">
+                                <i class="fas fa-search"></i><span class="px-2">Search</span>
+                            </button>
+                            <a th:href="@{/sys/user/form}" style="cursor: pointer;" class="btn btn-primary my-0 mx-1">
+                                <i class="fas fa-plus"></i><span class="px-2" th:text="#{create}"></span>
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card card-default">
+            <div class="card-body">
+                <div class="table-responsive mb-2 mt-3">
+                    <table id="table-list" class="table table-sm custom-table table-bordered table-hover text-center" style="table-layout: auto; width: 100%; font-weight: 600;">
+                        <thead class="thead-light align-content-center">
+                        <tr>
+                            <th style="width: 0%" th:text="#{no}"></th>
+                            <th>Username</th>
+                            <th>Fullname</th>
+                            <th>Phone number</th>
+                            <th>Email</th>
+                            <th>Created at</th>
+                            <th style="width: 0%" th:text="#{status}"></th>
+                            <th style="width: 0%"></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr onclick="activeRowTable(event)" th:each="model,item : ${models}" th:attr="data-id=${model.id}">
+                            <td  class="text-center" style="align-content: center;"
+                                 th:text="${item.index + pageSize * pageNo - (pageSize - 1)}">
+                            </td>
+                            <td th:text="${model.username}"></td>
+                            <td th:text="${model.fullname}"></td>
+                            <td th:text="${model.phone}" style="max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></td>
+                            <td>
+                                <a th:href="'mailto:' + ${model.email}" th:text="${model.email}"></a>
+                            </td>
+                            <td th:text="${#dates.format(new java.util.Date(model.createdAt), 'dd/MM/yyyy HH:mm:ss')}"></td>
+                            <td>
+                                <a th:attr="onclick=|toggleStatusImpl(event, '@{/sys/user/active-block}', 'POST', '${model.id}')|, data-active=${model.active}" style="cursor: pointer;" title="Status" class="btn btn-sm">
+                                    <span th:if="${model.active}" title="Active">
+                                        <svg  xmlns="http://www.w3.org/2000/svg"  width="22"  height="22"  viewBox="0 0 24 24"  fill="#16a2bc"  class="icon icon-tabler icons-tabler-filled icon-tabler-toggle-right"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M16 9a3 3 0 1 1 -3 3l.005 -.176a3 3 0 0 1 2.995 -2.824" /><path d="M16 5a7 7 0 0 1 0 14h-8a7 7 0 0 1 0 -14zm0 2h-8a5 5 0 1 0 0 10h8a5 5 0 0 0 0 -10" /></svg>
+                                    </span>
+                                    <span th:unless="${model.active}" title="Block">
+                                        <svg  xmlns="http://www.w3.org/2000/svg"  width="22"  height="22"  viewBox="0 0 24 24"  fill="currentColor"  class="icon icon-tabler icons-tabler-filled icon-tabler-toggle-left"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 9a3 3 0 1 1 -3 3l.005 -.176a3 3 0 0 1 2.995 -2.824" /><path d="M16 5a7 7 0 0 1 0 14h-8a7 7 0 0 1 0 -14zm0 2h-8a5 5 0 1 0 0 10h8a5 5 0 0 0 0 -10" /></svg>
+                                    </span>
+                                </a>
+                            </td>
+                            <td>
+                                <div class="d-flex flex-row justify-content-center">
+                                    <a th:href="@{'/sys/user/detail?id=' + ${model.id}}" class="btn" title="Roles">
+                                        <i class="fas fa-user-shield" style="color: #00709e;"></i>
+                                    </a>
+                                    <a th:href="@{'/sys/user/form?id=' + ${model.id}}" class="btn" title="Edit">
+                                        <i class="far fa-edit" style="color: #00709e;"></i>
+                                    </a>
+                                    <a th:attr="onclick=|event.stopPropagation(); deleteRecord({action: '@{'/sys/user/delete/'+${model.id}}', method: 'POST'})|" style="cursor: pointer; align-content: center;" title="Delete" class="btn btn-sm">
+                                        <i class="fas fa-trash-alt" style="color: #ff0000;"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr th:if="${models?.size() == 0}">
+                            <td colspan="100">No result</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <hungtvt-pagination th:replace="buu-component :: pagination(${pageNo}, ${totalPage}, ${pageSize}, 'buuPageSize', 'buuPagination')"></hungtvt-pagination>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- PAGE JAVASCRIPT CODE -->
+<script layout:fragment="content_page_script">
+    function toggleStatusImpl(e, action, method, id) {
+        e.stopPropagation();
+        toggleStatus(e, action, method, id, (statusAfterUpdate) => {
+            $(e.target).closest('a').html(statusAfterUpdate == 1 ?
+                `
+                    <span title="Active">
+                        <svg  xmlns="http://www.w3.org/2000/svg"  width="22"  height="22"  viewBox="0 0 24 24"  fill="#16a2bc"  class="icon icon-tabler icons-tabler-filled icon-tabler-toggle-right"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M16 9a3 3 0 1 1 -3 3l.005 -.176a3 3 0 0 1 2.995 -2.824" /><path d="M16 5a7 7 0 0 1 0 14h-8a7 7 0 0 1 0 -14zm0 2h-8a5 5 0 1 0 0 10h8a5 5 0 0 0 0 -10" /></svg>
+                    </span>
+                ` :
+                `
+                    <span title="Block">
+                        <svg  xmlns="http://www.w3.org/2000/svg"  width="22"  height="22"  viewBox="0 0 24 24"  fill="currentColor"  class="icon icon-tabler icons-tabler-filled icon-tabler-toggle-left"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 9a3 3 0 1 1 -3 3l.005 -.176a3 3 0 0 1 2.995 -2.824" /><path d="M16 5a7 7 0 0 1 0 14h-8a7 7 0 0 1 0 -14zm0 2h-8a5 5 0 1 0 0 10h8a5 5 0 0 0 0 -10" /></svg>
+                    </span>
+                `);
+        });
+    }
+</script>
+</body>
+</html>

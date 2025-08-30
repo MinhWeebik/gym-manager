@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.w3.org/1999/xhtml">
+<head layout:fragment="cms_layout_1_header">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" type="image/x-icon" th:href="@{/img/nexia-icon.jpeg}">
+    <title layout:title-pattern="$LAYOUT_TITLE - $CONTENT_TITLE">Nexia</title>
+    <!-- Custom fonts for this template-->
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap-icons/1.11.1/font/bootstrap-icons.css}">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"/>
+    <link th:href="@{/webjars/font-awesome/6.4.2/css/all.min.css}"  rel="stylesheet" type="text/css">
+    <link th:href="@{/webjars/bootstrap/4.6.2/css/bootstrap.min.css}"  rel="stylesheet" type="text/css">
+    <!-- Tempusdominus Bootstrap 4 -->
+    <link th:href="@{/webjars/tempusdominus-bootstrap-4/5.39.0/css/tempusdominus-bootstrap-4.min.css}" rel="stylesheet" type="text/css">
+    <!-- Select2 -->
+    <link rel="stylesheet" th:href="@{/webjars/select2/4.0.13/css/select2.min.css}" type="text/css"/>
+    <!--    <link rel="stylesheet" th:href="@{/vendor/select2-bootstrap4-theme/select2-bootstrap4.min.css}" type="text/css"/>-->
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet"th:href="@{/webjars/sweetalert2__theme-bootstrap-4/5.0.15/bootstrap-4.min.css}">
+    <link th:href="@{/webjars/AdminLTE/3.2.0/dist/css/adminlte.min.css}" rel="stylesheet">
+    <!-- jQuery -->
+    <script th:src="@{/webjars/jquery/3.6.0/jquery.min.js}"></script>
+
+    <!-- Select2 -->
+    <script th:src="@{/webjars/select2/4.0.13/js/select2.full.min.js}"></script>
+    <!-- InputMask -->
+    <script th:src="@{/webjars/moment/2.29.4/min/moment.min.js}"></script>
+    <!-- Bootstrap -->
+    <script th:src="@{/webjars/bootstrap/4.6.2/js/bootstrap.bundle.min.js}"></script>
+    <!-- Tempusdominus Bootstrap 4 -->
+    <script th:src="@{/webjars/tempusdominus-bootstrap-4/5.39.0/js/tempusdominus-bootstrap-4.min.js}"></script>
+    <!-- SweetAlert2 -->
+    <!-- <script th:src="@{/webjars/sweetalert2/11.7.32/dist/sweetalert2.min.js}"></script>-->
+    <!-- AdminLTE -->
+    <script th:src="@{/webjars/AdminLTE/3.2.0/dist/js/adminlte.js}"></script>
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Quicksand" />
+    <!-- OPTIONAL SCRIPTS -->
+
+    <!-- Simple pagination -->
+    <link rel="stylesheet" type="text/css" th:href="@{/css/lib/buu-pagination.css}"/>
+    <script th:src="@{/js/lib/simple-pagination.js}"></script>
+    <!-- SweetAlert2 -->
+    <script th:src="@{/js/lib/sweetalert2.js}"></script>
+
+    <!-- Custom switch bootstrap -->
+    <link rel="stylesheet" type="text/css" th:href="@{/css/lib/buu-switch-bs.css}"/>
+    <!-- Custom input bootstrap -->
+    <link rel="stylesheet" type="text/css" th:href="@{/css/lib/buu-custom-input-bs.css}"/>
+    <!-- Survey form -->
+    <link rel="stylesheet" type="text/css" th:href="@{/css/lib/buu-survey-form.css}"/>
+    <!-- Step Process Bar -->
+    <link rel="stylesheet" type="text/css" th:href="@{/css/lib/buu-step-process-bar.css}"/>
+    <link th:href="@{/webjars/AdminLTE/3.2.0/plugins/daterangepicker/daterangepicker.css}" rel="stylesheet">
+    <script th:src="@{/webjars/AdminLTE/3.2.0/plugins/daterangepicker/daterangepicker.js}"></script>
+    <link rel="stylesheet" type="text/css" th:href="@{/css/cropper.min.css}"/>
+    <script th:src="@{/js/cropper.min.js}"></script>
+    <link rel="stylesheet" type="text/css" th:href="@{/css/datetimepicker.min.css}"/>
+    <script th:src="@{/js/datetimepicker.min.js}"></script>
+    <script th:src="@{/js/lib/slugify.min.js}"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/3.3.4/css/bootstrap3/bootstrap-switch.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/3.3.4/js/bootstrap-switch.min.js"></script>
+    <style>
+        .select2-container--default .select2-selection--multiple .select2-selection__choice {
+            background-color: #17a2b7;
+            border-color: #17a2b7;
+        }
+        .select2-container--default .select2-results__option--highlighted[aria-selected], .select2-container--default .select2-results__option--highlighted[aria-selected]:hover {
+            background-color: #17a2b7;
+            color: #fff;
+        }
+        .nav-sidebar>.nav-item i {
+            text-align: center;
+            width: 1.6rem;
+        }
+
+        .table.custom-table th,
+        .table.custom-table td {
+            border-color: #adb3ba !important;
+        }
+
+        .custom-buu-label-top.custom-control {
+            padding-left: 2rem;
+        }
+
+        .table th {
+            cursor: default !important;
+            user-select: none;
+        }
+
+        .buu-sort-column {
+            transform: translateY(-3px);
+        }
+        .buu-sort-column i {
+            height: 6px;
+            font-size: 12px;
+            color: #999;
+        }
+
+        th[data-desc="true"] .buu-sort-column i:last-child {
+            color: #444;
+        }
+        th[data-desc="false"] .buu-sort-column i:first-child {
+            color: #444;
+        }
+
+        #bodyTableList tr.active {
+            background: rgba(23, 162, 184, .25);
+        }
+        .buu-limit-text {
+            display: table-cell;
+            overflow: hidden;
+            white-space: normal;
+        }
+
+        .exportTable>tbody>tr>td, .exportTable>thead>tr>th {
+            border: 0.5px solid #adb3ba;
+        }
+
+        .exportTable {
+            border-collapse: collapse;
+        }
+
+        .exportTable>tbody>tr>td+td, .exportTable>thead>tr>th+th {
+            border-left-width: 0;
+        }
+        .exportTable>tbody>tr+tr>td, .exportTable>thead>tr+tr>th {
+            border-top-width: 0;
+        }
+
+        .exportTable>thead>tr+tr>th {
+            border-bottom-width: 0;
+        }
+
+        .exportTable>thead>tr>th+th {
+            border-bottom-width: 0;
+        }
+
+        .exportTable>thead>tr>th:nth-child(1) {
+            border-bottom-width: 0 !important;
+        }
+
+        input,
+        textarea,
+        select {
+            font-weight: 600 !important;
+            border-color: #adb3ba !important;
+        }
+
+        .btn {
+            padding: 4px 10px !important;
+        }
+
+        .btn-sm {
+            padding: 4px 6px !important;
+        }
+
+        table tr.active {
+            background: rgba(23, 162, 184, .25) !important;
+        }
+    </style>
+</head>
+<body class="hold-transition text-sm sidebar-mini layout-fixed" style="font-family: 'Nunito', sans-serif !important;">
+
+<div class="wrapper">
+
+    <div class="preloader flex-column justify-content-center align-items-center">
+        <img class="animation__shake" th:src="@{/img/nexia-icon.jpeg}" alt="NexiaLogo" height="60" width="60">
+    </div>
+
+    <!-- Navbar -->
+    <nav class="main-header navbar navbar-expand navbar-white navbar-light">
+        <!-- Left navbar links -->
+        <ul class="navbar-nav">
+            <li class="nav-item">
+                <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
+            </li>
+        </ul>
+        <!-- Right navbar links -->
+        <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+                <a class="nav-link" data-widget="fullscreen" href="#" role="button">
+                    <i class="fas fa-expand-arrows-alt"></i>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" data-toggle="modal" data-target="#userProfileModal">
+                    <i class="fas fa-cog"></i>
+                </a>
+            </li>
+        </ul>
+    </nav>
+<!--    <div class="alert-primary d-none" role="alert" th:text="${success}" th:if="${success}" id="successAlert"></div>-->
+<!--    <div class="alert-danger d-none" role="alert" th:text="${error}" th:if="${error}" id="errorAlert"></div>-->
+    <!-- /.navbar -->
+    <!-- Main Sidebar Container -->
+    <aside th:replace="common :: left_menu_v2"></aside>
+    <div class="modal fade" id="logoutModal">
+        <div class="modal-dialog modal-sm-2">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" th:text="#{sureOut}">Small Modal</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p th:text="#{choose}">One fine body&hellip;</p>
+                </div>
+                <div class="modal-footer justify-content-between">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <a class="btn btn-primary" th:href="@{/logout}" th:text="#{logout}"></a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /.modal -->
+    <!-- Content Wrapper. Contains page content -->
+    <div class="content-wrapper" style="background-color: #f2eefa">
+        <!-- Content Header (Page header) -->
+        <div class="content-header">
+            <div class="container-fluid">
+                <div class="row mb-2">
+                    <div class="col-sm-6">
+                        <h1 class="m-0" th:text="${title}">Dashboard v3</h1>
+                    </div><!-- /.col -->
+                    <div class="col-sm-6">
+                        <ol class="breadcrumb float-sm-right">
+                            <li class="breadcrumb-item active" th:text="${title}">Dashboard v3</li>
+                        </ol>
+                    </div><!-- /.col -->
+                </div><!-- /.row -->
+            </div><!-- /.container-fluid -->
+        </div>
+        <!-- /.content-header -->
+        <!-- Main content -->
+        <div layout:fragment="page_content"></div>
+        <!-- /.content -->
+    </div>
+    <!-- /.content-wrapper -->
+    <!-- Control Sidebar -->
+    <aside class="control-sidebar control-sidebar-dark">
+        <!-- Control sidebar content goes here -->
+    </aside>
+    <!-- /.control-sidebar -->
+    <!-- Main Footer -->
+<!--    <footer class="main-footer" th:fragment="ringme_footer">-->
+<!--        <strong>Copyright &copy; 2023 <a href="https://ringme.vn/">ringme.vn</a>.</strong>-->
+<!--        All rights reserved.-->
+<!--        <div class="float-right d-none d-sm-inline-block">-->
+<!--            <b>Version</b> 2.0-->
+<!--        </div>-->
+<!--    </footer>-->
+</div>
+
+<form th:replace="buu-component :: form-delete"></form>
+<form th:replace="sys/user-profile :: user-profile"></form>
+
+<!-- ./wrapper -->
+<!-- REQUIRED SCRIPTS -->
+<!-- AdminLTE for demo purposes -->
+<script layout:fragment="content_page_script"></script>
+
+<script>
+    var APPNAME = "[[${@environment.getProperty('server.servlet.context-path')}]]";
+    var ROOT_URL= window.location.origin  + APPNAME;
+    console.log("APPNAME: " + APPNAME);
+    console.log("ROOT_URL: " + ROOT_URL);
+    $(function() {
+        var Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 8000,
+            timerProgressBar: true,
+            customClass: {
+                closeButton: 'swalDefaultError'
+            }
+        });
+        let menu_leaves = $("a[id *= 'a-']");
+
+        var current_link = $(location).attr('href');
+        let try_link;
+        if (current_link.lastIndexOf("?") != -1) {
+            try_link = current_link.substring(0, current_link.lastIndexOf("?"));
+        } else {
+            try_link = current_link;
+        }
+        //console.log("--> " + try_link);
+
+        var found = findMenu(try_link, menu_leaves);
+        if (found != null) {
+            console.log("FOUND: --> " + found.id);
+            var listIds = found.id.split("-");
+            console.log(listIds.length);
+
+            if (listIds.length > 2) {
+                liItem = "#li";
+                for (var i = 1; i < listIds.length - 1; i++) {
+                    var liItem = liItem + "-" + listIds[i];
+                    $(liItem).addClass("menu-open");
+                }
+
+            }
+            $("#" + found.id).addClass("active");
+        }
+
+        if($("#successAlert").length && performance.navigation.type !== 1) {
+            let contentSuccess = $("#successAlert").text();
+            Toast.fire({
+                icon: 'success',
+                text: contentSuccess,
+                timerProgressBar: true,
+                showCloseButton: true
+            })
+        }
+        if($("#errorAlert").length && performance.navigation.type !== 1) {
+            let contentERROR = $("#errorAlert").text();
+            Toast.fire({
+                icon: 'error',
+                text: contentERROR,
+                timerProgressBar: false,
+                showCloseButton: true
+            })
+        }
+    });
+
+    function findMenu(link, menus) {
+        console.log("PATTERN ===> " + link);
+
+        for (var i = 0; i < 5; i++) {
+            console.log("I  = " + i);
+            for (var y = 0; y < menus.length; y++) {
+                //console.log(menus.get(y).href);
+                if(ROOT_URL.match(link)) {
+                    return null;
+                } else if (menus.get(y).href.match(link) != null) {
+                    console.log(link + " ==> MATCHED: " + menus.get(y).href);
+                    return menus.get(y);
+                }
+            }
+            if (link.lastIndexOf("/") != -1) {
+                link = link.substring(0, link.lastIndexOf("/"));
+            } else {
+                return null;
+            }
+        }
+    }
+
+    var Toast1 = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        showCloseButton: true,
+        timer: 5000,
+        timerProgressBar: true,
+        allowOutsideClick: true,
+        didOpen: (toast) => {
+            toast.onmouseenter = Swal.stopTimer;
+            toast.onmouseleave = Swal.resumeTimer;
+        }
+    });
+
+    function toastSuccess(text, timer = 3000) {
+        Toast1.fire({
+            icon: 'success',
+            text: text,
+            timer,
+        })
+    }
+
+    function toastError(text, timer = 3000) {
+        Toast1.fire({
+            icon: 'error',
+            text: text,
+        })
+    }
+
+    function toastInfo(text) {
+        Toast1.fire({
+            icon: 'info',
+            text: text,
+        })
+    }
+
+    function toastWarning(text) {
+        Toast1.fire({
+            icon: 'warning',
+            text: text,
+        })
+    }
+
+    function toastLoading() {
+        Swal.fire({
+            text: 'Handling...',
+            position: 'top-right',
+            toast: true,
+            showConfirmButton: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+    }
+
+    function toastFlexible(type, text) {
+        Toast1.fire({
+            icon: type,
+            text: text,
+        })
+    }
+
+    function toggleShowInfo(e) {
+        e.target.closest('div').classList.toggle('buu-show');
+    }
+
+    function addParamUrl(nameParam, valueParam) {
+        let parsedUrl = new URL(window.location.href);
+        let params = parsedUrl.searchParams;
+
+        params.set(nameParam, valueParam);
+
+        history.replaceState(null, '', parsedUrl.pathname + '?' + params.toString())
+    }
+
+    function numberToText(inputNumber, suffix) {
+        const unitNumbers = ["không", "một", "hai", "ba", "bốn", "năm", "sáu", "bảy", "tám", "chín"];
+        const placeValues = ["", "nghìn", "triệu", "tỷ"];
+        let isNegative = false;
+
+        // -12345678.3445435 => "-12345678"
+        let sNumber = Math.floor(inputNumber).toString();
+        let number = parseFloat(sNumber);
+        if (number < 0) {
+            number = -number;
+            sNumber = Math.floor(number).toString();
+            isNegative = true;
+        }
+
+        let ones, tens, hundreds;
+        let positionDigit = sNumber.length;   // last -> first
+
+        let result = " ";
+
+        if (positionDigit === 0) {
+            result = unitNumbers[0] + result;
+        } else {
+            // 0:       ###
+            // 1: nghìn ###,###
+            // 2: triệu ###,###,###
+            // 3: tỷ    ###,###,###,###
+            let placeValue = 0;
+
+            while (positionDigit > 0) {
+                // Check last 3 digits remain ### (hundreds tens ones)
+                tens = hundreds = -1;
+                ones = parseInt(sNumber.substring(positionDigit - 1, positionDigit));
+                positionDigit--;
+                if (positionDigit > 0) {
+                    tens = parseInt(sNumber.substring(positionDigit - 1, positionDigit));
+                    positionDigit--;
+                    if (positionDigit > 0) {
+                        hundreds = parseInt(sNumber.substring(positionDigit - 1, positionDigit));
+                        positionDigit--;
+                    }
+                }
+
+                if ((ones > 0) || (tens > 0) || (hundreds > 0) || (placeValue === 3))
+                    result = placeValues[placeValue] + result;
+
+                placeValue++;
+                if (placeValue > 3) placeValue = 1;
+
+                if ((ones === 1) && (tens > 1))
+                    result = "một " + result;
+                else {
+                    if ((ones === 5) && (tens > 0))
+                        result = "lăm " + result;
+                    else if (ones > 0)
+                        result = unitNumbers[ones] + " " + result;
+                }
+                if (tens < 0)
+                    break;
+                else {
+                    if ((tens === 0) && (ones > 0)) result = "lẻ " + result;
+                    if (tens === 1) result = "mười " + result;
+                    if (tens > 1) result = unitNumbers[tens] + " mươi " + result;
+                }
+                if (hundreds < 0) break;
+                else {
+                    if ((hundreds > 0) || (tens > 0) || (ones > 0))
+                        result = unitNumbers[hundreds] + " trăm " + result;
+                }
+                result = " " + result;
+            }
+        }
+        result = result.trim();
+        if (isNegative) result = "Âm " + result;
+        return result.charAt(0).toUpperCase() + result.slice(1) + (suffix ? " " + suffix : "");
+    }
+
+    //Dùng để debug ko xóa
+    let buu = "hungtvt-debug";
+
+    function activeRowTable(e, callback = () => {}) {
+        tr = $(e.target).closest('tr');
+        callback(tr);
+        if (tr.hasClass('active')) {
+            tr.removeClass('active');
+        } else {
+            tr.closest('table').find('tr').removeClass('active');
+            tr.addClass('active');
+        }
+    }
+
+    function toggleStatus(e, action, method, id, callback) {
+        e.stopPropagation();
+        statusBeforeUpdate = $(e.target).closest('a').attr('data-active');
+        statusAfterUpdate = statusBeforeUpdate == 1 ? 0 : 1;
+        toastLoading();
+        $.ajax({
+            url: action,
+            method: method,
+            data: {id: id, status: statusAfterUpdate},
+            success: (data, status, xhr) => {
+                console.log(data);
+                var contentType = xhr.getResponseHeader("Content-Type");
+                console.log("Content-Type: " + contentType);
+                if (data.code == 200 && data.status) {
+                    $(e.target).closest('a').attr('data-active', statusAfterUpdate);
+                    callback(statusAfterUpdate);
+                    toastSuccess(data.msg, 3000);
+                } else {
+                    toastError(data.msg, 3000);
+                }
+            },
+            error: (err) => {
+                toastError('Error', 3000);
+            }
+        })
+    }
+</script>
+
+<script th:if="${error}" th:inline="javascript">
+    toastError([[${error}]], 3000);
+</script>
+<script th:if="${success}" th:inline="javascript">
+    toastSuccess([[${success}]], 3000);
+</script>
+
+</body>
+
+</html>

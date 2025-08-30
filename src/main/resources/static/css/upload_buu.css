@@ -1,0 +1,54 @@
+.input-group input {
+  display: none;
+}
+
+.input-group {
+  flex-direction: column;
+}
+
+.input-group .image-preview {
+  width: 240px;
+  height: 240px;
+  border: 2px solid #d9d9d9;
+  position: relative;
+}
+
+.input-group .image-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.input-group .buu-delete {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 20%;
+  height: 20%;
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 50%;
+  cursor: pointer;
+  display: none;
+}
+
+.input-group .buu-delete::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(45deg);
+  width: 60%;
+  height: 3px;
+  background-color: #fff;
+}
+
+.input-group .buu-delete::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-45deg);
+  width: 60%;
+  height: 3px;
+  background-color: #fff;
+}

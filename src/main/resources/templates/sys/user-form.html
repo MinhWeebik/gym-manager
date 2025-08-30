@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en" layout:decorate="~{cms_layout_1.html}"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+</head>
+<body>
+<div class="content" layout:fragment="page_content">
+    <div class="container-fluid">
+        <div class="card card-default">
+            <div class="card-body">
+                <form th:action="@{/sys/user/save}" method="post" th:object="${form}">
+                    <div class="row">
+                        <input hidden th:field="*{id}"/>
+
+                        <div class="col-12 form-group">
+                            <div th:insert="component :: input-enable('Status', 'active', *{active == null ? true : active}, false)"></div>
+                            <p th:if="${#fields.hasErrors('active')}" th:errors="*{active}" class="text-danger m-0"></p>
+                        </div>
+                        <div class="col-4 form-group">
+                            <div th:insert="component :: input-text('Username', 'username', *{username}, 1, 255, true, false)"></div>
+                            <p th:if="${#fields.hasErrors('username')}" th:errors="*{username}" class="text-danger m-0"></p>
+                        </div>
+                        <div class="col-4 form-group">
+                            <div th:insert="component :: input-password('Password', 'password', '', 1, 255, *{id == null}, false)"></div>
+                            <p th:if="${#fields.hasErrors('password')}" th:errors="*{password}" class="text-danger m-0"></p>
+                        </div>
+                        <div class="col-4 form-group">
+                            <div th:insert="component :: input-password('Confirm password', 'rePassword', '', 1, 255, *{id == null}, false)"></div>
+                            <p th:if="${#fields.hasErrors('rePassword')}" th:errors="*{rePassword}" class="text-danger m-0"></p>
+                        </div>
+                        <div class="col-4 form-group">
+                            <div th:insert="component :: input-text('Fullname', 'fullname', *{fullname}, 1, 255, true, false)"></div>
+                            <p th:if="${#fields.hasErrors('fullname')}" th:errors="*{fullname}" class="text-danger m-0"></p>
+                        </div>
+                        <div class="col-4 form-group">
+                            <div th:insert="component :: input-text('Phone number', 'phone', *{phone}, 1, 255, true, false)"></div>
+                            <p th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}" class="text-danger m-0"></p>
+                        </div>
+                        <div class="col-4 form-group">
+                            <div th:insert="component :: input-text('Email', 'email', *{email}, 1, 255, true, false)"></div>
+                            <p th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="text-danger m-0"></p>
+                        </div>
+
+                        <div class="col-12 text-center mt-2">
+                            <a th:href="@{/sys/user/index}" type="button" class="btn btn-danger mx-2">
+                                <i class="fa-solid fa-arrow-left"></i><span class="px-2">Back</span>
+                            </a>
+                            <button type="submit" class="btn btn-primary mx-2">
+                                <i class="fa-regular fa-floppy-disk"></i><span class="px-2">Save</span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script layout:fragment="content_page_script">
+</script>
+</body>
+</html>

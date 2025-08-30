@@ -1,0 +1,166 @@
+.card.card-default.overflow-hidden {
+    border-radius: 8px;
+}
+
+.buu-bdt-info {
+    border-top: 10px solid #138496;
+    padding-top: 10px;
+}
+
+.buu-input-form {
+    position: relative;
+}
+
+.buu-input-form input.buu-title {
+    font-size: 2rem;
+    padding: 0 0 5px;
+    background: #fff;
+}
+
+.buu-input-form input {
+    width: 100%;
+    border: 0;
+    outline: none;
+    padding: 10px 15px;
+    font-size: 1rem;
+    background: #f8f9fa;
+    border-bottom: 1.5px solid rgba(0, 0, 0, 0.2);
+}
+
+.buu-input-form input:hover:not(.buu-title) {
+    background: #f1f3f4;
+}
+
+.buu-line-focus {
+    position: absolute;
+    display: block;
+    bottom: 0;
+    width: 100%;
+    height: 2px;
+    background: #10707f;
+    transform-origin: center;
+    transform: scale(0, 1);
+    transition: transform .3s cubic-bezier(.4, 0, .2, 1);
+}
+
+.buu-input-form input:focus ~ .buu-line-focus {
+    transform: scale(1, 1);
+}
+
+.buu-bdl-info {
+    border-left: 6px solid #4285f4;
+}
+
+.buu-box-shadow {
+    box-shadow: 0 2px 1px -1px rgba(0, 0, 0, .2), 0 1px 1px 0 rgba(0, 0, 0, .14), 0 1px 3px 0 rgba(0, 0, 0, .12);
+    border: 1px solid rgba(218, 220, 224, 0.8);
+}
+
+.buu-input-choice input {
+    background: #fff;
+    padding: 5px 0;
+    border: none;
+    font-size: 14px;
+}
+
+.buu-hover:hover .buu-input-form.buu-input-choice input {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+    background: #fff;
+}
+
+.buu-circle {
+    width: 17px;
+    height: 17px;
+    border: 1.5px solid rgba(0, 0, 0, 0.26);
+    border-radius: 50%;
+    margin: 7px 10px 0 0;
+}
+
+.buu-square {
+    width: 17px;
+    height: 17px;
+    border: 1.5px solid rgba(0, 0, 0, 0.26);
+    border-radius: 4px;
+    margin: 7px 10px 0 0;
+}
+
+.buu-close {
+    display: flex;
+    width: 33px;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    margin-left: 10px;
+    cursor: pointer;
+}
+
+.buu-close:hover {
+    background: #f1f3f4;
+}
+
+.buu-close i {
+    color: #5f6368;
+    font-size: 18px;
+}
+
+.buu-trash {
+    width: 38px;
+    height: 38px;
+    cursor: pointer;
+    position: relative;
+    border-radius: 50%;
+}
+
+.buu-trash svg {
+    position: absolute;
+    top: 53%;
+    left: 53%;
+    transform: translate(-50%, -50%);
+}
+
+.buu-trash:hover {
+    background: #f1f3f4;
+}
+
+.buu-trash svg{
+    font-size: 14px;
+}
+
+.buu-form-action {
+    width: 46px;
+    background: #fff;
+    position: sticky;
+    top: 50%;
+}
+
+.buu-action {
+    width: 36px;
+    height: 36px;
+    cursor: pointer;
+    position: relative;
+    border-radius: 50%;
+}
+
+.buu-action svg {
+    position: absolute;
+    top: 54%;
+    left: 54%;
+    transform: translate(-50%, -50%);
+}
+
+.buu-action:hover {
+    background: #f1f3f4 !important;
+}
+
+.buu-action:active,
+.buu-trash:active,
+.buu-close:active {
+    background: rgba(95, 99, 104, .2) !important;
+}
+
+.buu-action.buu-submit-campaign {
+    display: block;
+    border: none;
+    outline: none;
+    background: #fff;
+}

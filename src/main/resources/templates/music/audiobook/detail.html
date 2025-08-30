@@ -1,0 +1,129 @@
+<th:block th:fragment="detail" xmlns:th="http://www.thymeleaf.org">
+  <tr>
+    <td style="font-weight: bold;" th:text="#{id}"></td>
+    <td th:text="${model.id}"></td>
+  </tr>
+  <tr>
+    <td style="font-weight: bold;" th:text="#{name}"></td>
+    <td th:text="${model.name}"></td>
+  </tr>
+  <tr>
+    <td style="font-weight: bold;" th:text="#{image}"></td>
+    <td>
+      <img th:onerror="this.onerror=null; this.src=[[${@environment.getProperty('domain.nginx')}]] + '/img/no-image-square.jpg';"
+           style="height: 100px;" th:src="${@environment.getProperty('domain.nginx')} + ${model.image}">
+    </td>
+  </tr>
+  <tr>
+    <td style="font-weight: bold;" th:text="#{status}"></td>
+    <td>
+      <span th:if="${model.status == -1}" class="badge badge-danger" style="white-space: normal;">Deleted</span>
+      <span th:if="${model.status == 0}" class="badge badge-danger" style="white-space: normal;">Inactive</span>
+      <span th:if="${model.status == 1}" class="badge badge-success" style="white-space: normal;">Active</span>
+    </td>
+  </tr>
+  <tr>
+    <td style="font-weight: bold;" th:text="#{cate}"></td>
+    <td>
+      <ol class="m-0 pl-3">
+        <li class="m-0" th:each="item : ${model.categories}" th:text="${item.title}"></li>
+      </ol>
+    </td>
+  </tr>
+  <tr>
+    <td style="font-weight: bold;" th:text="#{des}"></td>
+    <td th:text="${model.description}"></td>
+  </tr>
+  <tr>
+    <td style="font-weight: bold;" th:text="#{title.index.publisher}"></td>
+    <td th:text="${model.publisher.name}"></td>
+  </tr>
+  <tr>
+    <td style="font-weight: bold;" th:text="#{publishedTime}"></td>
+    <td th:text="${#dates.format(new java.util.Date(model.publisherDate), 'dd/MM/yyyy')}"></td>
+  </tr>
+  <tr>
+    <td style="font-weight: bold;" th:text="#{title.index.reader}"></td>
+    <td th:text="${model.reader.name}"></td>
+  </tr>
+  <tr>
+    <td style="font-weight: bold;" th:text="#{typeEarn}"></td>
+    <td>
+      <span th:if="${model.typeEarn == 0}" class="badge badge-light" style="white-space: normal;">Free</span>
+      <span th:if="${model.typeEarn == 1}" class="badge badge-warning" style="white-space: normal;">Coin</span>
+      <span th:if="${model.typeEarn == 2}" class="badge badge-success" style="white-space: normal;">Money</span>
+    </td>
+  </tr>
+  <tr th:if="${model.typeEarn != 0}">
+    <td style="font-weight: bold;" th:text="#{numberFreeChapter}"></td>
+    <td th:text="${model.numberFreeChap}"></td>
+  </tr>
+  <tr th:if="${model.typeEarn != 0}">
+    <td style="font-weight: bold;" th:text="#{priceOrCoin}"></td>
+    <td th:text="${model.priceOrCoin}"></td>
+  </tr>
+  <tr>
+    <td style="font-weight: bold;" th:text="#{totalListens}"></td>
+    <td th:text="${model.totalListen}"></td>
+  </tr>
+  <tr>
+    <td style="font-weight: bold;" th:text="#{totalLike}"></td>
+    <td th:text="${model.totalLike}"></td>
+  </tr>
+  <tr>
+    <td style="font-weight: bold;" th:text="#{totalFollow}"></td>
+    <td th:text="${model.totalFollow}"></td>
+  </tr>
+  <tr>
+    <td style="font-weight: bold;" th:text="#{totalDownload}"></td>
+    <td th:text="${model.totalDownload}"></td>
+  </tr>
+  <tr>
+    <td style="font-weight: bold;" th:text="#{totalShared}"></td>
+    <td th:text="${model.totalShare}"></td>
+  </tr>
+  <tr>
+    <td style="font-weight: bold;" th:text="#{totalRate}"></td>
+    <td th:text="${model.totalRate}"></td>
+  </tr>
+  <tr>
+    <td style="font-weight: bold;" th:text="#{isHot}"></td>
+    <td>
+      <span th:if="${model.isHot}" th:text="#{yes}" class="badge badge-success"></span>
+      <span th:unless="${model.isHot}" th:text="#{no}" class="badge badge-danger"></span>
+    </td>
+  </tr>
+  <tr>
+    <td style="font-weight: bold;" th:text="#{scoreVoice}"></td>
+    <td th:text="${model.scoreVoice}"></td>
+  </tr>
+  <tr>
+    <td style="font-weight: bold;" th:text="#{scoreContent}"></td>
+    <td th:text="${model.scoreContent}"></td>
+  </tr>
+  <tr>
+    <td style="font-weight: bold;" th:text="#{duration}"></td>
+    <td th:with="
+        totalSeconds=${T(java.lang.Math).round(model.duration)},
+        hours=${T(java.lang.Integer).valueOf(totalSeconds / 3600)},
+        minutes=${T(java.lang.Integer).valueOf((totalSeconds % 3600) / 60)},
+        remainingSeconds=${T(java.lang.Integer).valueOf(totalSeconds % 60)}"
+        th:text="${hours} + 'h' + ${minutes} + 'm' + ${remainingSeconds} + 's'"></td>
+  </tr>
+  <tr>
+    <td style="font-weight: bold;" th:text="#{createdAt}"></td>
+    <td th:text="${#dates.format(new java.util.Date(model.createdAt), 'dd/MM/yyyy HH:mm:ss')}"></td>
+  </tr>
+  <tr>
+    <td style="font-weight: bold;" th:text="#{createdBy}"></td>
+    <td th:text="${createdBy}"></td>
+  </tr>
+  <tr>
+    <td style="font-weight: bold;" th:text="#{updatedAt}"></td>
+    <td th:text="${#dates.format(new java.util.Date(model.updatedAt), 'dd/MM/yyyy HH:mm:ss')}"></td>
+  </tr>
+  <tr>
+    <td style="font-weight: bold;" th:text="#{updatedBy}"></td>
+    <td th:text="${updatedBy}"></td>
+  </tr>
+</th:block>

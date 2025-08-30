@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en" layout:decorate="~{cms_layout_1.html}"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <link rel="stylesheet" th:href="@{/css/member/detail.css}">
+</head>
+<body>
+<!-- Main content -->
+<div class="content" layout:fragment="page_content">
+    <div class="container-fluid pl-5 pr-5">
+        <div class="row pt-3" >
+            <div class="col-md-6">
+                <div th:text="${model.firstName} + ' ' + ${model.lastName}" class="member-name-label"></div>
+                <div th:text="${'#' + model.id}" class="member-id-label"></div>
+            </div>
+            <div class="col-md-6 d-flex justify-content-end align-items-center">
+
+            </div>
+        </div>
+    </div>
+
+    <div class="container-fluid pl-5 pr-5">
+        <div class="row">
+            <div class="col-md-3" style="width: 100%"></div>
+            <div class="col-md-9 extra-info-text"><span th:if="${startEndString != null}" th:text="${startEndString}"></span>
+                <span th:if="${startEndString == null}">Người dùng chưa đăng ký gói thành viên nào</span>
+                <i class="fa-solid fa-check" style="color: black; margin-left: 15px"></i>
+            </div>
+        </div>
+    </div>
+    <div class="container-fluid pl-5 pr-5">
+        <form th:action="@{/member/save}" method="post" th:object="${model}" enctype="multipart/form-data">
+        <div class="row">
+            <div class="col-md-3">
+                <div class = "pfp-container" id="image">
+                    <img th:src="${@environment.getProperty('domain.nginx')} + ${image}" class="buuPreviewImage rounded-circle" th:if="${image!=null}"/>
+                    <img th:src="@{/img/no_pfp_male.jpg}" class="buuPreviewImage rounded-circle"
+                         th:if="${image == null and model.gender == 1}" />
+                    <img th:src="@{/img/no_pfp_female.jpg}" class="buuPreviewImage rounded-circle"
+                         th:if="${image == null and model.gender == 0}" />
+                    <div>
+                        <button type="button" class="btn btn-secondary btn-sm" id="uploadImage"><i class="fas fa-upload"></i> Đăng ảnh</button>
+                        <button type="button" class="btn btn-secondary btn-sm" id="takePicture"><i class="fas fa-camera"></i> Chụp ảnh</button>
+                    </div>
+                    <input type="file" class="buu_file_image" accept="image/*" hidden="hidden" style="cursor: pointer;">
+                    <input type="text" class="buu_file_image_data" name="imageUpload" hidden>
+                    <div class="buu-modal-crop-image modal fade">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <div class="w-100"><h4 class="modal-title text-center">CROP IMAGE</h4></div>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="d-flex flex-row justify-content-between">
+                                        <div class="d-flex flex-column justify-content-between align-items-center h-100" style="width: 100%;">
+                                            <img class="buu_image" th:src="@{/img/vn.jpeg}" style="max-width: 100%;">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer justify-content-center">
+                                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                                    <button type="button" class="buu_apply_crop_image btn btn-default">OK</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="buu-modal-camera modal fade" id="cameraModal">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Chụp ảnh</h5>
+                                </div>
+                                <div class="modal-body text-center">
+                                    <!-- Video stream will be shown here -->
+                                    <video id="camera-stream" width="400" height="300" autoplay playsinline></video>
+                                    <!-- Canvas is used for capturing the frame, can be hidden -->
+                                    <canvas id="camera-canvas" width="400" height="300" style="display: none;"></canvas>
+                                </div>
+                                <div class="modal-footer justify-content-center">
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                                    <button type="button" id="snap-picture-btn" class="btn btn-primary"><i class="fas fa-camera"></i> Chụp</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button" class="detail-button"><i class="fas fa-clipboard-check"></i> Điểm danh</button>
+                <button type="button" class="detail-button"><i class="fas fa-list-alt"></i> Lịch sử điểm danh</button>
+                <button type="button" class="detail-button"><i class="fas fa-shopping-cart"></i> Mua hàng</button>
+            </div>
+            <div class="col-md-9">
+                <!-- Nav tabs -->
+                <ul class="nav nav-tabs" id="myTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" id="detail-tab" data-toggle="tab" href="#detail" role="tab" th:classappend="${tab == 1 ? 'active' : ''}">Chi tiết</a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" id="membership-tab" data-toggle="tab" href="#membership" role="tab" th:classappend="${tab == 2 ? 'active' : ''}">Thành viên</a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" id="account-tab" data-toggle="tab" href="#account" role="tab" th:classappend="${tab == 3 ? 'active' : ''}">Tài chính</a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" id="booking-tab" data-toggle="tab" href="#booking" role="tab" th:classappend="${tab == 4 ? 'active' : ''}"><d>Đặt lịch</d></a>
+                    </li>
+                </ul>
+
+                <!-- Tab panes -->
+                <div class="tab-content pt-3 tab-style ">
+                    <div class="tab-pane fade" id="detail" role="tabpanel" th:classappend="${tab == 1 ? 'active show' : ''}">
+                            <input type="hidden" name="id" th:value="${model.id}">
+                            <input type="hidden" name="status" th:value="${model.status}">
+                        <div class="container-fluid pt-2">
+                            <div class="row">
+                                <div class="col-md-6 pl-4 pr-2">
+                                    <div class="detail-title-container">
+                                        <i class="fas fa-user" style="font-size: 1.1rem"></i>
+                                        <span class="detail-title">Chi tiết</span>
+                                    </div>
+                                    <div class="detail-content-container">
+                                        <div class="form-group d-flex align-items-center">
+                                            <label for="firstName" class="mr-2 label-fixed">Tên <span style="color: red;">*</span></label>
+                                            <input required name="firstName" type="text" id="firstName" th:value="${model.firstName}" class="form-control">
+                                        </div>
+
+                                        <div class="form-group d-flex align-items-center">
+                                            <label for="lastName" class="mr-2 label-fixed">Họ <span style="color: red;">*</span></label>
+                                            <input required name="lastName" type="text" id="lastName" th:value="${model.lastName}" class="form-control">
+                                        </div>
+
+                                        <div class="form-group d-flex align-items-center">
+                                            <label for="dateOfBirth" class="mr-2 label-fixed" style="width: 100px;">Ngày sinh</label>
+
+                                            <div class="input-group date flex-grow-1" id="dateOfBirth">
+                                                <input required name="dateOfBirthString" type="text" th:value="${model.dateOfBirthString}" class="form-control">
+                                                <div class="input-group-addon input-group-append">
+                                                    <div class="input-group-text">
+                                                        <i class="glyphicon glyphicon-calendar fa fa-calendar"></i>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group d-flex align-items-center">
+                                            <label class="mr-2 label-fixed">Giới tính <span style="color: red;">*</span></label>
+                                            <div class="radio-group d-flex align-items-center">
+                                                <div class="form-check form-check-inline mb-0">
+                                                    <input class="form-check-input" type="radio" name="option" id="male" value="1" th:checked="${model.gender == 1}">
+                                                    <label class="form-check-label" for="male">Nam</label>
+                                                </div>
+                                                <div class="form-check form-check-inline mb-0">
+                                                    <input class="form-check-input" type="radio" name="option" id="female" value="0" th:checked="${model.gender == 0}">
+                                                    <label class="form-check-label" for="female">Nữ</label>
+                                                </div>
+                                                <input type="hidden" id="gender" name="gender" th:value="${model.gender}">
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="note">Note</label>
+                                            <textarea id="note" name="note" th:text="${model.note}" class="form-control" style="height: 190px"></textarea>
+                                        </div>
+                                        <button type="submit" class="btn btn-success float-left mt-1 mb-3" style="width: 70px; height: 30px" >Lưu</button>
+                                    </div>
+
+
+                                </div>
+                                <div class="col-md-6 pl-2 pr-4">
+                                    <div class="detail-title-container">
+                                    <i class="fas fa-mobile-alt" style="font-size: 1.1rem"></i> <span class="detail-title">Liên lạc</span>
+                                    </div>
+                                    <div class="detail-content-container">
+                                        <div class="form-group d-flex align-items-center">
+                                            <label for="email" class="mr-2 label-fixed">Email</label>
+                                            <div class="input-group">
+                                                <input type="text" name="email" id="email" th:value="${model.email}" class="form-control">
+                                                <div class="input-group-append">
+                                                <span class="input-group-text">
+                                                    <i class="fas fa-envelope"></i>
+                                                </span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group d-flex align-items-center">
+                                            <label for="phoneNumber" class="mr-2 label-fixed">SĐT <span style="color: red;">*</span></label>
+                                            <div class="input-group">
+                                                <input required type="text" name="phoneNumber" id="phoneNumber" th:value="${model.phoneNumber}" class="form-control">
+                                                <div class="input-group-append">
+                                                <span class="input-group-text">
+                                                    <i class="fas fa-mobile-alt"></i>
+                                                </span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group d-flex align-items-center">
+                                            <label for="homeNumber" class="mr-2 label-fixed">SĐT nhà</label>
+                                            <div class="input-group">
+                                                <input type="text" name="homeNumber" id="homeNumber" th:value="${model.homeNumber}" class="form-control">
+                                                <div class="input-group-append">
+                                                <span class="input-group-text">
+                                                    <i class="fas fa-phone-alt"></i>
+                                                </span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group d-flex align-items-center">
+                                            <label for="workNumber" class="mr-2 label-fixed">SĐT công việc</label>
+                                            <div class="input-group">
+                                                <input type="text" name="workNumber" id="workNumber" th:value="${model.workNumber}" class="form-control">
+                                                <div class="input-group-append">
+                                                <span class="input-group-text">
+                                                    <i class="fas fa-phone-alt"></i>
+                                                </span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group d-flex align-items-center">
+                                            <label for="city" class="mr-2 label-fixed">Tỉnh/Thành phố</label>
+                                            <input type="text" name="city" id="city" th:value="${model.city}" class="form-control">
+                                        </div>
+
+                                        <div class="form-group d-flex align-items-center">
+                                            <label for="district" class="mr-2 label-fixed">Quận/Huyện</label>
+                                            <input type="text" name="district" id="district" th:value="${model.district}" class="form-control">
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="address">Địa chỉ</label>
+                                            <input type="text" name="address" id="address"  th:value="${model.address}" class="form-control">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="membership" role="tabpanel" th:classappend="${tab == 2 ? 'show active' : ''}">
+                        <div class="container-fluid pt-2" >
+                            <div class="d-flex justify-content-center align-items-center">
+                                <button type="button" class="btn btn-secondary mr-1"><i class="fas fa-plus"></i> Đăng ký gói</button>
+                                <button type="button" class="btn btn-secondary ml-1"><i class="fas fa-money-bill"></i> Thanh toán</button>
+                            </div>
+
+                            <div class="card card-default mx-3 mt-3">
+                                <div class="card-body">
+                                    <div>
+                                        <div class="current-member-title d-flex align-items-center">
+                                            <span>Các gói thành viên hiện tại</span> <i class="fa fa-id-card ml-2"></i>
+                                        </div>
+                                    </div>
+                                    <div class="table-responsive mb-2 mt-3">
+                                        <table class="table table-sm custom-table table-bordered table-hover text-center" style="table-layout: auto; width: 100%; font-weight: 600;">
+                                            <thead class="thead-light align-content-center">
+                                            <tr>
+                                                <th>Tên gói</th>
+                                                <th>Giá</th>
+                                                <th>Ngày bắt đầu</th>
+                                                <th>Ngày kết thúc</th>
+                                                <th>Trạng thái</th>
+                                                <th>Định kỳ</th>
+                                                <th>Số buổi</th>
+                                                <th>Hành động</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr th:each="model,item : ${model.normalSubscription}" th:attr="data-id=${model.id}">
+                                                    <td th:text="${model.membership.name}" style="align-content: center;"></td>
+                                                    <td th:text="${'$' + model.membership.price}" style="align-content: center;"></td>
+                                                    <td th:text="${#dates.format(new java.util.Date(model.startAt), 'dd/MM/yyyy')}" style="align-content: center;"></td>
+                                                    <td th:text="${#dates.format(new java.util.Date(model.endAt), 'dd/MM/yyyy')}" style="align-content: center;"></td>
+                                                    <td style="align-content: center;">
+                                                        <span th:if="${model.status == 2}" class="badge badge-warning" style="white-space: normal; cursor: pointer">Đang chờ</span>
+                                                        <span th:if="${model.status == 1}" class="badge badge-success" style="white-space: normal; cursor: pointer">Hoạt động</span>
+                                                        <span th:if="${model.status == 0}" class="badge badge-secondary" style="white-space: normal; cursor: pointer;">Hết hạn</span>
+                                                        <span th:if="${model.status == -1}" class="badge badge-danger" style="white-space: normal; cursor: pointer;">Đã hủy</span>
+                                                    </td>
+                                                    <td style="align-content: center;">
+                                                        <span th:if="${model.isRecurring == 1}" class="badge badge-success" style="white-space: normal; cursor: pointer">Có</span>
+                                                        <span th:if="${model.isRecurring == 0}" class="badge badge-danger" style="white-space: normal; cursor: pointer;">Không</span>
+                                                    </td>
+                                                    <td th:if="${model.membership.totalVisit == null or model.membership.totalVisit == 0}" style="align-content: center;">Không giới hạn</td>
+                                                    <td th:if="${model.membership.totalVisit != null and model.membership.totalVisit != 0}" th:text="${model.numberOfVisit + ' của ' + model.membership.totalVisit}" style="align-content: center;"></td>
+                                                    <td style="align-content: center;">
+                                                        <div class="d-flex flex-row justify-content-center">
+                                                            <a class="btn open-modal-class" title="Sửa" th:data-url="${@environment.getProperty('domain.app') + '/nexia-cms/subscription/update?id=' + model.id}">
+                                                                <i class="far fa-edit" style="color: #00709e;"></i>
+                                                            </a>
+                                                            <a th:attr="onclick=|event.stopPropagation(); deleteRecord({action: '@{'/music/audiobook/delete/'+${model.id}}', method: 'POST'})|" style="cursor: pointer; align-content: center;" title="Hủy gói" class="btn btn-sm">
+                                                                <i class="fas fa-times" style="color: #ff0000;"></i>
+                                                            </a>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr th:if="${model.normalSubscription?.size() == 0}">
+                                                    <td colspan="100">Không kết quả</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card card-default mx-3 mt-3">
+                                <div class="card-body">
+                                    <div>
+                                        <div class="current-member-title d-flex align-items-center">
+                                            <span>Các gói khác</span> <i class="fa fa-plus-circle ml-2"></i>
+                                        </div>
+                                    </div>
+                                    <div class="table-responsive mb-2 mt-3">
+                                        <table class="table table-sm custom-table table-bordered table-hover text-center" style="table-layout: auto; width: 100%; font-weight: 600;">
+                                            <thead class="thead-light align-content-center">
+                                            <tr>
+                                                <th>Tên gói</th>
+                                                <th>Giá</th>
+                                                <th>Ngày bắt đầu</th>
+                                                <th>Ngày kết thúc</th>
+                                                <th>Trạng thái</th>
+                                                <th>Định kỳ</th>
+                                                <th>Số buổi</th>
+                                                <th>Hành động</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            <tr th:each="model,item : ${model.addonSubscription}" th:attr="data-id=${model.id}">
+                                                <td th:text="${model.membership.name}" style="align-content: center;"></td>
+                                                <td th:text="${'$' + model.membership.price}" style="align-content: center;"></td>
+                                                <td th:text="${#dates.format(new java.util.Date(model.startAt), 'dd/MM/yyyy')}" style="align-content: center;"></td>
+                                                <td th:text="${#dates.format(new java.util.Date(model.endAt), 'dd/MM/yyyy')}" style="align-content: center;"></td>
+                                                <td style="align-content: center;">
+                                                    <span th:if="${model.status == 2}" class="badge badge-warning" style="white-space: normal; cursor: pointer">Đang chờ</span>
+                                                    <span th:if="${model.status == 1}" class="badge badge-success" style="white-space: normal; cursor: pointer">Hoạt động</span>
+                                                    <span th:if="${model.status == 0}" class="badge badge-secondary" style="white-space: normal; cursor: pointer;">Hết hạn</span>
+                                                    <span th:if="${model.status == -1}" class="badge badge-danger" style="white-space: normal; cursor: pointer;">Đã hủy</span>
+                                                </td>
+                                                <td style="align-content: center;">
+                                                    <span th:if="${model.isRecurring == 1}" class="badge badge-success" style="white-space: normal; cursor: pointer">Có</span>
+                                                    <span th:if="${model.isRecurring == 0}" class="badge badge-danger" style="white-space: normal; cursor: pointer;">Không</span>
+                                                </td>
+                                                <td th:if="${model.membership.totalVisit == null or model.membership.totalVisit == 0}" style="align-content: center;">Không giới hạn</td>
+                                                <td th:if="${model.membership.totalVisit != null and model.membership.totalVisit != 0}" th:text="${model.numberOfVisit + ' của ' + model.membership.totalVisit}" style="align-content: center;"></td>
+                                                <td style="align-content: center;">
+                                                    <div class="d-flex flex-row justify-content-center">
+                                                        <a th:href="@{'/music/audiobook/form?id=' + ${model.id}}" class="btn" title="Sửa">
+                                                            <i class="far fa-edit" style="color: #00709e;"></i>
+                                                        </a>
+                                                        <a th:attr="onclick=|event.stopPropagation(); deleteRecord({action: '@{'/music/audiobook/delete/'+${model.id}}', method: 'POST'})|" style="cursor: pointer; align-content: center;" title="Hủy gói" class="btn btn-sm">
+                                                            <i class="fas fa-times" style="color: #ff0000;"></i>
+                                                        </a>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr th:if="${model.addonSubscription?.size() == 0}">
+                                                <td colspan="100">Không kết quả</td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card card-default mx-3 mt-3">
+                                <div class="card-body">
+                                    <div>
+                                        <div class="current-member-title d-flex align-items-center">
+                                            <span>Các gói cũ</span> <i class="fa fa-clock ml-2"></i>
+                                        </div>
+                                    </div>
+                                    <div class="table-responsive mb-2 mt-3">
+                                        <table class="table table-sm custom-table table-bordered table-hover text-center" style="table-layout: auto; width: 100%; font-weight: 600;">
+                                            <thead class="thead-light align-content-center">
+                                            <tr>
+                                                <th>Tên gói</th>
+                                                <th>Giá</th>
+                                                <th>Ngày bắt đầu</th>
+                                                <th>Ngày kết thúc</th>
+                                                <th>Trạng thái</th>
+                                                <th>Định kỳ</th>
+                                                <th>Số buổi</th>
+                                                <th>Hành động</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            <tr th:each="model,item : ${model.oldSubscription}" th:attr="data-id=${model.id}">
+                                                <td th:text="${model.membership.name}" style="align-content: center;"></td>
+                                                <td th:text="${'$' + model.membership.price}" style="align-content: center;"></td>
+                                                <td th:text="${#dates.format(new java.util.Date(model.startAt), 'dd/MM/yyyy')}" style="align-content: center;"></td>
+                                                <td th:text="${#dates.format(new java.util.Date(model.endAt), 'dd/MM/yyyy')}" style="align-content: center;"></td>
+                                                <td style="align-content: center;">
+                                                    <span th:if="${model.status == 2}" class="badge badge-warning" style="white-space: normal; cursor: pointer">Đang chờ</span>
+                                                    <span th:if="${model.status == 1}" class="badge badge-success" style="white-space: normal; cursor: pointer">Hoạt động</span>
+                                                    <span th:if="${model.status == 0}" class="badge badge-secondary" style="white-space: normal; cursor: pointer;">Hết hạn</span>
+                                                    <span th:if="${model.status == -1}" class="badge badge-danger" style="white-space: normal; cursor: pointer;">Đã hủy</span>
+                                                </td>
+                                                <td style="align-content: center;">
+                                                    <span th:if="${model.isRecurring == 1}" class="badge badge-success" style="white-space: normal; cursor: pointer">Có</span>
+                                                    <span th:if="${model.isRecurring == 0}" class="badge badge-danger" style="white-space: normal; cursor: pointer;">Không</span>
+                                                </td>
+                                                <td th:if="${model.membership.totalVisit == null or model.membership.totalVisit == 0}" style="align-content: center;">Không giới hạn</td>
+                                                <td th:if="${model.membership.totalVisit != null and model.membership.totalVisit != 0}" th:text="${model.numberOfVisit + ' của ' + model.membership.totalVisit}" style="align-content: center;"></td>
+                                                <td style="align-content: center;">
+                                                    <div class="d-flex flex-row justify-content-center">
+                                                        <a class="btn open-modal-class" title="Chi tiết" th:data-url="${@environment.getProperty('domain.app') + '/nexia-cms/subscription/detail?id=' + model.id}">
+                                                            <i class="fas fa-info" style="color: #00709e;"></i>
+                                                        </a>
+                                                        <a th:attr="onclick=|event.stopPropagation(); deleteRecord({action: '@{'/music/audiobook/delete/'+${model.id}}', method: 'POST'})|" style="cursor: pointer; align-content: center;" title="Đăng ký lại" class="btn btn-sm">
+                                                            <i class="fa-solid fa-rotate-right" style="color: #ff0000;"></i>
+                                                        </a>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr th:if="${model.oldSubscription?.size() == 0}">
+                                                <td colspan="100">Không kết quả</td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="account" role="tabpanel" th:classappend="${tab == 3 ? 'show active' : ''}">
+                        <p>Contact content goes here...</p>
+                    </div>
+                    <div class="tab-pane fade" id="billing" role="tabpanel" th:classappend="${tab == 4 ? 'show active' : ''}">
+                        <p>Contact content goes here...</p>
+                    </div>
+                </div>
+                </div>
+            </div>
+        </form>
+        </div>
+    <div id="modal-container"></div>
+    </div>
+
+
+<!-- PAGE JAVASCRIPT CODE -->
+<script layout:fragment="content_page_script">
+    $(".content-header").remove();
+    $('input[name="option"]').on('change', function() {
+        $('#gender').val($(this).val());
+    });
+    $('#dateOfBirth').datetimepicker({
+        allowInputToggle: true,
+        showClose: true,
+        showClear: true,
+        showTodayButton: true,
+        format: 'DD/MM/YYYY',
+        icons: {
+            time: 'fa fa-clock',
+            date: 'fa fa-calendar',
+            up: 'fa fa-arrow-up',
+            down: 'fa fa-arrow-down',
+            previous: 'fa fa-chevron-left',
+            next: 'fa fa-chevron-right',
+            today: 'fa fa-calendar-check',
+            clear: 'fa fa-trash',
+            close: 'fa fa-times'
+        }
+    });
+    $('.open-modal-class').on('click', function(e) {
+        e.preventDefault();
+        const url = $(this).data('url');
+        console.log(url);
+
+        $('#modal-container').load(url, function() {
+            $('#editMemberSubscriptionModal').modal('show');
+            $('#memberSubscriptionDetail').modal('show');
+        });
+    });
+
+    $('body').on('hidden.bs.modal', '#editMemberSubscriptionModal', function () {
+        $('#modal-container').empty();
+    });
+
+    $('#myTab a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+        // Get the index of the newly shown tab's parent <li> element
+        var tabIndex = $(e.target).parent().index();
+
+        // Create a new URL object
+        var url = new URL(window.location);
+
+        // Set the 'tab' parameter in the URL
+        url.searchParams.set('tab', tabIndex + 1);
+
+        // Update the URL in the browser without reloading the page
+        window.history.pushState({ path: url.href }, '', url.href);
+    });
+
+    $(() => {
+        let id = 'image';
+        let cropper = "";
+
+        //======== BEGIN REUSABLE CROPPER FUNCTION ========
+        // We move the cropper logic into its own function
+        function initializeCropper(imageDataUrl) {
+            let image = document.querySelector('#' + id + ' .buu_image');
+            image.setAttribute("src", imageDataUrl);
+
+            if (cropper) {
+                cropper.destroy();
+            }
+
+            cropper = new Cropper(image, {
+                aspectRatio: 1 / 1,
+                viewMode: 1,
+                minContainerWidth: 250,
+                minContainerHeight: 250,
+            });
+
+            $('#' + id + ' .buu-modal-crop-image').modal('show');
+        }
+
+        //======== BEGIN FILE UPLOAD LOGIC (Existing code, slightly modified) ========
+        $('#uploadImage').click(function() {
+            $('#' + id + ' .buu_file_image').click();
+        });
+
+        $('#' + id + ' .buu_file_image').change(function(e) {
+            if (e.target.files.length == 0) return;
+
+            let reader = new FileReader();
+            reader.readAsDataURL(e.target.files[0]);
+            reader.onload = () => {
+                // Call our new reusable function
+                initializeCropper(reader.result);
+            };
+        });
+
+        //======== BEGIN CAMERA LOGIC (New code) ========
+        const cameraModal = $('#cameraModal');
+        const video = document.getElementById('camera-stream');
+        const canvas = document.getElementById('camera-canvas');
+        let cameraStream = null;
+
+        $('#takePicture').click(async function() {
+            // Check for browser support
+            if ('mediaDevices' in navigator && 'getUserMedia' in navigator.mediaDevices) {
+                try {
+                    // Request the camera stream
+                    cameraStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                    video.srcObject = cameraStream;
+                    cameraModal.modal('show');
+                } catch (err) {
+                    console.error("Error accessing camera: ", err);
+                    alert("Could not access the camera. Please ensure you have given permission.");
+                }
+            } else {
+                alert("Your browser does not support camera access.");
+            }
+        });
+
+        $('#snap-picture-btn').click(function() {
+            // Draw the current video frame to the canvas
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Get the image data from the canvas as a Base64 string
+            const imageDataUrl = canvas.toDataURL('image/png');
+
+            // Hide the camera modal
+            cameraModal.modal('hide');
+
+            // Now, use our reusable function to start the cropper!
+            initializeCropper(imageDataUrl);
+        });
+
+        // Clean up: Stop the camera stream when the modal is closed
+        cameraModal.on('hidden.bs.modal', function () {
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(track => track.stop());
+            }
+        });
+
+
+        //======== BEGIN CROP APPLY LOGIC (Unchanged) ========
+        $('#' + id + ' .buu_apply_crop_image').click(function(e) {
+            e.preventDefault();
+            let imgSrc = cropper.getCroppedCanvas({}).toDataURL("image/png", 0.75);
+
+            $('#' + id + ' .buuPreviewImage').attr("src", imgSrc);
+            $('#' + id + ' .buu_file_image_data').val(imgSrc);
+            console.log($('#' + id + ' .buu_file_image_data').val())
+            $('#' + id + ' .buu-modal-crop-image').modal('hide');
+        });
+    });
+
+</script>
+</body>
+</html>

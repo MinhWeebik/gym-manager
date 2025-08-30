@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en" layout:decorate="~{cms_layout_1.html}"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <link rel="stylesheet" th:href="@{/css/member/member.css}">
+</head>
+<body>
+<!-- Main content -->
+<div class="content" layout:fragment="page_content">
+    <form th:action="@{/member/index}" method="get" id="member-form">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <div class="input-group mb-3 w-75">
+                        <input th:id="name" th:name="name" th:value="${name}" type="text" class="form-control" placeholder="Tìm bởi tên..." />
+                        <div class="input-group-append">
+                            <span class="input-group-text bg-white" id="open-filter-popover" style="cursor: pointer">
+                              <i class="fa fa-sliders-h text-muted" ></i>
+                            </span>
+                        </div>
+                        <div class="input-group-append">
+                            <button type="submit" class="btn btn-primary" >
+                                <i class="fa fa-search"></i> Tìm kiếm
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="d-none popover-style" id="popover-form-template">
+                <div class="form-group">
+                    <label th:for="email">Email</label>
+                    <input type="text" th:id="email"  th:value="${email}" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label th:for="phoneNumber">Số điện thoại</label>
+                    <input type="text" th:id="phoneNumber"  th:value="${phoneNumber}" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label th:for="status"><span>Trạng thái</span></label>
+                    <select th:id="status"  class="form-control" style="width: 100%">
+                        <option th:value="${''}" th:text="${'Tất cả'}" th:selected="${status == ''}"></option>
+                        <option th:value="${1}" th:text="${'Hoạt động'}" th:selected="${status == 1}"></option>
+                        <option th:value="${0}" th:text="${'Không hoạt động'}" th:selected="${status == 0}"></option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label th:for="gender"><span>Giới tính</span></label>
+                    <select th:id="gender" class="form-control" style="width: 100%">
+                        <option th:value="${''}" th:text="${'Tất cả'}" th:selected="${gender == ''}"></option>
+                        <option th:value="${1}" th:text="${'Nam'}" th:selected="${gender == 1}"></option>
+                        <option th:value="${0}" th:text="${'Nữ'}" th:selected="${gender == 0}"></option>
+                    </select>
+                </div>
+                <hr>
+                <button type="button" class="btn btn-secondary btn-sm" id="popover-close-button">Đóng</button>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group d-flex">
+                    <select class="custom-select rounded-0 w-25 ml-auto" th:id="orderBy" th:name="orderBy" th:value="${orderBy}">
+                        <option value="created_at" th:selected="${orderBy == 'created_at'}">Tạo gần đây nhất</option>
+                        <option value="updated_at" th:selected="${orderBy == 'updated_at'}">Sửa gần đây nhất</option>
+                        <option value="last_name asc" th:selected="${orderBy == 'last_name asc'}">Tên (A-Z)</option>
+                        <option value="last_name desc" th:selected="${orderBy == 'last_name desc'}">Tên (Z-A)</option>
+                    </select>
+                </div>
+            </div>
+            <div id="hidden-filter-inputs">
+                <input type="hidden" name="email" id="hidden_email" th:value="${email}">
+                <input type="hidden" name="phoneNumber" id="hidden_phoneNumber" th:value="${phoneNumber}">
+                <input type="hidden" name="status" id="hidden_status" th:value="${status}">
+                <input type="hidden" name="gender" id="hidden_gender" th:value="${gender}">
+            </div>
+        </div>
+
+    </div>
+
+    <div class="container-fluid">
+        <div class="d-flex">
+            <div class="form-check form-check-inline mr-5">
+                <input class="form-check-input" type="radio" name="member" id="radio1" th:value="${'all'}" th:checked="${member == 'all'}">
+                <label class="form-check-label unselectable" for="radio1">Tất cả</label>
+            </div>
+            <div class="form-check form-check-inline mr-5">
+                <input class="form-check-input" type="radio" name="member" id="radio2" th:value="${'member'}" th:checked="${member == 'member'}">
+                <label class="form-check-label unselectable" for="radio2">Thành viên đang hoạt động</label>
+            </div>
+            <div class="form-check form-check-inline mr-5">
+                <input class="form-check-input" type="radio" name="member" id="radio3" th:value="${'notMember'}" th:checked="${member == 'notMember'}">
+                <label class="form-check-label unselectable" for="radio3">Thành viên đã hết hạn</label>
+            </div>
+        </div>
+    </div>
+</form>
+
+
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-4 p-4" th:each="member,item : ${models}" th:attr="data-id=${member.id}">
+                <a th:href="@{'/member/detail?id=' + ${member.id}}" style="text-decoration:none;">
+                <div class="border square bg-light" th:classappend="${member.getStatus() == 0 ? 'disable-member' : ''}">
+                    <div class="member-image-container">
+                        <img th:src="${@environment.getProperty('domain.nginx')} + ${member.imageUrl}" class="rounded-circle" th:if="${member.imageUrl!=null}"/>
+                        <img th:src="@{/img/no_pfp_male.jpg}" class="rounded-circle"
+                             th:if="${member.imageUrl == null and member.gender == 1}" />
+                        <img th:src="@{/img/no_pfp_female.jpg}" class="rounded-circle"
+                             th:if="${member.imageUrl == null and member.gender == 0}" />
+                    </div>
+                    <div class="member-info-container">
+                        <div th:text="${member.getFirstName() + ' ' + member.getLastName()}" class="name"></div>
+                        <div th:text="${'#' + member.getId()}"></div>
+                        <div th:if="${member.memberSubscriptions != null}">
+                            <span th:text="${member.memberSubscriptions[0].membership.name}"></span>
+                        </div>
+                        <div><span th:text="${member.getPhoneNumber()}"></span></div>
+                        <div th:if="${member.getStatus() == 1}"><i class="fas fa-check status-icon" style="color: limegreen;"></i>
+                        </div>
+                        <div th:if="${member.getStatus() == 0}"><i class="fas fa-times status-icon" style="color: red;"></i>
+                        </div>
+                    </div>
+                </div>
+                </a>
+            </div>
+        </div>
+        <hungtvt-pagination th:replace="buu-component :: pagination(${pageNo}, ${totalPage}, ${pageSize}, 'buuPageSize', 'buuPagination')"></hungtvt-pagination>
+    </div>
+</div>
+<!-- PAGE JAVASCRIPT CODE -->
+<script layout:fragment="content_page_script">
+    document.addEventListener('DOMContentLoaded', function () {
+        const $trigger = $("#open-filter-popover").popover({
+            container: 'body',
+            title: 'Tùy chọn tìm kiếm khác',
+            html: true,
+            placement: 'bottom',
+            sanitize: false,
+            content: function () {
+                return $("#popover-form-template").html();
+            },
+        });
+
+        $(document).on('click', '#popover-close-button', function () {
+            $trigger.popover('hide');
+        });
+
+        $(document).on('change', '#email', function() {
+            $('#hidden_email').val($(this).val());
+        });
+
+        $(document).on('change', '#phoneNumber', function() {
+            $('#hidden_phoneNumber').val($(this).val());
+        });
+
+        $(document).on('change', '#status', function() {
+            $('#hidden_status').val($(this).val());
+        });
+
+        $(document).on('change', '#gender', function() {
+            $('#hidden_gender').val($(this).val());
+        });
+
+        $("#orderBy").on("change", function () {
+            $("#member-form").submit();
+        });
+
+        $('#open-filter-popover').on('hidden.bs.popover', function () {
+            $("#email").val("");
+            $("#phoneNumber").val("");
+            $("#status").prop("selectedIndex", 0);
+            $("#gender").prop("selectedIndex", 0);
+            $("#hidden_email").val("")
+            $("#hidden_phoneNumber").val("");
+            $("#hidden_status").prop("selectedIndex", 0);
+            $("#hidden_gender").prop("selectedIndex", 0);
+        });
+
+        $('input[name="member"]').on('change', function() {
+            $("#member-form").submit();
+        });
+    });
+
+</script>
+</body>
+</html>

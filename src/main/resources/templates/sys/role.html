@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en" layout:decorate="~{cms_layout_1.html}"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+</head>
+<body>
+<div class="content" layout:fragment="page_content">
+    <div class="container-fluid">
+        <div class="card card-default">
+            <div class="card-body">
+                <form th:action="@{/sys/role/save}" method="post" th:object="${form}">
+                    <div class="row">
+                        <div class="col-4">
+                            <div th:insert="component :: input-text('Role name', 'roleName', *{roleName}, 1, 255, true, false)"></div>
+                            <p th:if="${#fields.hasErrors('roleName')}" th:errors="*{roleName}" class="text-danger m-0"></p>
+                        </div>
+                        <div class="col-4">
+                            <div th:insert="component :: input-text(#{des}, 'description', *{description}, 1, 255, true, false)"></div>
+                            <p th:if="${#fields.hasErrors('description')}" th:errors="*{description}" class="text-danger m-0"></p>
+                        </div>
+                        <input hidden th:field="*{id}">
+
+                        <div class="col-4 d-flex" style="align-items: start; margin-top:5px; padding-top: 24px;">
+                            <button type="submit" style="cursor: pointer; padding: 4px 10px;" class="btn btn-primary my-0 mx-1">
+                                <i class="fa-regular fa-floppy-disk"></i><span class="px-2" th:text="#{save}"></span>
+                            </button>
+                            <button id="reset" type="reset" style="cursor: pointer; padding: 4px 10px;" class="btn btn-primary my-0 mx-1" onclick="reset1()">
+                                <i class="fa fa-refresh"></i><span class="px-2" th:text="#{reset}"></span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card card-default">
+            <div class="card-body">
+                <form class="mb-3" th:action="@{/sys/role/index}" method="GET">
+                    <div class="row">
+                        <div class="col-3" th:insert="component :: input-text('Search', 'search', ${search}, 0, 255, false, false)"></div>
+
+                        <div class="col-4 d-flex" style="align-items: start; margin-top:5px; padding-top: 24px;">
+                            <button type="submit" style="cursor: pointer; padding: 4px 10px;" class="btn btn-primary my-0 mx-1">
+                                <i class="fas fa-search"></i><span class="px-2">Search</span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                <div class="table-responsive mb-2">
+                    <table id="table-list" class="table table-sm custom-table table-bordered table-hover text-center" style="table-layout: auto; width: 100%; font-weight: 600;">
+                        <thead class="thead-light align-content-center">
+                        <tr>
+                            <th style="width: 0%" th:text="#{no}"></th>
+                            <th>Role name</th>
+                            <th th:text="#{des}"></th>
+                            <th style="width: 0%"></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr onclick="activeRowImpl(event)" th:each="model,item : ${models}" th:attr="data-id=${model.id}">
+                            <td  class="text-center" style="align-content: center;"
+                                 th:text="${item.index + pageSize * pageNo - (pageSize - 1)}">
+                            </td>
+                            <td class="px-3" style="text-align: start; align-content: center;">
+                                <a class="mark-role-name" th:href="@{/sys/role/detail(id=${model.id})}" th:text="${model.roleName}"></a>
+                            </td>
+                            <td th:text="${model.description}" class="mark-des px-3" style="text-align: start; align-content: center;"></td>
+                            <td>
+                                <div class="d-flex flex-row justify-content-center">
+                                    <a th:attr="onclick=|event.stopPropagation(); deleteRecord({action: '@{'/sys/role/delete/'+${model.id}}', method: 'POST'})|" style="cursor: pointer; align-content: center;" title="Delete" class="btn btn-sm">
+                                        <i class="fas fa-trash-alt" style="color: #ff0000;"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr th:if="${models?.size() == 0}">
+                            <td colspan="100">No result</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <hungtvt-pagination th:replace="buu-component :: pagination(${pageNo}, ${totalPage}, ${pageSize}, 'buuPageSize', 'buuPagination')"></hungtvt-pagination>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script layout:fragment="content_page_script">
+    function activeRowImpl(e) {
+        activeRowTable(e, (tr) => {
+            if (tr.hasClass('active')) {
+                $('#id').val(null);
+                $('#roleName').val(null);
+                $('#description').val(null);
+            } else {
+                $('#id').val(tr.attr('data-id'));
+                $('#roleName').val(tr.find('.mark-role-name').text());
+                $('#description').val(tr.find('.mark-des').text());
+            }
+        })
+    }
+
+    function reset1(){
+        $("table tr.active").removeClass("active");
+    }
+</script>
+</body>
+</html>

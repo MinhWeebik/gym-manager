@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml" xmlns:sec="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="#{login}"></title>
+    <link rel="icon" type="image/x-icon" th:href="@{/img/nexia-icon.jpeg}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link th:href="@{/webjars/bootstrap/4.6.2/css/bootstrap.min.css}"  rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,400,0,0" />
+    <link rel="stylesheet" href="https://cdn.linearicons.com/free/1.0.0/icon-font.min.css">
+    <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css'>
+    <link rel="icon" type="image/x-icon" th:href="@{/img/logo-nxbgd-removebg-preview.png}" >
+
+    <link rel="stylesheet" type="text/css" th:href="@{/css/styles.css}" />
+    <link rel="stylesheet" th:href="@{/css/subcss.css}">
+    <style>
+        body {
+            background-image: url('img/music_bg.jpg');
+            background-repeat: no-repeat;
+            background-size: cover;
+        }
+        .a-hover:hover{
+            text-decoration: underline !important;
+        }
+    </style>
+</head>
+<body>
+<section class="h-100">
+    <div class="container h-100">
+        <div class="row justify-content-sm-center h-100">
+            <div class="col-xxl-4 col-xl-5 col-lg-5 col-md-7 col-sm-9" style="height: 100vh;">
+                <div class="text-center my-5">
+                    <H3></H3>
+                </div>
+                <div class="card shadow-lg">
+                    <div class="card-body p-5">
+                        <h1 class="fs-4 card-title fw-bold mb-4 d-flex justify-content-sm-center" th:text="#{login}"></h1>
+                        <form th:action="@{/login}" method="POST" class="needs-validation" novalidate="" autocomplete="off">
+
+                            <div class="mb-3">
+                                <label class="mb-2 text-muted" for="email" th:text="#{username}"> <span style="color:red"> *</span></label>
+                                <input id="email" type="text" class="form-control" name="username" value="" required autofocus>
+                                <div class="invalid-feedback" th:text="#{uII}">
+
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="mb-2 w-100">
+                                    <label class="text-muted" for="password" th:text="#{pass}"> <span style="color:red"> *</span></label>
+                                </div>
+                                <input id="password" type="password" class="form-control" name="password" required>
+                                <div class="invalid-feedback" th:text="#{pIR}">
+
+                                </div>
+                            </div>
+                            <div class="d-flex mb-2 align-items-center">
+                                <input id="captcha" type="text" class="form-control" style="flex: 1;" name="captcha" placeholder="Captcha" required>
+                                <div class="ms-auto d-flex ml-2" style="height: 38px;">
+                                    <img th:src="@{/generate-security}" alt="Captcha" style="min-width: 97px;" class="img-thumbnail" >
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-check py-2">
+                                    <input type="checkbox" name="remember-me" id="remember"  class="form-check-input" value="true">
+                                    <label for="remember" class="form-check-label" th:text="#{reLog}"></label>
+                                </div>
+                                <div class="alert alert-success d-flex align-items-center p-2 my-2" role="alert"  th:if="${success}">
+                                    <div th:text="${success}" th:if="${success}">
+                                        An example alert with an icon
+                                    </div>
+                                </div>
+                                <div class="alert alert-danger d-flex align-items-center p-2 my-2" role="alert" th:if="${error}">
+                                    <div th:text="${error}" th:if="${error}">
+                                        An example alert with an icon
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-primary w-100 p-2" th:text="#{loginBut}">
+                                </button>
+                            </div>
+                        </form>
+<!--                        <a class="a-hover" href="https://uid.com.la/auth/signin?redirectUri=https:%2F%2Fcms.umusic.la:8081%2F&state=umusic&clientId=3cf85bc2-fd4a-48fc-b85b-c2fd4a38fc04&isFromWeb=true&step=identifier">Login with UniID</a>-->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+</body>
+</html>

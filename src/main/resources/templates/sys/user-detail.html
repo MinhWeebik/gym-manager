@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en" layout:decorate="~{cms_layout_1.html}"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+</head>
+<body>
+<div class="content" layout:fragment="page_content">
+    <div class="container-fluid">
+        <div class="card card-default">
+            <div class="card-body">
+                <table class="table custom-table table-bordered table-sm table-striped">
+                    <tbody>
+                    <tr>
+                        <td style="font-weight: bold;">Username</td>
+                        <td th:text="${model.username}"></td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: bold;">Fullname</td>
+                        <td th:text="${model.fullname}"></td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: bold;">Phone number</td>
+                        <td th:text="${model.phone}"></td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: bold;">Email</td>
+                        <td th:text="${model.email}"></td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: bold;">Status</td>
+                        <td>
+                            <span th:if="${model.active}" title="Active">
+                                <svg  xmlns="http://www.w3.org/2000/svg"  width="22"  height="22"  viewBox="0 0 24 24"  fill="#16a2bc"  class="icon icon-tabler icons-tabler-filled icon-tabler-toggle-right"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M16 9a3 3 0 1 1 -3 3l.005 -.176a3 3 0 0 1 2.995 -2.824" /><path d="M16 5a7 7 0 0 1 0 14h-8a7 7 0 0 1 0 -14zm0 2h-8a5 5 0 1 0 0 10h8a5 5 0 0 0 0 -10" /></svg>
+                            </span>
+                            <span th:unless="${model.active}" title="Block">
+                                <svg  xmlns="http://www.w3.org/2000/svg"  width="22"  height="22"  viewBox="0 0 24 24"  fill="currentColor"  class="icon icon-tabler icons-tabler-filled icon-tabler-toggle-left"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 9a3 3 0 1 1 -3 3l.005 -.176a3 3 0 0 1 2.995 -2.824" /><path d="M16 5a7 7 0 0 1 0 14h-8a7 7 0 0 1 0 -14zm0 2h-8a5 5 0 1 0 0 10h8a5 5 0 0 0 0 -10" /></svg>
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: bold;">Created at</td>
+                        <td th:text="${#dates.format(new java.util.Date(model.createdAt), 'dd/MM/yyyy HH:mm:ss')}"></td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: bold;">Updated at</td>
+                        <td th:text="${#dates.format(new java.util.Date(model.updatedAt), 'dd/MM/yyyy HH:mm:ss')}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card card-default">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-5">
+                        <div class="form-group" th:insert="component :: input-text('Search unowned role', 'searchUnownedRole', '', 0, 255, false, false)"></div>
+                        <form th:action="@{/sys/user-role/createOrDelete}" method="POST" id="formCreate">
+                            <input hidden name="userId" th:value="${model.id}">
+                            <input hidden name="type" value="true">
+                            <select id="selectUnownedRole" size="15" name="roleIds" multiple required class="form-control">
+                                <option th:each="role : ${unownedRoles}" th:value="${role.id}"
+                                        th:text="${role.roleName}"></option>
+                            </select>
+                        </form>
+                    </div>
+                    <div class="col-2 d-flex justify-content-center align-items-center flex-column">
+                        <button style="padding: 4px 8px !important;" type="button" onclick="$('#formCreate').submit();" class="btn btn-sm btn-primary mb-2">
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                        <button style="padding: 4px 8px !important;" type="button" onclick="$('#formDelete').submit();" class="btn btn-sm btn-primary">
+                            <i class="fa-solid fa-arrow-left"></i>
+                        </button>
+                    </div>
+                    <div class="col-5">
+                        <div class="form-group" th:insert="component :: input-text('Search owned role', 'searchOwnedRole', '', 0, 255, false, false)"></div>
+                        <form th:action="@{/sys/user-role/createOrDelete}" method="POST" id="formDelete">
+                            <input hidden name="userId" th:value="${model.id}">
+                            <input hidden name="type" value="false">
+                            <select id="selectOwnedRole" size="15" name="roleIds" multiple required class="form-control">
+                                <option th:each="role : ${ownedRoles}" th:value="${role.id}"
+                                        th:text="${role.roleName}"></option>
+                            </select>
+                        </form>
+                    </div>
+                    <div class="col-12">
+                        <a th:href="@{/sys/user/index}" type="button" class="btn btn-danger mt-3">
+                            <i class="fa-solid fa-arrow-left"></i><span class="px-2">Back</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- PAGE JAVASCRIPT CODE -->
+<script layout:fragment="content_page_script">
+    function searchFunction(selectorInput, selectorSelect) {
+        var input, filter, select, options, i, txtValue;
+        input = document.getElementById(selectorInput);
+        filter = input.value.toLowerCase();
+        select = document.getElementById(selectorSelect);
+        options = select.getElementsByTagName("option");
+
+        for (i = 0; i < options.length; i++) {
+            txtValue = options[i].text;
+            if (txtValue.toLowerCase().indexOf(filter) > -1) {
+                options[i].style.display = "";
+            } else {
+                options[i].style.display = "none";
+            }
+        }
+    }
+
+    $('#searchUnownedRole').on('input', (e) => {
+        searchFunction('searchUnownedRole', 'selectUnownedRole')
+    });
+    $('#searchOwnedRole').on('input', (e) => {
+        searchFunction('searchOwnedRole', 'selectOwnedRole')
+    });
+</script>
+</body>
+</html>

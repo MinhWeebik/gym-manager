@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en" layout:decorate="~{cms_layout_1.html}"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+</head>
+<body>
+<!-- Main content -->
+<div class="content" layout:fragment="page_content">
+    <div class="container-fluid">
+        <div class="card card-default">
+            <div class="card-body">
+                <form th:action="@{/music/home-content/{type}/index(type=${type})}" method="get">
+                    <div class="row">
+                        <div class="col-4" th:insert="component :: input-text(#{title}, 'title', ${homeTitle}, 0, 255, false, false)"></div>
+                        <div class="col-4 mb-3" th:with="options=${T(java.util.Arrays).asList(
+                            '', 'All',
+                            '1', 'Active',
+                            '0', 'Inactive'
+                        )}">
+                            <div th:replace="component :: select-default-v2(#{status}, 'status', ${status}, false, false, ${options})"></div>
+                        </div>
+                        <div class="col-4 text-center mt-4">
+                            <button type="submit" style="cursor: pointer; padding: 4px 10px;" class="btn btn-primary my-0 mx-1">
+                                <i class="fas fa-search"></i><span class="px-2">Search</span>
+                            </button>
+                            <a th:href="@{/music/home-content/{type}/form(type=${type})}" style="cursor: pointer;" class="btn btn-primary my-0 mx-1">
+                                <i class="fas fa-plus"></i><span class="px-2" th:text="#{create}"></span>
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card card-default">
+            <div class="card-body">
+                <div class="mb-3">
+                    <button onclick="activeAll(getAllIdChecked())" type="button" class="btn btn-success my-0">
+                        <i class="fas fa-check-circle"></i><span class="px-2">Active Checked</span>
+                    </button>
+                    <button onclick="inactiveAll(getAllIdChecked())" type="button" class="btn btn-danger my-0 mx-2">
+                        <i class="fas fa-times-circle"></i><span class="px-2">Deactivate Checked</span>
+                    </button>
+                    <button type="button" class="btn btn-primary my-0" data-toggle="modal" data-target="#changePositionModal" th:text="#{action.change-position}">
+                    </button>
+                </div>
+                <div class="table-responsive mb-2 mt-3">
+                    <table id="table-list" class="table table-sm custom-table table-bordered table-hover text-center" style="table-layout: auto; width: 100%; font-weight: 600;">
+                        <thead class="thead-light align-content-center">
+                        <tr>
+                            <th class="align-content-center" style="width: 0%">
+                                <div class="custom-control custom-checkbox custom-buu-label-top">
+                                    <input type="checkbox" class="custom-control-input custom-control-input-info" id="customCheckAll">
+                                    <label class="custom-control-label" for="customCheckAll"></label>
+                                </div>
+                            </th>
+                            <th th:text="#{id}"></th>
+                            <th th:text="#{title}"></th>
+                            <th th:text="#{status}" style="width: 10%"></th>
+                            <th th:text="#{typeDisplay}" style="width: 10%"></th>
+                            <th th:text="#{position}" style="width: 10%"></th>
+                            <th th:text="#{createdAt}"></th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="model,item : ${models}" th:attr="data-id=${model.id}">
+                            <td>
+                                <div class="custom-control custom-checkbox custom-buu-label-top">
+                                    <input th:attr="data-id=${model.id}" type="checkbox" class="custom-control-input custom-control-input-info buu-marked" th:id="${'customCheck' + model.id}">
+                                    <label class="custom-control-label"  th:for="${'customCheck' + model.id}"></label>
+                                </div>
+                            </td>
+                            <td th:text="${model.id}" style="align-content: center;"></td>
+                            <td th:text="${model.title}" style="align-content: center;"></td>
+                            <td style="align-content: center;">
+                                <span th:if="${model.status == 0}" class="badge badge-danger" style="white-space: normal; cursor: pointer;">Inactive</span>
+                                <span th:if="${model.status == 1}" class="badge badge-success" style="white-space: normal; cursor: pointer">Active</span>
+                            </td>
+                            <td style="align-content: center;">
+                                <span th:if="${model.typeDisplay == 1}" class="badge badge-warning" style="white-space: normal; cursor: pointer;"><span th:text="#{numbered}"></span></span>
+                                <span th:if="${model.typeDisplay == 0}" class="badge badge-info" style="white-space: normal; cursor: pointer;"><span th:text="#{default}"></span></span>
+                            </td>
+                            <td th:text="${model.position}" style="align-content: center;"></td>
+                            <td th:text="${#dates.format(new java.util.Date(model.createdAt), 'dd/MM/yyyy HH:mm:ss')}" style="align-content: center;"></td>
+                            <td style="align-content: center;">
+                                <div class="d-flex flex-row justify-content-center">
+                                    <a title="Content" th:href="@{/music/home-content/{type}/content(type=${type}, id=${model.id})}" class="btn btn-sm">
+                                        <i class="fas fa-compact-disc" style="color: #00709e;"></i>
+                                    </a>
+                                    <a th:href="@{'/music/home-content/' + ${type} + '/form?id=' + ${model.id}}" class="btn" title="Edit">
+                                        <i class="far fa-edit" style="color: #00709e;"></i>
+                                    </a>
+                                    <button type="button"
+                                            th:attr="onclick=|event.stopPropagation(); deleteRecord({action: '@{'/music/home-content/' + ${type} + '/delete/' + ${model.id}}', method: 'POST'})|"
+                                            style="cursor: pointer; align-content: center;"
+                                            title="Delete"
+                                            class="btn btn-sm"
+                                            th:disabled="${model.status}">
+                                        <i class="fas fa-trash-alt" style="color: #ff0000;"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr th:if="${models?.size() == 0}">
+                            <td colspan="100" th:text="#{noResult}"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <hungtvt-pagination th:replace="buu-component :: pagination(${pageNo}, ${totalPage}, ${pageSize}, 'buuPageSize', 'buuPagination')"></hungtvt-pagination>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="changePositionModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <form th:action="@{/music/home-content/{type}/change-position(type=${type})}" method="get">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="myModalLabel" th:text="#{action.change-position}"></h5>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="from"><span>[[#{from}]] <span style="color: red;">*</span></span></label>
+                            <input type="number" class="form-control" id="from" name="from" required min="1">
+                        </div>
+                        <div class="form-group">
+                            <label for="to"><span>[[#{to}]] <span style="color: red;">*</span></span></label>
+                            <input type="number" class="form-control" id="to" name="to" required min="1">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <!-- Button to Trigger JavaScript Action -->
+                        <button type="submit" class="btn btn-primary" th:text="#{change}"></button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal" th:text="#{close}"></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- PAGE JAVASCRIPT CODE -->
+<script layout:fragment="content_page_script">
+    $('#customCheckAll').on("change", function(e) {
+        $('.buu-marked').prop("checked", e.target.checked);
+    });
+
+    function getAllIdChecked() {
+        let ids = [];
+        $('.buu-marked:checked').each(function() {
+            ids.push($(this).data('id'));
+        });
+        return ids;
+    }
+
+    function activeAll(ids) {
+        Swal.fire({
+            title: "Confirm activation?",
+            icon: "question",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: 'Yes',
+            cancelButtonText: 'No'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                toastLoading();
+                $.ajax({
+                    url: "[[@{'/music/home-content/approveAll'}]]",
+                    type: 'POST',
+                    data: {ids},
+                    traditional: true,
+                    success: (data) => {
+                        toastSuccess(data);
+                        window.location.reload();
+                    },
+                    error: (err) => {
+                        toastError("An error has occurred!")
+                    }
+                });
+            }
+        });
+    }
+
+    function inactiveAll(ids) {
+        Swal.fire({
+            title: "Confirm deactivation?",
+            icon: "question",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: 'Yes',
+            cancelButtonText: 'No'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                toastLoading();
+                $.ajax({
+                    url: "[[@{'/music/home-content/disapproveAll'}]]",
+                    type: 'POST',
+                    data: {ids},
+                    traditional: true,
+                    success: (data) => {
+                        toastSuccess(data);
+                        window.location.reload();
+                    },
+                    error: (err) => {
+                        toastError("An error has occurred!")
+                    }
+                });
+            }
+        });
+    }
+</script>
+</body>
+</html>

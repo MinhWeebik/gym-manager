@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en" layout:decorate="~{cms_layout_1.html}"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/3.3.4/css/bootstrap3/bootstrap-switch.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/3.3.4/js/bootstrap-switch.min.js"></script>
+  <style>
+    textarea{
+      height: 240px !important;
+    }
+  </style>
+</head>
+<body>
+<div class="content" layout:fragment="page_content">
+  <div class="container-fluid">
+    <div class="card card-default">
+      <div class="card-body">
+        <form th:action="@{/music/audiobook/save}" method="post" th:object="${form}" enctype="multipart/form-data">
+          <div class="row">
+            <input hidden th:field="*{id}"/>
+
+            <div class="col-md-5">
+              <div class="form-group">
+                <div th:insert="component :: input-text(#{name}, 'name', *{name}, 0, 255, true, false)"></div>
+                <p th:if="${#fields.hasErrors('name')}" th:errors="*{name}" class="text-danger m-0"></p>
+              </div>
+              <div class="form-group">
+                <div th:insert="component :: select2-v2('GET', #{title.index.publisher}, 'publisherId', *{publisherId}, '/search/music/publisher/ajax-search', #{enterPublisher}, ${publisherName} , true, false, 0, null)"></div>
+                <p th:if="${#fields.hasErrors('publisherId')}" th:errors="*{publisherId}" class="text-danger m-0"></p>
+              </div>
+              <div class="form-group">
+                <div th:insert="component :: select2-v2('GET', #{title.index.reader}, 'readerId', *{readerId}, '/search/music/reader/ajax-search', #{enterReader}, ${readerName} , true, false, 0, null)"></div>
+                <p th:if="${#fields.hasErrors('readerId')}" th:errors="*{readerId}" class="text-danger m-0"></p>
+              </div>
+              <div class="form-group">
+                <div th:insert="component :: select2-multiple('GET', #{categories}, 'categoryIds', ${audiobookCategories}, '/search/music/category/ajax-search?type=1', #{enterCategories}, true, false, 0, null)"></div>
+                <p th:if="${#fields.hasErrors('categoryIds')}" th:errors="*{categoryIds}" class="text-danger m-0"></p>
+              </div>
+              <div class="form-group">
+                <div th:insert="component :: input-datetimepicker(#{publishTime}, 'publisherDateString', *{publisherDateString}, 'DD/MM/YYYY', true, false)"></div>
+                <p th:if="${#fields.hasErrors('publisherDateString')}" th:errors="*{publisherDateString}" class="text-danger m-0"></p>
+              </div>
+              <div class="form-group" th:with="options=${T(java.util.Arrays).asList(
+                            0, 'Free',
+                            1, 'Coin',
+                            2, 'Money'
+                        )}">
+                <div th:replace="component :: select-default-v2(#{typeEarn}, 'typeEarn', *{typeEarn}, true, false, ${options})"></div>
+              </div>
+              <div class="form-group" id="priceOrCoinContainer">
+                <div th:insert="component :: input-number(#{priceOrCoin}, 'priceOrCoin', *{priceOrCoin}, 0, null, false, false)"></div>
+                <p th:if="${#fields.hasErrors('priceOrCoin')}" th:errors="*{priceOrCoin}" class="text-danger m-0"></p>
+              </div>
+              <div class="form-group" id="freeChapterContainer">
+                <div th:insert="component :: input-number(#{numberFreeChapter}, 'numberFreeChap', *{numberFreeChap}, 0, null, false, false)"></div>
+                <p th:if="${#fields.hasErrors('numberFreeChap')}" th:errors="*{numberFreeChap}" class="text-danger m-0"></p>
+              </div>
+              <div class="form-group">
+                <div th:replace="component :: input-enable-v2(#{status}, 'status', *{status == null ? 0 : status}, false)"></div>
+                <p th:if="${#fields.hasErrors('status')}" th:errors="*{status}" class="text-danger m-0"></p>
+              </div>
+              <div class="form-group">
+                <div th:replace="component :: input-enable-v3(#{isHot}, 'isHot', *{isHot == null ? 0 : isHot}, false, 'True', 'False')"></div>
+                <p th:if="${#fields.hasErrors('isHot')}" th:errors="*{isHot}" class="text-danger m-0"></p>
+              </div>
+            </div>
+            <div class="col-md-7">
+              <div class="form-group">
+                <div style="max-width: 250px;" th:insert="component :: crop-image(imageUpload, #{image}, ${image}, 250, 1, 1, 250, 250)"></div>
+                <p th:if="${#fields.hasErrors('imageUpload')}" th:errors="*{imageUpload}" class="text-danger m-0"></p>
+              </div>
+              <div class="form-group">
+                <div th:insert="component :: textarea-v2(#{des}, 'description', *{description}, 5, 0, 20000, true, false, false)"></div>
+                <p th:if="${#fields.hasErrors('description')}" th:errors="*{description}" class="text-danger m-0"></p>
+              </div>
+            </div>
+
+            <div class="col-12 text-center mt-2">
+              <a th:href="@{/music/audiobook/index}" type="button" class="btn btn-danger mx-2">
+                <i class="fa-solid fa-arrow-left"></i><span class="px-2">Back</span>
+              </a>
+              <button type="submit" class="btn btn-primary mx-2">
+                <i class="fa-regular fa-floppy-disk"></i><span class="px-2">Save</span>
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script layout:fragment="content_page_script">
+  $(document).ready(function() {
+    function handleSelectedOption(selectedValue) {
+      if(selectedValue === '0')
+      {
+        $('#priceOrCoinContainer').hide();
+        $('#freeChapterContainer').hide();
+      }
+      else
+      {
+        $('#priceOrCoinContainer').show();
+        $('#freeChapterContainer').show();
+      }
+    }
+
+    handleSelectedOption($('#typeEarn').val());
+
+    $('#typeEarn').change(function() {
+      handleSelectedOption($(this).val())
+    });
+  });
+</script>
+</body>
+</html>

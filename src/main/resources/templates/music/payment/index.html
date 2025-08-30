@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en" layout:decorate="~{cms_layout_1.html}"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <style>
+    .custom-button {
+      width: 90px;  /* Set desired width */
+      padding: 10px 0;  /* Set vertical padding */
+      text-align: center;  /* Center-align text and icons */
+    }
+  </style>
+</head>
+<body>
+<!-- Main content -->
+<div class="content" layout:fragment="page_content">
+  <div class="container-fluid">
+    <div class="card card-default">
+      <div class="card-body">
+        <form th:action="@{/music/payment/index/}" method="get">
+          <div class="row">
+            <div class="col-4" th:insert="component :: input-text(#{user}, 'userName', ${userName}, 0, 255, false, false)"></div>
+            <div class="col-4" th:insert="component :: input-text(#{packageName}, 'packageName', ${packageName}, 0, 255, false, false)"></div>
+            <div class="col-4 mb-3" th:insert="component :: input-date-ranger-v3(#{date}, 'date', ${date}, false, false, 'DD/MM/YYYY', 3, 0, false)"></div>
+          </div>
+          <div class="row">
+            <div class="col-12 text-center mt-4">
+              <button type="submit" class="btn btn-primary my-0 mx-1 custom-button">
+                <i class="fas fa-search"></i><span class="px-2">Search</span>
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="card card-default">
+      <div class="card-body">
+        <div class="table-responsive mb-2 mt-3">
+          <table id="table-list" class="table table-sm custom-table table-bordered table-hover text-center" style="table-layout: auto; width: 100%; font-weight: 600;">
+            <thead class="thead-light align-content-center">
+            <tr>
+              <th th:text="#{id}"></th>
+              <th th:text="#{user}"></th>
+              <th th:text="#{packageName}" ></th>
+              <th th:text="#{price}"></th>
+              <th th:text="#{createdAt}"></th>
+              <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="model,item : ${models}" th:attr="data-id=${model.id}">
+              <td th:text="${model.id}" style="align-content: center;"></td>
+              <td th:text="${model.user.getUserName()}" style="align-content: center;"></td>
+              <td th:text="${model.packageName}" style="align-content: center;"></td>
+              <td th:text="${model.amount}" style="align-content: center;"></td>
+              <td th:text="${#dates.format(new java.util.Date(model.createdAt), 'dd/MM/yyyy HH:mm:ss')}" style="align-content: center;"></td>
+              <td style="align-content: center;">
+                <div class="d-flex flex-row justify-content-center">
+                  <a th:attr="onclick=|event.stopPropagation(); deleteRecord({action: '@{'/music/payment/delete/'+${model.id}}', method: 'POST'})|" style="cursor: pointer; align-content: center;" title="Delete" class="btn btn-sm">
+                    <i class="fas fa-trash-alt" style="color: #ff0000;"></i>
+                  </a>
+                </div>
+              </td>
+            </tr>
+            <tr th:if="${models?.size() == 0}">
+              <td colspan="100" th:text="#{noResult}"></td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <hungtvt-pagination th:replace="buu-component :: pagination(${pageNo}, ${totalPage}, ${pageSize}, 'buuPageSize', 'buuPagination')"></hungtvt-pagination>
+      </div>
+    </div>
+  </div>
+  <modal-detail th:replace="buu-component :: modal-detail"></modal-detail>
+</div>
+<!-- PAGE JAVASCRIPT CODE -->
+<script layout:fragment="content_page_script">
+</script>
+</body>
+</html>

@@ -1,0 +1,82 @@
+<th:block th:fragment="detail" xmlns:th="http://www.thymeleaf.org">
+    <tr>
+        <td style="font-weight: bold;" th:text="#{id}"></td>
+        <td th:text="${model.id}"></td>
+    </tr>
+    <tr>
+        <td style="font-weight: bold;" th:text="#{title.index.audiobook}"></td>
+        <td th:text="${model.audiobook.name}"></td>
+    </tr>
+    <tr>
+        <td style="font-weight: bold;" th:text="#{name}"></td>
+        <td th:text="${model.title}"></td>
+    </tr>
+    <tr>
+        <td style="font-weight: bold;" th:text="#{image}"></td>
+        <td>
+            <img th:onerror="this.onerror=null; this.src=[[${@environment.getProperty('domain.nginx')}]] + '/img/no-image-square.jpg';"
+                 style="height: 100px;" th:src="${@environment.getProperty('domain.nginx')} + ${model.image}">
+        </td>
+    </tr>
+    <tr>
+        <td style="font-weight: bold;" th:text="#{status}"></td>
+        <td>
+            <span th:if="${model.status == -1}" class="badge badge-danger" style="white-space: normal;">Deleted</span>
+            <span th:if="${model.status == 0}" class="badge badge-danger" style="white-space: normal;">Inactive</span>
+            <span th:if="${model.status == 1}" class="badge badge-success" style="white-space: normal;">Active</span>
+        </td>
+    </tr>
+    <tr>
+        <td style="font-weight: bold;" th:text="#{des}"></td>
+        <td th:text="${model.description}"></td>
+    </tr>
+    <tr>
+        <td style="font-weight: bold;" th:text="#{media}"></td>
+        <td>
+            <audio controls="">
+                <source th:src="${@environment.getProperty('domain.nginx')} + ${model.file}" type="audio/mpeg">
+            </audio>
+        </td>
+    </tr>
+    <tr>
+        <td style="font-weight: bold;" th:text="#{chapterNumber}"></td>
+        <td th:text="${model.number}"></td>
+    </tr>
+    <tr>
+        <td style="font-weight: bold;" th:text="#{duration}"></td>
+        <td th:with="
+        totalSeconds=${T(java.lang.Math).round(model.duration)},
+        hours=${T(java.lang.Integer).valueOf(totalSeconds / 3600)},
+        minutes=${T(java.lang.Integer).valueOf((totalSeconds % 3600) / 60)},
+        remainingSeconds=${T(java.lang.Integer).valueOf(totalSeconds % 60)}"
+            th:text="${hours} + 'h' + ${minutes} + 'm' + ${remainingSeconds} + 's'"></td>
+    </tr>
+    <tr>
+        <td style="font-weight: bold;" th:text="#{totalListens}"></td>
+        <td th:text="${model.totalListen}"></td>
+    </tr>
+    <tr>
+        <td style="font-weight: bold;" th:text="#{totalLike}"></td>
+        <td th:text="${model.totalLike}"></td>
+    </tr>
+    <tr>
+        <td style="font-weight: bold;" th:text="#{totalDownload}"></td>
+        <td th:text="${model.totalDownload}"></td>
+    </tr>
+    <tr>
+        <td style="font-weight: bold;" th:text="#{createdAt}"></td>
+        <td th:text="${#dates.format(new java.util.Date(model.createdAt), 'dd/MM/yyyy HH:mm:ss')}"></td>
+    </tr>
+    <tr>
+        <td style="font-weight: bold;" th:text="#{createdBy}"></td>
+        <td th:text="${createdBy}"></td>
+    </tr>
+    <tr>
+        <td style="font-weight: bold;" th:text="#{updatedAt}"></td>
+        <td th:text="${#dates.format(new java.util.Date(model.updatedAt), 'dd/MM/yyyy HH:mm:ss')}"></td>
+    </tr>
+    <tr>
+        <td style="font-weight: bold;" th:text="#{updatedBy}"></td>
+        <td th:text="${updatedBy}"></td>
+    </tr>
+</th:block>

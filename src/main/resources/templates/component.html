@@ -1,0 +1,868 @@
+<hieutm xmlns:th="http://www.thymeleaf.org">
+    <div th:fragment="input-text(label, name, value, minlength, maxlength, required, disabled)">
+        <label th:for="${name}"><span>[[${label}]] <span th:if="${required}" style="color: red;">*</span></span></label>
+        <input type="text" th:id="${name}" th:name="${name}" th:value="${value}" th:disabled="${disabled}"
+               class="form-control" th:required="${required}" style="height: 31px" th:minlength="${minlength}" th:maxlength="${maxlength}">
+    </div>
+
+    <div th:fragment="input-password(label, name, value, minlength, maxlength, required, disabled)">
+        <label th:for="${name}"><span>[[${label}]] <span th:if="${required}" style="color: red;">*</span></span></label>
+        <input type="password" th:id="${name}" th:name="${name}" th:value="${value}" th:disabled="${disabled}"
+               class="form-control" th:required="${required}" style="height: 31px" th:minlength="${minlength}" th:maxlength="${maxlength}">
+    </div>
+
+    <div th:fragment="input-text-v2(label, name, value, minlength, maxlength, required, disabled, pattern)">
+        <label th:for="${name}"><span>[[${label}]] <span th:if="${required}" style="color: red;">*</span></span></label>
+        <input type="text" th:id="${name}" th:name="${name}" th:value="${value}" th:disabled="${disabled}" th:pattern="${pattern}"
+               class="form-control" th:required="${required}" style="height: 31px" th:minlength="${minlength}" th:maxlength="${maxlength}">
+    </div>
+
+    <div th:fragment="input-date(label, name, value, min, max, required, disabled)">
+        <label th:for="${name}"><span>[[${label}]] <span th:if="${required}" style="color: red;">*</span></span></label>
+        <input type="datetime-local" th:id="${name}" th:name="${name}" th:value="${value}" th:disabled="${disabled}"
+               class="form-control" th:required="${required}" style="height: 31px" th:min="${min}" th:max="${max}">
+    </div>
+
+    <div th:fragment="input-date-v2(label, name, value, min, max, required, disabled)">
+        <label th:for="${name}"><span>[[${label}]] <span th:if="${required}" style="color: red;">*</span></span></label>
+        <input type="date" th:id="${name}" th:name="${name}" th:value="${value}" th:disabled="${disabled}"
+               class="form-control" th:required="${required}" style="height: 31px" th:min="${min}" th:max="${max}">
+    </div>
+
+    <div th:fragment="input-text-v3(label, name, value, minlength, maxlength, required, disabled, readonly)">
+        <label th:for="${name}"><span>[[${label}]] <span th:if="${required}" style="color: red;">*</span></span></label>
+        <input type="text" th:id="${name}" th:name="${name}" th:value="${value}" th:disabled="${disabled}" th:readonly="${readonly}"
+               class="form-control" th:required="${required}" style="height: 31px" th:minlength="${minlength}" th:maxlength="${maxlength}">
+    </div>
+
+    <div th:fragment="input-number(label, name, value, minlength, maxlength, required, disabled)">
+        <label th:for="${name}"><span>[[${label}]] <span th:if="${required}" style="color: red;">*</span></span></label>
+        <input type="number" th:id="${name}" th:name="${name}" th:value="${value}" th:disabled="${disabled}"
+               class="form-control" th:required="${required}" style="height: 31px" th:min="${minlength}" th:max="${maxlength}">
+    </div>
+
+    <div th:fragment="input-number-v2(label, name, value, minlength, maxlength, required, disabled, readonly)">
+        <label th:for="${name}"><span>[[${label}]] <span th:if="${required}" style="color: red;">*</span></span></label>
+        <input type="number" th:id="${name}" th:name="${name}" th:value="${value}" th:disabled="${disabled}" th:readonly="${readonly}"
+               class="form-control" th:required="${required}" style="height: 31px" th:min="${minlength}" th:max="${maxlength}">
+    </div>
+
+
+    <div th:fragment="input-text-date(label, name, value, minlength, maxlength, required, disabled)">
+        <label th:for="${name}"><span>[[${label}]] <span th:if="${required}" style="color: red;">*</span></span></label>
+        <input type="text" th:id="${name}" th:name="${name}" th:value="${#dates.format(value, 'yyyy-MM-dd HH:mm:ss')}" th:disabled="${disabled}"
+               class="form-control" th:required="${required}" style="height: 31px" th:minlength="${minlength}" th:maxlength="${maxlength}">
+    </div>
+
+    <input th:fragment="input-hidden(name, value)" type="hidden" th:id="${name}" th:name="${name}" th:value="${value}">
+
+    <div th:fragment="textarea-v2(label, name, value, rows, minlength, maxlength, required, disabled, readonly)">
+        <label th:for="${name}"><span>[[${label}]] <span th:if="${required}" style="color: red;">*</span></span></label>
+        <textarea type="text" th:rows="${rows}" th:id="${name}" th:name="${name}" th:value="${value}" th:text="${value}" th:disabled="${disabled}" th:readonly="${readonly}"
+                  class="form-control" th:required="${required}" th:minlength="${minlength}" th:maxlength="${maxlength}">
+        </textarea>
+    </div>
+
+    <div th:fragment="select-default(label, name, value, options, required, disabled)">
+        <label th:for="${name}">
+            <span th:text="${label}"></span>
+            <span th:if="${required}" style="color: red;">*</span>
+        </label>
+        <select th:id="${name}" th:name="${name}" th:required="${required}" th:disabled="${disabled}" class="form-control" style="height: 31px; padding-top: 3px;">
+            <option th:each="option : ${options}" th:value="${option.value}" th:selected="${option.value == value}" th:text="${option.text}"></option>
+        </select>
+    </div>
+
+    <div th:fragment="select-default-v2(label, name, value, required, disabled, options)">
+        <label th:for="${name}">
+            <span th:text="${label}"></span>
+            <span th:if="${required}" style="color: red;">*</span>
+        </label>
+        <select th:id="${name}" th:name="${name}" th:required="${required}" th:disabled="${disabled}" class="form-control" style="height: 31px; padding-top: 3px;">
+        </select>
+        <input th:if="${disabled}" type="text" hidden th:name="${name}" th:value="${value}">
+        <script th:inline="javascript">
+            $(document).ready(function(){
+                let array = [[${options}]];
+
+                for (let i = 0; i < array.length; i+=2) {
+                    if (i % 2 === 0) { // Even index - value of the option
+                        let value = array[i];
+                        let text = array[i + 1]; // The text is the next item in the array
+                        $('#' + [[${name}]]).append(new Option(text, value));
+                        if(i == 0)
+                            $('#' + [[${name}]]).val(value);
+                    }
+                }
+
+                let value = [[${value}]];
+                if(value !== null && value !== '') {
+                    $('#' + [[${name}]]).val(value);
+                }
+            });
+        </script>
+    </div>
+
+    <div th:fragment="select-default-v3(label, name, value, required, disabled, options)">
+        <label th:for="${name}">
+            <span th:text="${label}"></span>
+            <span th:if="${required}" style="color: red;">*</span>
+        </label>
+        <select th:id="${name}" th:name="${name}" th:required="${required}" th:disabled="${disabled}" class="form-control" style="height: 31px; padding-top: 3px;">
+        </select>
+        <input th:if="${disabled}" type="text" hidden th:name="${name}" th:value="${value}">
+        <script th:inline="javascript">
+            $(document).ready(function(){
+                let array = [[${options}]];
+
+                for (let i = 0; i < array.length; i+=2) {
+                    if (i % 2 === 0) { // Even index - value of the option
+                        let value = array[i];
+                        let text = array[i + 1]; // The text is the next item in the array
+                        $('#' + [[${name}]]).append(new Option(text, value));
+                        if(i == 0)
+                            $('#' + [[${name}]]).val(value);
+                    }
+                }
+
+                let value = [[${value}]];
+                if(value != null && value != '')
+                    $('#' + [[${name}]]).val(value);
+            });
+        </script>
+    </div>
+
+    <div th:fragment="input-file(label, name, value, accept, required, disabled)">
+        <label style="font-weight: bold"><span>[[${label}]] <span th:if="${required}" style="color: red;">*</span></span></label>
+        <div class="custom-file">
+            <input type="file" th:id="${name} + 'Upload'" th:name="${name} + 'Upload'" class="custom-file-input" th:accept="${accept}" th:disabled="${disabled}" th:required="${required}">
+            <input type="text" hidden th:id="${name}" th:name="${name}" th:value="${value}">
+            <label th:id="${name} + 'UploadfileNameDisplay'" class="custom-file-label" th:for="${name} + 'Upload'" style="height: 31px">Choose file</label>
+        </div>
+        <script th:inline="javascript">
+            $(document).ready(function() {
+                let name = [[${name}]] + 'Upload';
+                let inputElement = $('#' + name);
+                let fileNameDisplay = $('#' + name + 'fileNameDisplay');
+
+                inputElement.on('change', function() {
+                    let files = this.files;
+                    let fileName = files.length > 0 ? files[0].name : 'Choose file';
+                    console.log(files.length > 0 ? 'Người dùng đã chọn file' : 'Người dùng đã nhấn Cancel');
+                    fileNameDisplay.text(fileName);
+                });
+            });
+        </script>
+    </div>
+
+    <div th:fragment="input-file-v2(label, name, value, accept, required, disabled)">
+        <label style="font-weight: bold"><span>[[${label}]] <span th:if="${required}" style="color: red;">*</span></span></label>
+        <div class="custom-file">
+            <input type="file" th:id="${name}" th:name="${name}" class="custom-file-input" th:accept="${accept}" th:disabled="${disabled}" th:required="${required}">
+            <label th:id="${name} + 'fileNameDisplay'" class="custom-file-label" th:for="${name}" style="height: 31px">Choose file</label>
+        </div>
+        <script th:inline="javascript">
+            $(document).ready(function() {
+                let name = [[${name}]];
+                let inputElement = $('#' + name);
+                let fileNameDisplay = $('#' + name + 'fileNameDisplay');
+
+                inputElement.on('change', function() {
+                    let files = this.files;
+                    let fileName = files.length > 0 ? files[0].name : 'Choose file';
+                    console.log(files.length > 0 ? 'Người dùng đã chọn file' : 'Người dùng đã nhấn Cancel');
+                    fileNameDisplay.text(fileName);
+                });
+            });
+        </script>
+    </div>
+
+    <div th:fragment="select2(method, label, name, value, url, title, text, required, disabled)">
+        <label th:for="${name}"><span>[[${label}]] <span th:if="${required}" style="color: red;">*</span></span></label>
+        <select th:id="${name}" th:name="${name}" class="form-control" th:required="${required}" th:disabled="${disabled}" style="width: 100%">
+            <option th:value="${value}" th:text="${text}"></option>
+        </select>
+        <script th:inline="javascript">
+            $('#' + [[${name}]]).select2({
+                ajax: {
+                    type: [[${method}]],
+                    url: [[${@environment.getProperty('server.servlet.context-path') + url}]],
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return {
+                            input: params.term
+                        };
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data
+                        };
+                    },
+                    cache: true
+                },
+                placeholder: [[${title}]],
+                minimumInputLength: 1,
+                allowClear: true
+            });
+        </script>
+    </div>
+
+    <div th:fragment="select2-v2(method, label, name, value, url, title, text, required, disabled, minimumInputLength, additionalParams)">
+        <label th:for="${name}"><span>[[${label}]] <span th:if="${required}" style="color: red;">*</span></span></label>
+        <select th:id="${name}" th:name="${name}" class="form-control" th:required="${required}" th:disabled="${disabled}" style="width: 100%">
+            <option th:value="${value}" th:text="${text}"></option>
+        </select>
+        <script th:inline="javascript">
+            $('#' + [[${name}]]).select2({
+                ajax: {
+                    type: [[${method}]],
+                    url: [[${@environment.getProperty('server.servlet.context-path') + url}]],
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        let query = {
+                            input: params.term
+                        }
+                        let additionalParams = [[${additionalParams}]];
+                        console.log(additionalParams);
+                        if(additionalParams != null) {
+                            additionalParams.forEach(param => {
+                                query[param.value] = param.text;
+                            });
+                        }
+                        return query;
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data
+                        };
+                    },
+                    cache: true
+                },
+                placeholder: [[${title}]],
+                minimumInputLength: [[${minimumInputLength}]],
+                allowClear: true
+            });
+        </script>
+    </div>
+
+    <div th:fragment="select2-v3(method, label, name, value, url, title, text, required, disabled, readonly, minimumInputLength, additionalParams)">
+        <label th:for="${name}"><span>[[${label}]] <span th:if="${required}" style="color: red;">*</span></span></label>
+        <select th:id="${name}" th:name="${name}" class="form-control" th:required="${required}" th:disabled="${disabled}" th:readonly="${readonly}" style="width: 100%">
+            <option th:value="${value}" th:text="${text}"></option>
+        </select>
+        <script th:inline="javascript">
+            $('#' + [[${name}]]).select2({
+                ajax: {
+                    type: [[${method}]],
+                    url: [[${@environment.getProperty('server.servlet.context-path') + url}]],
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        let query = {
+                            input: params.term
+                        }
+                        let additionalParams = [[${additionalParams}]];
+                        console.log(additionalParams);
+                        if(additionalParams != null) {
+                            additionalParams.forEach(param => {
+                                query[param.value] = param.text;
+                            });
+                        }
+                        return query;
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data
+                        };
+                    },
+                    cache: true
+                },
+                placeholder: [[${title}]],
+                minimumInputLength: [[${minimumInputLength}]],
+                allowClear: true
+            });
+        </script>
+    </div>
+
+    <div th:fragment="select2-multiple(method, label, name, options, url, title, required, disabled, minimumInputLength, additionalParams)">
+        <label th:for="${name}"><span>[[${label}]] <span th:if="${required}" style="color: red;">*</span></span></label>
+        <select th:id="${name}" th:name="${name}" class="form-control" th:required="${required}" th:disabled="${disabled}" multiple style="width: 100%">
+            <option th:each="option : ${options}" th:text="${option.text}" th:value="${option.value}"></option>
+        </select>
+        <script th:inline="javascript">
+            $('#' + [[${name}]]).select2({
+                ajax: {
+                    type: [[${method}]],
+                    url: [[${@environment.getProperty('server.servlet.context-path') + url}]],
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        let query = {
+                            input: params.term
+                        }
+                        let additionalParams = [[${additionalParams}]];
+                        console.log(additionalParams);
+                        if(additionalParams != null) {
+                            additionalParams.forEach(param => {
+                                query[param.value] = param.text;
+                            });
+                        }
+                        return query;
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data
+                        };
+                    },
+                    cache: true
+                },
+                placeholder: [[${title}]],
+                minimumInputLength: [[${minimumInputLength}]],
+                allowClear: true
+            }).val((function(selectId) {
+                let selectElement = document.getElementById(selectId); // Lấy tham chiếu đến phần tử <select>
+                let selectedValues = []; // Khởi tạo một mảng để lưu trữ các giá trị đã chọn
+                for (let i = 0; i < selectElement.options.length; i++) {
+                    let option = selectElement.options[i]; // Lấy ra từng tùy chọn
+                    selectedValues.push(option.value); // Thêm giá trị của tùy chọn vào mảng
+                }
+                return selectedValues;
+            })([[${name}]]))
+            .trigger('change');
+        </script>
+    </div>
+
+    <div th:fragment="select2-multiple-search-for(method, label, name, options, url, title, required, disabled, minimumInputLength, idNeedSearch, additionalParams)">
+        <label th:for="${name}"><span>[[${label}]] <span th:if="${required}" style="color: red;">*</span></span></label>
+        <select th:id="${name}" th:name="${name}" class="form-control" th:required="${required}" th:disabled="${disabled}" multiple style="width: 100%">
+            <option th:each="option : ${options}" th:text="${option.text}" th:value="${option.value}"></option>
+        </select>
+        <script th:inline="javascript">
+            $('#' + [[${name}]]).select2({
+                ajax: {
+                    type: [[${method}]],
+                    url: [[${@environment.getProperty('server.servlet.context-path') + url}]],
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        let query = {
+                            input: params.term
+                        }
+
+                        let idNeedSearch = [[${idNeedSearch}]];
+                        idNeedSearch.forEach((item) => {
+                            console.log(item, $(`#${item}`).val());
+                            query[item] = $(`#${item}`).val();
+                        });
+
+                        let additionalParams = [[${additionalParams}]];
+                        console.log(additionalParams);
+                        if(additionalParams != null) {
+                            additionalParams.forEach(param => {
+                                query[param.value] = param.text;
+                            });
+                        }
+                        return query;
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data
+                        };
+                    },
+                    cache: true
+                },
+                placeholder: [[${title}]],
+                minimumInputLength: [[${minimumInputLength}]],
+                allowClear: true
+            }).val((function(selectId) {
+                let selectElement = document.getElementById(selectId); // Lấy tham chiếu đến phần tử <select>
+                let selectedValues = []; // Khởi tạo một mảng để lưu trữ các giá trị đã chọn
+                for (let i = 0; i < selectElement.options.length; i++) {
+                    let option = selectElement.options[i]; // Lấy ra từng tùy chọn
+                    selectedValues.push(option.value); // Thêm giá trị của tùy chọn vào mảng
+                }
+                return selectedValues;
+            })([[${name}]]))
+            .trigger('change');
+        </script>
+    </div>
+
+    <div th:fragment="select2-tag-number-multiple(label, name, options, title, required, disabled)">
+        <label th:for="${name}"><span>[[${label}]] <span th:if="${required}" style="color: red;">*</span></span></label>
+        <select th:id="${name}" th:name="${name}" class="form-control" th:required="${required}" th:disabled="${disabled}" multiple style="width: 100%">
+            <option th:each="option : ${options}" th:text="${option.text}" th:value="${option.value}"></option>
+        </select>
+        <script th:inline="javascript">
+            $('#' + [[${name}]]).select2({
+                tags: true,
+                placeholder: [[${title}]],
+                minimumInputLength: 1,
+                allowClear: true,
+                createTag: function(params) {
+                    let term = $.trim(params.term);
+                    if (term === '') {
+                        return null;
+                    }
+
+                    if (!/^[\d+]+$/.test(term)) {
+                        return null;
+                    }
+
+                    return {
+                        id: term,
+                        text: term
+                    };
+                }
+            }).on('select2:open', function() {
+                let searchField = $('.select2-container--open .select2-search__field');
+                searchField.on('input', function() {
+                    let value = $(this).val();
+                    $(this).val(value.replace(/[^\d+]/g, '')); // Replace non-numeric characters
+                });
+            }).val((function(selectId) {
+                let selectElement = document.getElementById(selectId); // Lấy tham chiếu đến phần tử <select>
+                let selectedValues = []; // Khởi tạo một mảng để lưu trữ các giá trị đã chọn
+                for (let i = 0; i < selectElement.options.length; i++) {
+                    let option = selectElement.options[i]; // Lấy ra từng tùy chọn
+                    selectedValues.push(option.value); // Thêm giá trị của tùy chọn vào mảng
+                }
+                return selectedValues;
+            })([[${name}]]))
+            .trigger('change');
+        </script>
+    </div>
+
+    <div th:fragment="select2-tag-number(label, name, value, title, text, required, disabled)">
+        <label th:for="${name}"><span>[[${label}]] <span th:if="${required}" style="color: red;">*</span></span></label>
+        <select th:id="${name}" th:name="${name}" class="form-control" th:required="${required}" th:disabled="${disabled}" style="width: 100%">
+            <option th:text="${text}" th:value="${value}"></option>
+        </select>
+        <script th:inline="javascript">
+            $('#' + [[${name}]]).select2({
+                tags: true,
+                placeholder: [[${title}]],
+                minimumInputLength: 1,
+                allowClear: true,
+                createTag: function(params) {
+                    let term = $.trim(params.term);
+                    if (term === '') {
+                        return null;
+                    }
+
+                    if (!/^[\d+]+$/.test(term)) {
+                        return null;
+                    }
+
+                    return {
+                        id: term,
+                        text: term
+                    };
+                }
+            }).on('select2:open', function() {
+                let searchField = $('.select2-container--open .select2-search__field');
+                searchField.on('input', function() {
+                    let value = $(this).val();
+                    $(this).val(value.replace(/[^\d+]/g, '')); // Replace non-numeric characters
+                });
+            });
+        </script>
+    </div>
+
+    <div th:fragment="input-date-ranger(label, name, value, required, disabled, format, start, end)">
+        <label th:for="${name}"><span>[[${label}]] <span th:if="${required}" style="color: red;">*</span></span></label>
+        <input type="text" th:id="${name}" th:name="${name}" th:value="${value}" th:disabled="${disabled}"
+               class="form-control" th:required="${required}" style="height: 31px">
+        <script th:inline="javascript">
+            let currentDate = moment().subtract([[${end}]], 'days');
+            let defaultDate = moment().subtract([[${start}]], 'days');
+            $('#' + [[${name}]]).on('focus', function() {
+                $(this).daterangepicker({
+                    "locale": {
+                        "format": [[${format}]]
+                    },
+                    "startDate": defaultDate,
+                    "endDate": currentDate,
+                    "maxDate": currentDate
+                });
+            });
+        </script>
+    </div>
+
+    <div th:fragment="input-date-ranger-v2(label, name, value, required, disabled, format, start, end, isMaxDate)">
+        <label th:for="${name}"><span>[[${label}]] <span th:if="${required}" style="color: red;">*</span></span></label>
+        <input type="text" th:id="${name}" th:name="${name}" th:value="${value}" th:disabled="${disabled}"
+               class="form-control" th:required="${required}" style="height: 31px">
+        <script th:inline="javascript">
+            $(() => {
+                let currentDate = moment().subtract([[${end}]], 'days');
+                let defaultDate = moment().subtract([[${start}]], 'days');
+                let isMaxDate = [[${isMaxDate}]];
+                let objDaterangepicker = {
+                    autoUpdateInput: true,
+                    "locale": {
+                        format: [[${format}]],
+                        applyLabel: 'Reset',
+                        cancelLabel: 'Cancel',
+                        // customRangeLabel: 'Tùy chọn',
+                        // daysOfWeek: ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'],
+                        // monthNames: ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6', 'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12']
+                    },
+                    // "startDate": defaultDate,
+                    // "endDate": currentDate,
+                }
+                if(isMaxDate) {
+                    objDaterangepicker.maxDate = currentDate;
+                }
+                // $('#' + [[${name}]]).on('focus', function() {
+                //     $(this).daterangepicker(objDaterangepicker);
+                // });
+                $('#' + [[${name}]]).daterangepicker(objDaterangepicker);
+                $('#' + [[${name}]]).on('apply.daterangepicker', function (ev, picker) {
+                    $(this).val(currentDate.format('DD/MM/YYYY') + ' - ' + defaultDate.format('DD/MM/YYYY'));
+
+                    $(this).data('daterangepicker').setStartDate(defaultDate);
+                    $(this).data('daterangepicker').setEndDate(currentDate);
+                });
+            })
+        </script>
+    </div>
+
+    <div th:fragment="input-date-ranger-v3(label, name, value, required, disabled, format, start, end, isMaxDate)">
+        <label th:for="${name}"><span>[[${label}]] <span th:if="${required}" style="color: red;">*</span></span></label>
+        <input type="text" th:id="${name}" th:name="${name}" th:value="${value}" th:disabled="${disabled}"
+               class="form-control" th:required="${required}" style="height: 31px">
+        <script th:inline="javascript">
+            $(() => {
+                let currentDate = moment().subtract([[${end}]], 'days');
+                let defaultDate = moment().subtract([[${start}]], 'days');
+                let isMaxDate = [[${isMaxDate}]];
+                let objDaterangepicker = {
+                    autoUpdateInput: true,
+                    "locale": {
+                        format: [[${format}]],
+                        applyLabel: 'Reset',
+                        cancelLabel: 'Cancel',
+                        // customRangeLabel: 'Tùy chọn',
+                        // daysOfWeek: ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'],
+                        // monthNames: ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6', 'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12']
+                    },
+                    // "startDate": defaultDate,
+                    // "endDate": currentDate,
+                }
+                if(isMaxDate) {
+                    objDaterangepicker.maxDate = currentDate;
+                }
+                // $('#' + [[${name}]]).on('focus', function() {
+                //     $(this).daterangepicker(objDaterangepicker);
+                // });
+                $('#' + [[${name}]]).daterangepicker(objDaterangepicker);
+                $('#' + [[${name}]]).on('apply.daterangepicker', function (ev, picker) {
+                    $(this).data('daterangepicker').setStartDate(defaultDate);
+                    $(this).data('daterangepicker').setEndDate(currentDate);
+                    $(this).val('');
+                });
+                if(![[${value}]]) {
+                    $('#' + [[${name}]]).val('');
+                }
+            })
+        </script>
+    </div>
+
+    <div class="container-fluid" th:fragment="info-box(label, value, icon)">
+        <div class="card card-default">
+            <div class="card-body">
+                <div class="row" style="justify-content: center;">
+                    <span th:utext="${icon}"></span>
+                    <span class="ml-2" th:text="${label}"></span>
+                </div>
+                <div class="row" style="justify-content: center" th:text="${value}"></div>
+            </div>
+        </div>
+    </div>
+
+<!--    <div th:fragment="input-enable(label, name, value, disabled, turn)">-->
+<!--        <label th:for="${name}">[[${label}]]</label>-->
+<!--        <a th:id="${name} + Btl" style="cursor: pointer; border: none;" th:title="${name}" class="form-control">-->
+<!--            <span th:id="${name} + BtlActive"><i class="fas fa-toggle-on fa-lg" style="color: #00709e; font-size: 2.5em;"></i></span>-->
+<!--            <span th:id="${name} + BtlBlock"><i class="fas fa-toggle-off  fa-lg" style="color: gray; font-size: 2.5em;"></i></span>-->
+<!--        </a>-->
+<!--        <div th:replace="component :: input-hidden(${name}, ${value})"></div>-->
+<!--        <script th:inline="javascript">-->
+<!--            if(![[${disabled}]]) {-->
+<!--                let functionName = 'show' + [[${name}]] + 'Btl';-->
+<!--                let turnOn = 'turnOn' + [[${name}]];-->
+<!--                let turnOff = 'turnOff' + [[${name}]];-->
+
+<!--                window[turnOn] = function() {-->
+<!--                    $('#' + [[${name}]] + 'BtlActive').show();-->
+<!--                    $('#' + [[${name}]] + 'BtlBlock').hide();-->
+<!--                    $('#' + [[${name}]]).val(1);-->
+<!--                }-->
+
+<!--                window[turnOff] = function() {-->
+<!--                    $('#' + [[${name}]] + 'BtlActive').hide();-->
+<!--                    $('#' + [[${name}]] + 'BtlBlock').show();-->
+<!--                    $('#' + [[${name}]]).val(0);-->
+<!--                }-->
+
+<!--                window[functionName] = function(value, check) {-->
+<!--                    if(value == 1 && check)-->
+<!--                        window[turnOff]();-->
+<!--                    else if(!check) { // Enter update form-->
+<!--                        if(value == 1)-->
+<!--                            window[turnOn]();-->
+<!--                        else if(value == 0)-->
+<!--                            window[turnOff]();-->
+<!--                        else {-->
+<!--                            if([[${turn == true}]])-->
+<!--                                window[turnOn]();-->
+<!--                            else-->
+<!--                                window[turnOff]();-->
+<!--                        }-->
+<!--                    } else-->
+<!--                        window[turnOn]();-->
+<!--                }-->
+
+<!--                window[functionName]($('#' + [[${name}]]).val(), false);-->
+<!--                $('#' + [[${name}]] + 'Btl').on('click', function(event) {-->
+<!--                    let value = $('#' + [[${name}]]).val();-->
+<!--                    window[functionName](value, true);-->
+<!--                });-->
+<!--            } else {-->
+<!--                if([[${value}]] == 0) {-->
+<!--                    $('#' + [[${name}]] + 'BtlActive').hide();-->
+<!--                }-->
+<!--                if([[${value}]] == 1) {-->
+<!--                    $('#' + [[${name}]] + 'BtlBlock').hide();-->
+<!--                }-->
+<!--            }-->
+<!--        </script>-->
+<!--    </div>-->
+
+    <div th:fragment="input-enable(label, name, value, disabled)">
+        <div class="buu">
+            <div class="custom-control custom-switch custom-buu-label-top">
+                <input th:id="${name} + 'Check'" th:value="${value}" th:name="${name} + 'Check'" th:disabled="${disabled}" type="checkbox" class="custom-control-input custom-control-input-info">
+                <input hidden="hidden" th:id="${name}" th:value="${value}" th:name="${name}" type="text">
+                <label th:id="${name + 'Btl'}" class="custom-control-label" th:for="${name} + 'Check'">[[${label}]]</label>
+            </div>
+            <script th:inline="javascript">
+                if([[${value}]] == 0) {
+                    $(`#` + [[${name}]] + `Check`).prop("checked", false);
+                } else if([[${value}]] == 1) {
+                    $(`#` + [[${name}]] + `Check`).prop("checked", true);
+                } else if ([[${value}]] == null) {
+                    $(`#` + [[${name}]] + `Check`).prop("checked", false);
+                    $(`#` + [[${name}]] + `Check`).val("0");
+                    $(`#` + [[${name}]]).val("0");
+                }
+                $(`#` + [[${name}]] + `Check`).on("change", (e) => {
+                    if(e.target.checked === true) {
+                        $(`#` + [[${name}]]).val("1");
+                        $(`#` + [[${name}]] + `Check`).val("1");
+                    } else {
+                        $(`#` + [[${name}]]).val("0");
+                        $(`#` + [[${name}]] + `Check`).val("0");
+                    }
+                })
+            </script>
+        </div>
+    </div>
+
+    <div th:fragment="input-enable-v2(label, name, value, disabled)">
+        <div class="">
+            <label th:for="${name} + 'Check'" th:text="${label}" style="user-select: none; display: block"></label>
+            <input type="checkbox" th:id="${name} + 'Check'" th:value="${value}" th:name="${name} + 'Check'" th:disabled="${disabled}" data-bootstrap-switch data-off-color="danger" data-on-color="success">
+            <input type="hidden" th:id="${name}" th:value="${value}" th:name="${name}">
+
+            <script th:inline="javascript">
+                $(`#` + [[${name}]] + `Check`).bootstrapSwitch({
+                    onText: "Active",
+                    offText: "Inactive",
+                    onSwitchChange: function(event, state) {
+                        $(`#` + [[${name}]]).val(state ? "1" : "0");
+                    }
+                });
+                $(`#` + [[${name}]] + `Check`).bootstrapSwitch('state', [[${value}]] == 1);
+            </script>
+        </div>
+    </div>
+
+    <div th:fragment="input-enable-v3(label, name, value, disabled, textOn, textOff)">
+        <div class="">
+            <label th:for="${name} + 'Check'" th:text="${label}" style="user-select: none; display: block"></label>
+            <input type="checkbox" th:id="${name} + 'Check'" th:value="${value}" th:name="${name} + 'Check'" th:disabled="${disabled}" data-bootstrap-switch data-off-color="danger" data-on-color="success">
+            <input type="hidden" th:id="${name}" th:value="${value}" th:name="${name}">
+
+            <script th:inline="javascript">
+                $(`#` + [[${name}]] + `Check`).bootstrapSwitch({
+                    onText: [[${textOn}]],
+                    offText: [[${textOff}]],
+                    onSwitchChange: function(event, state) {
+                        $(`#` + [[${name}]]).val(state ? "1" : "0");
+                    }
+                });
+                $(`#` + [[${name}]] + `Check`).bootstrapSwitch('state', [[${value}]] == 1);
+            </script>
+        </div>
+    </div>
+
+
+    <th:block th:fragment="crop-image(id, label, image, height, x, y, minW, minH)">
+        <div th:id="${id}">
+            <div class="form-group h-100 w-100 d-inline-block">
+                <label><span>[[${label}]]<span style="color: red;"> *</span></span></label>
+                <div class="buu_image_upload">
+                    <img th:unless="${image}" th:style="'object-fit: cover; object-position: bottom;' + 'max-height: ' + ${height} + 'px;'" th:src="@{/img/bg_login4.jpg}" class="buuPreviewImage img-fluid img-thumbnail"/>
+                    <img th:if="${image}" th:src="${@environment.getProperty('domain.nginx')} + ${image}" class="buuPreviewImage img-fluid img-thumbnail"/>
+                </div>
+            </div>
+            <input type="file" class="buu_file_image" accept="image/*" hidden="hidden" style="cursor: pointer;">
+            <input type="text" class="buu_file_image_data" th:name="${id}" hidden>
+            <div class="buu-modal-crop-image modal fade">
+                <div class="modal-dialog modal-xl">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <div class="w-100"><h4 class="modal-title text-center">CROP IMAGE</h4></div>
+                        </div>
+                        <div class="modal-body">
+                            <div class="d-flex flex-row justify-content-between">
+                                <div class="d-flex flex-column justify-content-between align-items-center h-100" style="width: 100%;">
+                                    <img class="buu_image" th:src="@{/img/vn.jpeg}" style="max-width: 100%;">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer justify-content-center">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                            <button type="button" class="buu_apply_crop_image btn btn-default">OK</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script th:inline="javascript">
+            $(() => {
+                let id = [[${id}]];
+                $('#' + id + ' .buuPreviewImage').css('min-height', [[${height}]]);
+                $('#' + id + ' .buuPreviewImage').css('width', '100%');
+                $('#' + id + ' .buuPreviewImage').css('display', 'block');
+                //======== BEGIN CROPPER SETUP ========
+                $('#' + id + ' .buuPreviewImage').click( function() {
+                    console.log("xxxx");
+                    $('#' + id + ' .buu_file_image').click();
+                });
+
+                let image = document.querySelector('#' + id + ' .buu_image');
+                let cropper = "";
+                let fileName = "";
+                $('#' + id + ' .buu_file_image').change(function(e) {
+                    let reader = new FileReader();
+                    console.log(e.target.files.length);
+                    if(e.target.files.length == 0)
+                        return;
+                    reader.readAsDataURL(e.target.files[0]);
+
+                    reader.onload = () => {
+                        image.setAttribute("src", reader.result);
+                        if (cropper) {
+                            cropper.destroy();
+                        }
+                        cropper = new Cropper(image, {
+                            aspectRatio: [[${x}]] / [[${y}]],
+                            viewMode: 1,
+                            minContainerWidth: [[${minW}]],
+                            minContainerHeight: [[${minH}]],
+                        });
+
+                        $('#' + id + ' .buu-modal-crop-image').modal('show');
+                    };
+                    fileName = e.target.files[0].name.split(".")[0];
+                });
+
+
+                $('#' + id + ' .buu_apply_crop_image').click(function(e) {
+                    e.preventDefault();
+                    console.log(cropper);
+                    let imgSrc = cropper.getCroppedCanvas({}).toDataURL("image/png", 0.75);
+                    console.log(imgSrc);
+
+                    $('#' + id + ' .buuPreviewImage').attr("src", imgSrc);
+                    $('#' + id + ' .buu_file_image_data').val(imgSrc);
+                    $('#' + id + ' .buu-modal-crop-image').modal('hide');
+                });
+            })
+        </script>
+    </th:block>
+
+    <th:block th:fragment="input-datetimepicker(label, name, value, format, required, disabled)">
+        <label th:for="${name}"><span>[[${label}]]<span th:if="${required}" style="color: red;"> *</span></span></label>
+        <div class="input-group date" th:id="${name}">
+            <input th:name="${name}" style="height: 31px;" type="text" th:value="${value}" class="form-control" th:required="${required}" th:disabled="${disabled}" autocomplete="off">
+            <div class="input-group-addon input-group-append">
+                <div class="input-group-text">
+                    <i class="glyphicon glyphicon-calendar fa fa-calendar"></i>
+                </div>
+            </div>
+        </div>
+        <script th:inline="javascript">
+            $(() => {
+                let id = [[${name}]];
+                $('#' + id).datetimepicker({
+                    allowInputToggle: true,
+                    showClose: true,
+                    showClear: true,
+                    showTodayButton: true,
+                    format: [[${format}]],
+                    icons: {
+                        time: 'fa fa-clock',
+                        date: 'fa fa-calendar',
+                        up: 'fa fa-arrow-up',
+                        down: 'fa fa-arrow-down',
+                        previous: 'fa fa-chevron-left',
+                        next: 'fa fa-chevron-right',
+                        today: 'fa fa-calendar-check',
+                        clear: 'fa fa-trash',
+                        close: 'fa fa-times'
+                    }
+                });
+            });
+        </script>
+    </th:block>
+
+    <th:block th:fragment="input-datetimepicker-v2(label, name, value, format, required, disabled, readonly)">
+        <label th:for="${name}"><span>[[${label}]]<span style="color: red;"> *</span></span></label>
+        <div class="input-group date" th:id="${name}">
+            <input th:name="${name}" style="height: 31px;" type="text" th:value="${value}" class="form-control" th:required="${required}" th:disabled="${disabled}" th:readonly="${readonly}">
+            <div class="input-group-addon input-group-append">
+                <div class="input-group-text">
+                    <i class="glyphicon glyphicon-calendar fa fa-calendar"></i>
+                </div>
+            </div>
+        </div>
+        <script th:inline="javascript">
+            $(() => {
+                let id = [[${name}]];
+                $('#' + id).datetimepicker({
+                    allowInputToggle: true,
+                    showClose: true,
+                    showClear: true,
+                    showTodayButton: true,
+                    format: [[${format}]],
+                    icons: {
+                        time: 'fa fa-clock',
+                        date: 'fa fa-calendar',
+                        up: 'fa fa-arrow-up',
+                        down: 'fa fa-arrow-down',
+                        previous: 'fa fa-chevron-left',
+                        next: 'fa fa-chevron-right',
+                        today: 'fa fa-calendar-check',
+                        clear: 'fa fa-trash',
+                        close: 'fa fa-times'
+                    },
+                });
+            });
+        </script>
+    </th:block>
+</hieutm>

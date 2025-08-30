@@ -1,0 +1,373 @@
+﻿* {
+    font-family: "Poppins", sans-serif;
+}
+.container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1em;
+    border-radius: 7px;
+}
+.image-container,
+.preview-container{
+    width: 100%;
+    max-height: 600px;
+}
+input[type="file"] {
+    display: none;
+}
+label .chooseImg {
+    display: block;
+    position: relative;
+    background-color: #337ab7;
+    color: #ffffff;
+    font-size: 16px;
+    text-align: center;
+    width: 250px;
+    padding: 16px 0;
+    border-radius: 0.3em;
+    margin: 16px auto;
+    cursor: pointer;
+}
+label .chooseVid {
+    display: block;
+    position: relative;
+    background-color: #337ab7;
+    color: #ffffff;
+    font-size: 16px;
+    text-align: center;
+    width: 250px;
+    padding: 16px 0;
+    border-radius: 0.3em;
+    margin: 16px auto;
+    cursor: pointer;
+}
+.chooseImg {
+    background-color: #337ab7;
+    color: #ffff;
+    /*padding: 1em;*/
+    margin-top: 0rem;
+    border-radius: 0.3rem;
+}
+img {
+    display: block;
+    /* Important for cropper js*/
+    max-width: 100%;
+    border-radius: 5px;
+}
+.image-container {
+    width: 60%;
+    margin: 0 auto;
+}
+.options {
+    display: flex;
+    justify-content: center;
+    gap: 1em;
+}
+input[type="number"] {
+    width: 100px;
+    padding: 16px 5px;
+    border-radius: 0.3em;
+    border: 2px solid #000000;
+}
+button {
+    padding: 1em;
+    border-radius: 0.3em;
+    border: 2px solid #337ab7;
+    background-color: #ffffff;
+    color: #337ab7;
+}
+.btns {
+    display: flex;
+    justify-content: center;
+    gap: 1em;
+    margin-top: 1em;
+}
+.btns button {
+    font-size: 1em;
+}
+.btns a {
+    border: 2px solid #337ab7;
+    background-color: #337ab7;
+    color: #ffffff;
+    text-decoration: none;
+    padding: 1em;
+    font-size: 1em;
+    border-radius: 0.3em;
+}
+#apply {
+    margin-top: 10px;
+}
+
+#apply2 {
+    margin-top: 10px;
+}
+
+.hide {
+    display: none;
+}
+
+.drop-container {
+    position: relative;
+    display: flex;
+    /*gap: 10px;*/
+    /*flex-direction: column;*/
+    justify-content: center;
+    align-items: center;
+    height: 202px;
+    width: 202px;
+    /*padding: 20px;*/
+    border-radius: 10px;
+    /*border: 2px dashed #555;*/
+    color: #444;
+    cursor: pointer;
+    transition: background .2s ease-in-out, border .2s ease-in-out;
+}
+
+.drop-container2 {
+    position: relative;
+    display: flex;
+    /*gap: 10px;*/
+    /*flex-direction: column;*/
+    justify-content: center;
+    align-items: center;
+    height: 202px;
+    width: 590px;
+    /*padding: 20px;*/
+    border-radius: 10px;
+    /*border: 2px dashed #555;*/
+    color: #444;
+    cursor: pointer;
+    transition: background .2s ease-in-out, border .2s ease-in-out;
+}
+
+.drop-container3 {
+    position: relative;
+    display: flex;
+    /*gap: 10px;*/
+    /*flex-direction: column;*/
+    justify-content: center;
+    align-items: center;
+    height: 202px;
+    width: 358px;
+    /*padding: 20px;*/
+    border-radius: 10px;
+    /*border: 2px dashed #555;*/
+    color: #444;
+    cursor: pointer;
+    transition: background .2s ease-in-out, border .2s ease-in-out;
+}
+
+.drop-container:hover,
+.drop-container.drag-active {
+    background: #bebebe;
+    border-color: #111;
+}
+
+.drop-container:hover .drop-title,
+.drop-container.drag-active .drop-title {
+    color: #222;
+}
+
+.drop-container2:hover,
+.drop-container2.drag-active {
+    background: #bebebe;
+    border-color: #111;
+}
+
+.drop-container2:hover .drop-title,
+.drop-container2.drag-active .drop-title {
+    color: #222;
+}
+
+.drop-container3:hover,
+.drop-container3.drag-active {
+    background: #bebebe;
+    border-color: #111;
+}
+
+.drop-container3:hover .drop-title,
+.drop-container3.drag-active .drop-title {
+    color: #222;
+}
+
+.drop-title {
+    color: #444;
+    font-size: 18px;
+    font-weight: bold;
+    text-align: center;
+    transition: color .2s ease-in-out;
+}
+
+input[type=file] {
+    width: 350px;
+    max-width: 100%;
+    color: #444;
+    padding: 5px;
+    background: #fff;
+    border-radius: 10px;
+    border: 1px solid #555;
+}
+
+input[type=file]::file-selector-button {
+    margin-right: 20px;
+    border: none;
+    background: #084cdf;
+    padding: 10px 20px;
+    border-radius: 10px;
+    color: #fff;
+    cursor: pointer;
+    transition: background .2s ease-in-out;
+}
+
+input[type=file]::file-selector-button:hover {
+    background: #0d45a5;
+}
+
+.popup-container {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+}
+
+.popup-content {
+    background-color: #fff;
+    padding: 20px;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+#closePopupButton {
+    margin-top: 10px;
+    margin-right: 10px;
+}
+
+#closePopupButton2 {
+    margin-top: 10px;
+    margin-right: 10px;
+}
+
+.popup-container-validate {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+}
+
+.popup-content-validate {
+    background-color: #fff;
+    padding: 20px;
+    width: 40%;
+    height: 20%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.cropper-bg {
+    background-image: none;
+}
+
+.cropper-modal {
+    background-color: white;
+    opacity: 0.2;
+}
+
+.block {
+    position: absolute;
+    top: 1%;
+    left: 75%;
+}
+
+.popup-container {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+}
+
+.popup-content {
+    background-color: #fff;
+    padding: 20px;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.popup-container-validate {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+}
+
+.popup-content-validate {
+    background-color: #fff;
+    padding: 20px;
+    width: 40%;
+    height: 20%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.cropper-bg {
+    background-image: none;
+}
+
+.cropper-modal {
+    background-color: white;
+    opacity: 0.2;
+}
+
+label {
+    cursor: pointer;
+    /* Tạo kiểu theo ý muốn, nó sẽ trở thành thành phần giao diện người dùng hiển thị. */
+}
+
+#images {
+    opacity: 0;
+    position: absolute;
+    z-index: -1;
+}
+
+#videoUpload {
+    opacity: 0;
+    position: absolute;
+    z-index: -1;
+}
+
+.image-preview img {
+    width: 100%; /* Đảm bảo ảnh không vượt quá kích thước của div */
+    height: 100%; /* Giữ nguyên tỷ lệ khung hình */
+}
+
+.image-preview video {
+    width: 100%;
+    /*height: 100%;*/
+}

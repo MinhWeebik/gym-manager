@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en" layout:decorate="~{cms_layout_1.html}"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+</head>
+<body>
+<!-- Main content -->
+<div class="content" layout:fragment="page_content">
+  <div class="container-fluid">
+    <div class="card card-default">
+      <div class="card-body">
+        <form th:action="@{/music/podcast/index}" method="get">
+          <div class="row">
+            <div class="col-4" th:insert="component :: input-text(#{name}, 'name', ${name}, 0, 255, false, false)"></div>
+            <div class="col-4 mb-3" th:with="options=${T(java.util.Arrays).asList(
+                            '', 'All',
+                            '0', 'Free',
+                            '1', 'Coin',
+                            '2', 'Money'
+                        )}">
+              <div th:replace="component :: select-default-v2(#{typeEarn}, 'typeEarn', ${typeEarn}, false, false, ${options})"></div>
+            </div>
+            <div class="col-4 mb-3" th:with="options=${T(java.util.Arrays).asList(
+                            '', 'All',
+                            '1', 'Active',
+                            '0', 'Inactive',
+                            '-1', 'Deleted'
+                        )}">
+              <div th:replace="component :: select-default-v2(#{status}, 'status', ${status}, false, false, ${options})"></div>
+            </div>
+            <div class="col-4 mb-3" th:insert="component :: select2-multiple('GET', #{categories}, 'categories', ${categoriesList}, '/search/music/category/ajax-search?type=0', #{enterCategories}, false, false, 0, null)"></div>
+            <div class="col-4 mb-3" th:insert="component :: select2-v2('GET', #{title.index.publisher}, 'publisher', ${publisher}, '/search/music/publisher/ajax-search', #{enterPublisher}, ${publisherName} , false, false, 0, null)"></div>
+          </div>
+          <div class="row">
+            <div class="col-12 text-center mt-4">
+              <button type="submit" style="cursor: pointer; padding: 4px 10px;" class="btn btn-primary my-0 mx-1">
+                <i class="fas fa-search"></i><span class="px-2">Search</span>
+              </button>
+              <a th:href="@{/music/podcast/form}" style="cursor: pointer;" class="btn btn-primary my-0 mx-1">
+                <i class="fas fa-plus"></i><span class="px-2" th:text="#{create}"></span>
+              </a>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="card card-default">
+      <div class="card-body">
+        <div class="table-responsive mb-2 mt-3">
+          <table id="table-list" class="table table-sm custom-table table-bordered table-hover text-center" style="table-layout: auto; width: 100%; font-weight: 600;">
+            <thead class="thead-light align-content-center">
+            <tr>
+              <th th:text="#{id}"></th>
+              <th th:text="#{name}"></th>
+              <th th:text="#{image}" style="width: 0%"></th>
+              <th th:text="#{status}" ></th>
+              <th th:text="#{typeEarn}" style="width: 10%"></th>
+              <th th:text="#{createdAt}"></th>
+              <th th:text="#{totalListens}" style="width: 10%"></th>
+              <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="model,item : ${models}" th:attr="data-id=${model.id}">
+              <td th:text="${model.id}" style="align-content: center;"></td>
+              <td th:text="${model.name}" style="align-content: center;"></td>
+              <td>
+                <div class="dropdown">
+<!--                  <img class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" th:onerror="this.onerror=null; this.src=[[${@environment.getProperty('domain.nginx')}]] + '/img/no-image-square.jpg';"-->
+<!--                       style="height: 60px;width:60px" th:src="${@environment.getProperty('domain.nginx')} + ${model.image}">-->
+<!--                  <div class="dropdown-menu p-1" aria-labelledby="dropdownMenu2">-->
+<!--                    <img style="height: 200px;width:200px" th:src="${@environment.getProperty('domain.nginx')} + ${model.image}" th:onerror="this.onerror=null; this.src=[[${@environment.getProperty('domain.nginx')}]] + '/img/no-image-square.jpg';">-->
+<!--                  </div>-->
+                  <img class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                       style="height: 60px;width:60px" th:src="${@environment.getProperty('domain.nginx')} + ${model.image}">
+                  <div class="dropdown-menu p-1" aria-labelledby="dropdownMenu2">
+                    <img style="height: 200px;width:200px" th:src="${@environment.getProperty('domain.nginx')} + ${model.image}">
+                  </div>
+                </div>
+              </td>
+              <td style="align-content: center;">
+                <span th:if="${model.status == 0}" class="badge badge-danger" style="white-space: normal; cursor: pointer;">Inactive</span>
+                <span th:if="${model.status == 1}" class="badge badge-success" style="white-space: normal; cursor: pointer">Active</span>
+                <span th:if="${model.status == -1}" class="badge badge-danger" style="white-space: normal; cursor: pointer;">Deleted</span>
+              </td>
+              <td style="align-content: center;">
+                <span th:if="${model.typeEarn == 0}" class="badge badge-light" style="white-space: normal; cursor: pointer;">Free</span>
+                <span th:if="${model.typeEarn == 1}" class="badge badge-warning" style="white-space: normal; cursor: pointer">Coin</span>
+                <span th:if="${model.typeEarn == 2}" class="badge badge-success" style="white-space: normal; cursor: pointer;">Money</span>
+              </td>
+              <td th:text="${#dates.format(new java.util.Date(model.createdAt), 'dd/MM/yyyy HH:mm:ss')}" style="align-content: center;"></td>
+              <td th:text="${model.totalListen}" style="align-content: center;"></td>
+              <td style="align-content: center;">
+                <div class="d-flex flex-row justify-content-center">
+                  <a title="Detail" th:attr="onclick=|seeDetail(${model.id})|" class="btn btn-sm">
+                    <i class="fas fa-eye" style="color: #00709e;"></i>
+                  </a>
+                  <a th:href="@{'/music/podcast/episode/index/' + ${model.id}}" class="btn" title="Episode List">
+                    <i class="fas fa-list" style="color: #00709e;"></i>
+                  </a>
+                  <a th:href="@{'/music/podcast/form?id=' + ${model.id}}" class="btn" title="Edit">
+                    <i class="far fa-edit" style="color: #00709e;"></i>
+                  </a>
+                  <a th:attr="onclick=|event.stopPropagation(); deleteRecord({action: '@{'/music/podcast/delete/'+${model.id}}', method: 'POST'})|" style="cursor: pointer; align-content: center;" title="Delete" class="btn btn-sm">
+                    <i class="fas fa-trash-alt" style="color: #ff0000;"></i>
+                  </a>
+                </div>
+              </td>
+            </tr>
+            <tr th:if="${models?.size() == 0}">
+              <td colspan="100" th:text="#{noResult}"></td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <hungtvt-pagination th:replace="buu-component :: pagination(${pageNo}, ${totalPage}, ${pageSize}, 'buuPageSize', 'buuPagination')"></hungtvt-pagination>
+      </div>
+    </div>
+  </div>
+
+  <modal-detail th:replace="buu-component :: modal-detail"></modal-detail>
+</div>
+<!-- PAGE JAVASCRIPT CODE -->
+<script layout:fragment="content_page_script">
+  function seeDetail(id) {
+    toastLoading();
+    $.ajax({
+      url: "[[@{/music/podcast/detail}]]",
+      type: 'GET',
+      data: {id},
+      success: (data) => {
+        Swal.close();
+        $('#body-detail').html(data);
+        $('#modal-detail').modal("show");
+      },
+      error: (err) => {
+        console.error(err);
+        toastError("An error has occurred!")
+      }
+    });
+  }
+</script>
+</body>
+</html>

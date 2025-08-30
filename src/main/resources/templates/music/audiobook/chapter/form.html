@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en" layout:decorate="~{cms_layout_1.html}"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/3.3.4/css/bootstrap3/bootstrap-switch.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/3.3.4/js/bootstrap-switch.min.js"></script>
+</head>
+<body>
+<div class="content" layout:fragment="page_content">
+    <div class="container-fluid">
+        <div class="card card-default">
+            <div class="card-body">
+                <form th:action="@{'/music/audiobook/chapter/save/' + ${audiobookId!=null? audiobookId : ''}}" method="post" th:object="${form}" enctype="multipart/form-data" id="submitForm">
+                    <div class="row">
+                        <input hidden th:field="*{id}"/>
+                        <div class="col-md-5">
+                            <div class="form-group">
+                                <div th:insert="component :: select2-v2('GET', #{select2.audiobook}, 'idAudiobook', *{idAudiobook}, '/search/music/audiobook/ajax-search', #{enterAudiobook}, ${audiobookName} , true, ${audiobookId!=null || (audiobookId == null && form.id!=null)}, 0, null)"></div>
+                                <p th:if="${#fields.hasErrors('idAudiobook')}" th:errors="*{idAudiobook}" class="text-danger m-0"></p>
+                            </div>
+                            <div class="form-group">
+                                <div th:insert="component :: input-text-v3(#{name}, 'title', *{title}, 0, 255, true, false, false)"></div>
+                                <p th:if="${#fields.hasErrors('title')}" th:errors="*{title}" class="text-danger m-0"></p>
+                            </div>
+                            <div class="form-group">
+                                <div th:insert="component :: input-number-v2(#{chapterNumber}, 'number', *{number}, 1, null, false, false, false)"></div>
+                                <p th:if="${#fields.hasErrors('number')}" th:errors="*{number}" class="text-danger m-0"></p>
+                            </div>
+                            <div class="form-group">
+                                <div th:insert="component :: textarea-v2(#{des}, 'description', *{description}, 5, 0, 10000, true, false, false)"></div>
+                                <p th:if="${#fields.hasErrors('description')}" th:errors="*{description}" class="text-danger m-0"></p>
+                            </div>
+                            <div class="form-group">
+                                <div th:replace="component :: input-enable-v2(#{status}, 'status', *{status == null ? 0 : status}, false)"></div>
+                                <p th:if="${#fields.hasErrors('status')}" th:errors="*{status}" class="text-danger m-0"></p>
+                            </div>
+                        </div>
+                        <div class="col-md-7">
+                            <div class="form-group">
+                                <div style="max-width: 250px;" th:insert="component :: crop-image(imageUpload, #{image}, ${image}, 250, 1, 1, 250, 250)"></div>
+                                <p th:if="${#fields.hasErrors('imageUpload')}" th:errors="*{imageUpload}" class="text-danger m-0"></p>
+                            </div>
+                            <div class="form-group">
+                                <div th:insert="component :: input-file-v2(#{media}, 'audioUpload', null, '.mp3', *{id == null ? true : false}, false)"></div>
+                                <div th:if="*{id != null}" class="mt-2">
+                                    <audio controls="">
+                                        <source th:src="${@environment.getProperty('domain.nginx')} + ${media}" type="audio/mpeg">
+                                    </audio>
+                                </div>
+                                <p th:if="${#fields.hasErrors('audioUpload')}" th:errors="*{audioUpload}" class="text-danger m-0"></p>
+                            </div>
+                        </div>
+
+                        <div class="col-12 text-center mt-2">
+                            <a th:href="@{'/music/audiobook/chapter/index/' + ${audiobookId!=null?audiobookId : ''}}" type="button" class="btn btn-danger mx-2">
+                                <i class="fa-solid fa-arrow-left"></i><span class="px-2">Back</span>
+                            </a>
+                            <button type="submit" class="btn btn-primary mx-2">
+                                <i class="fa-regular fa-floppy-disk"></i><span class="px-2">Save</span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script layout:fragment="content_page_script">
+    function setSelectedValueAfterLoading(selectElement, valueToSelect, textToSelect) {
+        const interval = setInterval(() => {
+            if (selectElement.find("option").length > 0) {
+                selectElement.select2("trigger", "select", {
+                    data: { id: valueToSelect , text: textToSelect}
+                });
+                clearInterval(interval);
+            }
+        }, 100);
+    }
+    const url = new URL(window.location.href);
+    const audiobookId = url.searchParams.get("audiobookId");
+    if(audiobookId!=null && audiobookId!=""){
+        setSelectedValueAfterLoading($('#idAudiobook'),audiobookId,`[[${audiobookName}]]`);
+    }
+
+    $('#submitForm').on('submit', function() {
+        $('#idAudiobook').prop('disabled', false);
+    });
+
+</script>
+</body>
+</html>

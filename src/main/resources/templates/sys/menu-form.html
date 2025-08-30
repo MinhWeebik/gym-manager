@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en" layout:decorate="~{cms_layout_1.html}"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+</head>
+<body>
+<div class="content" layout:fragment="page_content">
+    <div class="container-fluid">
+        <div class="card card-default">
+            <div class="card-body">
+                <form th:action="@{/sys/menu/save}" method="post" th:object="${form}">
+                    <div class="row">
+                        <input hidden th:field="*{id}"/>
+
+                        <div class="col-4">
+                            <div class="form-group" th:insert="component :: input-text('Name Vn', 'nameVn', *{nameVn}, 1, 255, true, false)"></div>
+                            <p th:if="${#fields.hasErrors('nameVn')}" th:errors="*{nameVn}" class="text-danger m-0"></p>
+                        </div>
+                        <div class="col-4">
+                            <div class="form-group" th:insert="component :: input-text('Name En', 'nameEn', *{nameEn}, 1, 255, true, false)"></div>
+                            <p th:if="${#fields.hasErrors('nameEn')}" th:errors="*{nameEn}" class="text-danger m-0"></p>
+                        </div>
+                        <div class="col-4">
+                            <div class="form-group" th:insert="component :: input-number('Location', 'orderNum', *{orderNum}, 1, 1000, true, false)"></div>
+                            <p th:if="${#fields.hasErrors('orderNum')}" th:errors="*{orderNum}" class="text-danger m-0"></p>
+                        </div>
+                        <div class="col-4">
+                            <div class="form-group" th:insert="component :: select2-v2('GET', 'Menu parent', 'parentNameId', *{parentNameId}, '/sys/menu/ajax-search-2', 'Enter name...', ${parentNameMenu} , false, false, 0, null)"></div>
+                            <p th:if="${#fields.hasErrors('parentNameId')}" th:errors="*{parentNameId}" class="text-danger m-0"></p>
+                        </div>
+                        <div class="col-4">
+                            <div class="form-group" th:insert="component :: select2-v2('GET', 'Icon', 'iconId', *{iconId}, '/sys/icon/ajax-search', 'Enter name...', ${iconName} , true, false, 0, null)"></div>
+                            <p th:if="${#fields.hasErrors('iconId')}" th:errors="*{iconId}" class="text-danger m-0"></p>
+                        </div>
+                        <div class="col-4">
+                            <div class="form-group" th:insert="component :: select2-v2('GET', 'Router', 'routerId', *{routerId}, '/sys/router/ajax-search', 'Enter name...', ${routerName} , true, false, 0, null)"></div>
+                            <p th:if="${#fields.hasErrors('routerId')}" th:errors="*{routerId}" class="text-danger m-0"></p>
+                        </div>
+
+                        <div class="col-12 text-center mt-2">
+                            <a th:href="@{/sys/menu/index}" type="button" class="btn btn-danger mx-2">
+                                <i class="fa-solid fa-arrow-left"></i><span class="px-2">Back</span>
+                            </a>
+                            <button type="submit" class="btn btn-primary mx-2">
+                                <i class="fa-regular fa-floppy-disk"></i><span class="px-2">Save</span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script layout:fragment="content_page_script">
+</script>
+</body>
+</html>

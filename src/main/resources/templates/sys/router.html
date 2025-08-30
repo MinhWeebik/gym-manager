@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en" layout:decorate="~{cms_layout_1.html}"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+</head>
+<body>
+<div class="content" layout:fragment="page_content">
+    <div class="container-fluid">
+        <div class="card card-default">
+            <div class="card-body">
+                <form th:action="@{/sys/router/save}" method="post" th:object="${form}">
+                    <div class="row">
+                        <div class="col-4">
+                            <div th:insert="component :: input-text(#{routerLink}, 'routerLink', *{routerLink}, 1, 255, true, false)"></div>
+                            <p th:if="${#fields.hasErrors('routerLink')}" th:errors="*{routerLink}" class="text-danger m-0"></p>
+                        </div>
+                        <div class="col-4">
+                            <div th:insert="component :: input-text(#{des}, 'des', *{des}, 1, 255, true, false)"></div>
+                            <p th:if="${#fields.hasErrors('des')}" th:errors="*{des}" class="text-danger m-0"></p>
+                        </div>
+                        <input hidden th:field="*{id}">
+
+                        <div class="col-4 d-flex" style="align-items: start; margin-top:5px; padding-top: 24px;">
+                            <button type="submit" style="cursor: pointer; padding: 4px 10px;" class="btn btn-primary my-0 mx-1">
+                                <i class="fa-regular fa-floppy-disk"></i><span class="px-2" th:text="#{save}"></span>
+                            </button>
+                            <button id="reset" type="reset" style="cursor: pointer; padding: 4px 10px;" class="btn btn-primary my-0 mx-1" onclick="reset1()">
+                                <i class="fa fa-refresh"></i><span class="px-2" th:text="#{reset}"></span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card card-default">
+            <div class="card-body">
+                <div class="table-responsive mb-2">
+                    <table id="table-list" class="table table-sm custom-table table-bordered table-hover text-center" style="table-layout: auto; width: 100%; font-weight: 600;">
+                        <thead class="thead-light align-content-center">
+                        <tr>
+                            <th style="width: 0%" th:text="#{no}"></th>
+                            <th th:text="#{routerLink}"></th>
+                            <th th:text="#{des}"></th>
+                            <th style="width: 0%" th:text="#{status}"></th>
+                            <th style="width: 0%"></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr onclick="activeRowImpl(event)" th:each="model,item : ${models}" th:attr="data-id=${model.id}">
+                            <td  class="text-center" style="align-content: center;"
+                                 th:text="${item.index + pageSize * pageNo - (pageSize - 1)}">
+                            </td>
+                            <td th:text="${model.routerLink}" class="mark-router-link px-3" style="text-align: start; align-content: center;">None</td>
+                            <td th:text="${model.des}" class="mark-des px-3" style="text-align: start; align-content: center;">None</td>
+                            <td>
+                                <a th:attr="onclick=|toggleStatusImpl(event, '@{/sys/router/active-block}', 'POST', '${model.id}')|, data-active=${model.active ? '1' : '0'}" style="cursor: pointer;" title="Status" class="btn btn-sm">
+                                    <span th:if="${model.active}" title="Active">
+                                        <svg  xmlns="http://www.w3.org/2000/svg"  width="22"  height="22"  viewBox="0 0 24 24"  fill="#16a2bc"  class="icon icon-tabler icons-tabler-filled icon-tabler-toggle-right"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M16 9a3 3 0 1 1 -3 3l.005 -.176a3 3 0 0 1 2.995 -2.824" /><path d="M16 5a7 7 0 0 1 0 14h-8a7 7 0 0 1 0 -14zm0 2h-8a5 5 0 1 0 0 10h8a5 5 0 0 0 0 -10" /></svg>
+                                    </span>
+                                    <span th:unless="${model.active}" title="Block">
+                                        <svg  xmlns="http://www.w3.org/2000/svg"  width="22"  height="22"  viewBox="0 0 24 24"  fill="currentColor"  class="icon icon-tabler icons-tabler-filled icon-tabler-toggle-left"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 9a3 3 0 1 1 -3 3l.005 -.176a3 3 0 0 1 2.995 -2.824" /><path d="M16 5a7 7 0 0 1 0 14h-8a7 7 0 0 1 0 -14zm0 2h-8a5 5 0 1 0 0 10h8a5 5 0 0 0 0 -10" /></svg>
+                                    </span>
+                                </a>
+                            </td>
+                            <td>
+                                <div class="d-flex flex-row justify-content-center">
+                                    <a th:attr="onclick=|event.stopPropagation(); deleteRecord({action: '@{'/sys/router/delete/'+${model.id}}', method: 'POST'})|" style="cursor: pointer; align-content: center;" title="Delete" class="btn btn-sm">
+                                        <i class="fas fa-trash-alt" style="color: #ff0000;"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr th:if="${models?.size() == 0}">
+                            <td colspan="100">No result</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <hungtvt-pagination th:replace="buu-component :: pagination(${pageNo}, ${totalPage}, ${pageSize}, 'buuPageSize', 'buuPagination')"></hungtvt-pagination>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script layout:fragment="content_page_script">
+    function reset1(){
+        $("table tr.active").removeClass("active");
+    }
+
+    function activeRowImpl(e) {
+        activeRowTable(e, (tr) => {
+            if (tr.hasClass('active')) {
+                $('#id').val(null);
+                $('#routerLink').val(null);
+                $('#des').val(null);
+            } else {
+                $('#id').val(tr.attr('data-id'));
+                $('#routerLink').val(tr.find('.mark-router-link').text());
+                $('#des').val(tr.find('.mark-des').text());
+            }
+        })
+    }
+
+    function toggleStatusImpl(e, action, method, id) {
+        e.stopPropagation();
+        toggleStatus(e, action, method, id, (statusAfterUpdate) => {
+            $(e.target).closest('a').html(statusAfterUpdate == 1 ?
+                `
+                    <span title="Active">
+                        <svg  xmlns="http://www.w3.org/2000/svg"  width="22"  height="22"  viewBox="0 0 24 24"  fill="#16a2bc"  class="icon icon-tabler icons-tabler-filled icon-tabler-toggle-right"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M16 9a3 3 0 1 1 -3 3l.005 -.176a3 3 0 0 1 2.995 -2.824" /><path d="M16 5a7 7 0 0 1 0 14h-8a7 7 0 0 1 0 -14zm0 2h-8a5 5 0 1 0 0 10h8a5 5 0 0 0 0 -10" /></svg>
+                    </span>
+                ` :
+                `
+                    <span title="Block">
+                        <svg  xmlns="http://www.w3.org/2000/svg"  width="22"  height="22"  viewBox="0 0 24 24"  fill="currentColor"  class="icon icon-tabler icons-tabler-filled icon-tabler-toggle-left"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 9a3 3 0 1 1 -3 3l.005 -.176a3 3 0 0 1 2.995 -2.824" /><path d="M16 5a7 7 0 0 1 0 14h-8a7 7 0 0 1 0 -14zm0 2h-8a5 5 0 1 0 0 10h8a5 5 0 0 0 0 -10" /></svg>
+                    </span>
+                `);
+        });
+    }
+
+
+</script>
+</body>
+</html>

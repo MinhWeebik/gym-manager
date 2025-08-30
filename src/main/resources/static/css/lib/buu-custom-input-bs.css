@@ -1,0 +1,87 @@
+.buu-wrapper-config {
+    transform: scale(1);
+    transform-origin: center;
+    opacity: 1;
+    animation: wrapperConfigShow 0.3s ease-in;
+}
+@keyframes wrapperConfigShow {
+    0% {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+.buu-show ~ p {
+    display: block !important;
+}
+.form-control {
+    outline: none;
+    padding: .3rem .75rem;
+    line-height: 1.5;
+    color: #495057;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid #adb3ba;
+    border-radius: .25rem;
+    transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+}
+.form-control:focus {
+    border-color: #63d9ec;
+    box-shadow: inset 0 0 0 transparent, 0 0 0 .2rem rgba(23, 162, 184, .25);
+}
+
+.select2-selection.select2-selection--single {
+    border: 1px solid #adb3ba;
+    border-radius: .25rem;
+    transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+}
+.select2-selection.select2-selection--single:focus {
+    border-color: #63d9ec;
+    box-shadow: inset 0 0 0 transparent, 0 0 0 .2rem rgba(23, 162, 184, .25);
+}
+
+.btn {
+    display: inline-block;
+    font-weight: 400;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    border: 1px solid transparent;
+    padding: .375rem .75rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    border-radius: .25rem;
+    transition: color .15s ease-in-out, background-color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+}
+.btn-primary {
+    color: #fff;
+    background-color: #17a2b8;
+    border-color: #17a2b8;
+}
+.btn-primary:focus {
+    color: #fff;
+    background-color: #17a2b8;
+    border-color: #17a2b8;
+    box-shadow: 0 0 0 .2rem rgba(23, 162, 184, .5);
+}
+.btn-primary:hover {
+    color: #fff;
+    background-color: #138496;
+    border-color: #117a8b;
+}
+.btn-primary:not(:disabled):not(.disabled).active, .btn-primary:not(:disabled):not(.disabled):active, .show>.btn-primary.dropdown-toggle {
+    color: #fff;
+    background-color: #117a8b;
+    border-color: #10707f;
+}
+
+.custom-switch .custom-control-input:disabled:checked~.custom-control-label::before {
+    background-color: rgba(23, 162, 184, .5);
+}

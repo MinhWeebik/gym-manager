@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="editMemberSubscription" class="modal fade" id="editMemberSubscriptionModal" tabindex="-1" role="dialog" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <form th:action="@{/subscription/save}" method="post" th:object="${model}" enctype="multipart/form-data">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Cập nhật gói</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <input hidden="hidden" name="id" th:value="*{id}"/>
+                        <input hidden="hidden" name="paypalSubscriptionId" th:value="*{paypalSubscriptionId}"/>
+                        <input hidden="hidden" name="isRecurring" th:value="*{isRecurring}"/>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <div th:insert="component :: input-date-ranger-v3('Ngày bắt đầu và kết thúc', 'startEndString', *{startEndString}, true, false, 'DD/MM/YYYY', 3, 0, false)"></div>
+                                <p th:if="${#fields.hasErrors('startEndString')}" th:errors="*{startEndString}" class="text-danger m-0"></p>
+                            </div>
+<!--                            <div class="form-group">-->
+<!--                                <div th:replace="component :: input-enable-v3('Định kỳ', 'isRecurring', *{isRecurring}, false, 'Có', 'Không')"></div>-->
+<!--                                <p th:if="${#fields.hasErrors('isRecurring')}" th:errors="*{isRecurring}" class="text-danger m-0"></p>-->
+<!--                            </div>-->
+                            <div th:with="
+                                    options=${T(java.util.Arrays).asList(-1, 'Đã hủy', 0, 'Hết hạn', 1, 'Hoạt động', 2, 'Đang chờ')}">
+                                <div th:replace="component :: select-default-v2('Trạng thái', 'status', *{status}, true, false, ${options})"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <div th:insert="component :: input-number-v2('Số buổi đã đi', 'numberOfVisit', *{numberOfVisit}, 0, null, false, false, false)"></div>
+                                <p th:if="${#fields.hasErrors('numberOfVisit')}" th:errors="*{numberOfVisit}" class="text-danger m-0"></p>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+
+                    <button type="button" class="btn btn-danger" th:disabled="${model.isRecurring == 0
+              or model.paypalSubscriptionId == null
+              or model.paypalSubscriptionId == ''
+              or model.status != 1}">Hủy định kỳ</button>
+                    <button type="button" class="btn btn-primary" th:disabled="${model.isRecurring == 1
+              or model.paypalSubscriptionId == null
+              or model.paypalSubscriptionId == ''
+              or model.status != 1}">Đăng ký định kỳ lại</button>
+                    <button type="submit" class="btn btn-success mr-2">Lưu</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div th:fragment="memberSubscriptionDetail" class="modal fade" id="memberSubscriptionDetail">
+<div class="modal-dialog modal-dialog-centered modal-sm-2">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h4 class="modal-title">Chi tiết</h4>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <div class="modal-body">
+            <table class="table custom-table table-bordered table-sm table-striped">
+                <tbody id="body-detail">
+                <tr>
+                    <td style="font-weight: bold;">Tên gói</td>
+                    <td th:text="${model.membership.name}"></td>
+                </tr>
+                <tr>
+                    <td style="font-weight: bold;">Ngày bắt đầu</td>
+                    <td th:text="${#dates.format(new java.util.Date(model.startAt), 'dd/MM/yyyy')}"></td>
+                </tr>
+                <tr>
+                    <td style="font-weight: bold;">Ngày kết thúc</td>
+                    <td th:text="${#dates.format(new java.util.Date(model.endAt), 'dd/MM/yyyy')}"></td>
+                </tr>
+                <tr>
+                    <td style="font-weight: bold;">Trạng thái</td>
+                    <td>
+                        <span th:if="${model.status == 2}" class="badge badge-warning" style="white-space: normal; cursor: pointer">Đang chờ</span>
+                        <span th:if="${model.status == 1}" class="badge badge-success" style="white-space: normal; cursor: pointer">Hoạt động</span>
+                        <span th:if="${model.status == 0}" class="badge badge-secondary" style="white-space: normal; cursor: pointer;">Hết hạn</span>
+                        <span th:if="${model.status == -1}" class="badge badge-danger" style="white-space: normal; cursor: pointer;">Đã hủy</span>
+                    </td>
+                </tr>
+                <tr th:if="${model.membership.totalVisit != null and model.membership.totalVisit != 0}">
+                    <td style="font-weight: bold;">Số buổi đã đi</td>
+                    <td th:text="${model.numberOfVisit + ' của ' + model.membership.totalVisit}" style="align-content: center;"></td>
+                </tr>
+                <tr>
+                    <td style="font-weight: bold;">Định kỳ</td>
+                    <td>
+                        <span th:if="${model.isRecurring == 1}" class="badge badge-success" style="white-space: normal; cursor: pointer">Có</span>
+                        <span th:if="${model.isRecurring == 0}" class="badge badge-danger" style="white-space: normal; cursor: pointer;">Không</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="font-weight: bold;">Giá</td>
+                    <td th:text="${'$' + model.membership.price}"></td>
+                </tr>
+                <tr>
+                    <td style="font-weight: bold;">Loại gói</td>
+                    <td>
+                        <span th:if="${model.membership.type == 0}" class="badge badge-success" style="white-space: normal; cursor: pointer">Gói thường</span>
+                        <span th:if="${model.membership.type == 1}" class="badge badge-warning" style="white-space: normal; cursor: pointer;">Gói thêm</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="font-weight: bold;">Ngày tạo</td>
+                    <td th:text="${#dates.format(new java.util.Date(model.createdAt), 'dd/MM/yyyy')}"></td>
+                </tr>
+                <tr>
+                    <td style="font-weight: bold;">Ngày sửa</td>
+                    <td th:text="${#dates.format(new java.util.Date(model.updatedAt), 'dd/MM/yyyy')}"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="modal-footer justify-content-end">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+        </div>
+    </div>
+</div>
+</div>
+
+</body>
+</html>
+
+  

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en" layout:decorate="~{cms_layout_1.html}"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/3.3.4/css/bootstrap3/bootstrap-switch.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/3.3.4/js/bootstrap-switch.min.js"></script>
+    <style>
+        textarea{
+            height: 172px !important;
+        }
+    </style>
+</head>
+<body>
+<div class="content" layout:fragment="page_content">
+    <div class="container-fluid">
+        <div class="card card-default">
+            <div class="card-body">
+                <form th:action="@{/music/publisher/save}" method="post" th:object="${form}" enctype="multipart/form-data">
+                    <div class="row">
+                        <input hidden th:field="*{id}"/>
+
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <div th:insert="component :: input-text(#{name}, 'name', *{name}, 0, 255, true, false)"></div>
+                                <p th:if="${#fields.hasErrors('name')}" th:errors="*{name}" class="text-danger m-0"></p>
+                            </div>
+                            <div class="form-group">
+                                <div th:insert="component :: textarea-v2(#{description}, 'description', *{description}, 5, 0, 10000, true, false, false)"></div>
+                                <p th:if="${#fields.hasErrors('description')}" th:errors="*{description}" class="text-danger m-0"></p>
+                            </div>
+                            <div class="form-group">
+                                <div th:insert="component :: input-datetimepicker(#{birthday}, 'birthdayDateString', *{birthdayDateString}, 'DD/MM/YYYY', true, false)"></div>
+                                <p th:if="${#fields.hasErrors('birthdayDateString')}" th:errors="*{birthdayDateString}" class="text-danger m-0"></p>
+                            </div>
+                            <div class="form-group">
+                                <div th:replace="component :: input-enable-v2(#{status}, 'status', *{status == null ? 0 : status}, false)"></div>
+                                <p th:if="${#fields.hasErrors('status')}" th:errors="*{status}" class="text-danger m-0"></p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <div style="max-width: 250px;" th:insert="component :: crop-image(imageUpload, #{avatar}, ${image}, 250, 1, 1, 250, 250)"></div>
+                                <p th:if="${#fields.hasErrors('imageUpload')}" th:errors="*{imageUpload}" class="text-danger m-0"></p>
+                            </div>
+                        </div>
+                        <div class="col-12 text-center mt-2">
+                            <a th:href="@{/music/publisher/index}" type="button" class="btn btn-danger mx-2">
+                                <i class="fa-solid fa-arrow-left"></i><span class="px-2">Back</span>
+                            </a>
+                            <button type="submit" class="btn btn-primary mx-2">
+                                <i class="fa-regular fa-floppy-disk"></i><span class="px-2">Save</span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script layout:fragment="content_page_script">
+
+</script>
+</body>
+</html>

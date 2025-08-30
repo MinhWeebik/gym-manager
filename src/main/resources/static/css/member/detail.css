@@ -1,0 +1,130 @@
+.member-name-label {
+    font-size: clamp(24px, 1vw, 28px);
+}
+
+.member-id-label {
+    font-size: clamp(18px, 1vw, 22px);
+    font-weight: bold;
+}
+
+.pfp-container {
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    aspect-ratio: 1 / 1;
+    justify-content: center;
+    align-items: center;
+    background-color: white;
+    border-radius: 5px;
+}
+
+.rounded-circle {
+    width: 80%;
+    height: 80%;
+    object-fit: cover;
+    border-radius: 50%;
+    margin-bottom: 10px;
+}
+
+.detail-button {
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    width: 100%;
+    padding-top: 7px;
+    padding-bottom: 7px;
+    background-color: white;
+    border: none;
+    font-size: clamp(14px, 1vw, 19px);
+    margin-top: 20px;
+    border-radius: 5px;
+}
+
+.detail-button:hover {
+    box-shadow: 0 8px 20px rgba(0, 123, 255, 0.6);
+    transition: box-shadow 0.2s ease;
+}
+
+.detail-button:active {
+    box-shadow: 0 8px 20px rgba(0, 86, 179, 0.8);
+    transition: box-shadow 0.2s ease;
+}
+
+.tab-style {
+    border-color: darkgrey;
+    border-width: 1px;
+    border-style: solid;
+    border-top: none;
+    background-color: white;
+}
+
+.nav-tabs .nav-link {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #495057;
+    background-color: #e5e4eb;
+    border: 1px solid darkgrey;
+    border-bottom: none;
+}
+
+.nav-tabs .nav-link:hover {
+    border: 1px solid darkgrey;
+    background: lightgrey;
+    border-bottom: none;
+}
+
+.nav-tabs .nav-link.active {
+    border: 1px solid darkgrey;
+    border-bottom: none;
+}
+
+.detail-title {
+    font-size: 1.3rem;
+    font-weight: bold;
+
+}
+
+.detail-title-container {
+    border-bottom: 1px solid lightgrey;
+    padding-bottom: 10px;
+}
+
+.detail-content-container {
+    padding-left: 15px;
+    padding-right: 15px;
+    margin-top: 15px;
+}
+
+.label-fixed {
+    width: 100px;  /* same label width */
+    font-size: 0.9rem
+}
+
+.input-group .form-control {
+    flex: 1 1 auto;   /* make input grow same as normal fields */
+}
+
+.radio-group {
+    flex: 1; /* take full remaining width like input fields */
+}
+
+.extra-info-text {
+    font-size: clamp(16px, 1vw, 21px);
+    color: #6c757d;
+    margin-bottom: 4px;
+    padding-left: 25px;
+}
+
+.extra-info-text span{
+    font-size: clamp(16px, 1vw, 21px);
+    color: #6c757d;
+}
+
+#camera-stream {
+    max-width: 100%;
+    border-radius: 5px;
+    background-color: #333;
+}
+
+.current-member-title {
+    font-size: 1.2rem;
+    font-weight: bold;
+}

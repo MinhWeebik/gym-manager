@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en" layout:decorate="~{cms_layout_1.html}"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+</head>
+<body>
+<div class="content" layout:fragment="page_content">
+    <div class="container-fluid">
+        <div class="card card-default">
+            <div class="card-body">
+                <table class="table custom-table table-bordered table-sm table-striped">
+                    <tbody>
+                    <tr>
+                        <td style="font-weight: bold;" th:text="#{name}">Name</td>
+                        <td th:text="${model.roleName}"></td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: bold;" th:text="#{des}">Description</td>
+                        <td th:text="${model.description}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card card-default">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-5">
+                        <div class="form-group" th:insert="component :: input-text('Search unowned router', 'searchUnownedRouter', '', 0, 255, false, false)"></div>
+                        <form th:action="@{/sys/router-role/createOrDelete}" method="POST" id="formCreate">
+                            <input hidden name="roleId" th:value="${model.id}">
+                            <input hidden name="type" value="true">
+                            <select id="selectUnownedRouter" size="15" name="routerIds" multiple required class="form-control">
+                                <option th:each="router : ${unownedRoutes}" th:value="${router.id}"
+                                        th:text="${router.des + ': ' + router.routerLink}"></option>
+                            </select>
+                        </form>
+                    </div>
+                    <div class="col-2 d-flex justify-content-center align-items-center flex-column">
+                        <button style="padding: 4px 8px !important;" type="button" onclick="$('#formCreate').submit();" class="btn btn-sm btn-primary mb-2">
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                        <button style="padding: 4px 8px !important;" type="button" onclick="$('#formDelete').submit();" class="btn btn-sm btn-primary">
+                            <i class="fa-solid fa-arrow-left"></i>
+                        </button>
+                    </div>
+                    <div class="col-5">
+                        <div class="form-group" th:insert="component :: input-text('Search owned router', 'searchOwnedRouter', '', 0, 255, false, false)"></div>
+                        <form th:action="@{/sys/router-role/createOrDelete}" method="POST" id="formDelete">
+                            <input hidden name="roleId" th:value="${model.id}">
+                            <input hidden name="type" value="false">
+                            <select id="selectOwnedRouter" size="15" name="routerIds" multiple required class="form-control">
+                                <option th:each="routerRole : ${ownedRoutes}" th:value="${routerRole.router.id}"
+                                        th:text="${routerRole.router.des + ': ' + routerRole.router.routerLink}"></option>
+                            </select>
+                        </form>
+                    </div>
+                    <div class="col-12">
+                        <a th:href="@{/sys/role/index}" type="button" class="btn btn-danger mt-3">
+                            <i class="fa-solid fa-arrow-left"></i><span class="px-2">Back</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- PAGE JAVASCRIPT CODE -->
+<script layout:fragment="content_page_script">
+    function searchFunction(selectorInput, selectorSelect) {
+        var input, filter, select, options, i, txtValue;
+        input = document.getElementById(selectorInput);
+        filter = input.value.toLowerCase();
+        select = document.getElementById(selectorSelect);
+        options = select.getElementsByTagName("option");
+
+        for (i = 0; i < options.length; i++) {
+            txtValue = options[i].text;
+            if (txtValue.toLowerCase().indexOf(filter) > -1) {
+                options[i].style.display = "";
+            } else {
+                options[i].style.display = "none";
+            }
+        }
+    }
+
+    $('#searchUnownedRouter').on('input', (e) => {
+        searchFunction('searchUnownedRouter', 'selectUnownedRouter')
+    });
+    $('#searchOwnedRouter').on('input', (e) => {
+        searchFunction('searchOwnedRouter', 'selectOwnedRouter')
+    });
+</script>
+</body>
+</html>

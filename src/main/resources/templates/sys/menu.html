@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en" layout:decorate="~{cms_layout_1.html}"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+</head>
+<body>
+<!-- Main content -->
+<div class="content" layout:fragment="page_content">
+    <div class="container-fluid">
+        <div class="card card-default">
+            <div class="card-body">
+                <form th:action="@{/sys/menu/index}" method="get">
+                    <div class="row">
+                        <div class="col-4" th:insert="component :: select2-v2('GET', 'Menu', 'parentNameId', ${parentNameId}, '/sys/menu/ajax-search-2', 'Input...', ${parentNameMenu} , false, false, 0, null)"></div>
+                        <div class="col-4 d-flex" style="align-items: start; margin-top:5px; padding-top: 24px;">
+                            <button type="submit" style="cursor: pointer; padding: 4px 10px;" class="btn btn-primary my-0 mx-1">
+                                <i class="fas fa-search"></i><span class="px-2">Search</span>
+                            </button>
+                            <a th:href="@{/sys/menu/form}" style="cursor: pointer;" class="btn btn-primary my-0 mx-1">
+                                <i class="fas fa-plus"></i><span class="px-2" th:text="#{create}"></span>
+                            </a>
+                        </div>
+                    </div>
+                </form>
+                <div class="table-responsive mb-2 mt-3">
+                    <table id="table-list" class="table table-sm custom-table table-bordered table-hover text-center" style="table-layout: auto; width: 100%; font-weight: 600;">
+                        <thead class="thead-light align-content-center">
+                        <tr>
+                            <th style="width: 0%" th:text="#{no}"></th>
+                            <th th:text="#{menuPa}">Menu parent</th>
+                            <th th:text="#{name}"></th>
+                            <th style="width: 0%" th:text="#{loca}"></th>
+                            <th th:text="#{path}"></th>
+                            <th style="width: 0%"></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr onclick="activeRowTable(event)" th:each="model,item : ${models}" th:attr="data-id=${model.id}">
+                            <td  class="text-center" style="align-content: center;"
+                                 th:text="${item.index + pageSize * pageNo - (pageSize - 1)}">
+                            </td>
+                            <td class="px-3" th:text="${model.parentName?.nameEn}" style="align-content: center; text-align: start;"></td>
+                            <td class="px-3" th:text="${model.nameEn}" style="align-content: center; text-align: start;"></td>
+                            <td class="text-center" th:text="${model.orderNum}" style="align-content: center;"></td>
+                            <td class="px-3" th:text="${model.router?.routerLink}" style="align-content: center; text-align: start;"></td>
+                            <td>
+                                <div class="d-flex flex-row justify-content-center">
+                                    <a th:href="@{'/sys/menu/form?id=' + ${model.id}}" class="btn" title="Edit">
+                                        <i class="far fa-edit" style="color: #00709e;"></i>
+                                    </a>
+                                    <a th:attr="onclick=|event.stopPropagation(); deleteRecord({action: '@{'/sys/menu/delete/'+${model.id}}', method: 'POST'})|" style="cursor: pointer; align-content: center;" title="Delete" class="btn btn-sm">
+                                        <i class="fas fa-trash-alt" style="color: #ff0000;"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr th:if="${models?.size() == 0}">
+                            <td colspan="100">No result</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <hungtvt-pagination th:replace="buu-component :: pagination(${pageNo}, ${totalPage}, ${pageSize}, 'buuPageSize', 'buuPagination')"></hungtvt-pagination>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- PAGE JAVASCRIPT CODE -->
+<script layout:fragment="content_page_script">
+
+</script>
+</body>
+</html>
