@@ -128,3 +128,7 @@
     font-size: 1.2rem;
     font-weight: bold;
 }
+
+.links a { color: #0070ba; text-decoration: none; text-align: center; }
+.links a:hover { text-decoration: underline; }
+.links { margin-top: 15px; display: flex; flex-direction: column; gap: 10px; }

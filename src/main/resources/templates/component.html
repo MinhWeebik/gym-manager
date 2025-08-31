@@ -203,7 +203,7 @@
                 },
                 placeholder: [[${title}]],
                 minimumInputLength: 1,
-                allowClear: true
+                allowClear: true,
             });
         </script>
     </div>
@@ -282,6 +282,46 @@
                 placeholder: [[${title}]],
                 minimumInputLength: [[${minimumInputLength}]],
                 allowClear: true
+            });
+        </script>
+    </div>
+
+    <div th:fragment="select2-v4(method, label, name, value, url, title, text, required, disabled, minimumInputLength, additionalParams)">
+        <label th:for="${name}"><span>[[${label}]] <span th:if="${required}" style="color: red;">*</span></span></label>
+        <select th:id="${name}" th:name="${name}" class="form-control" th:required="${required}" th:disabled="${disabled}" style="width: 100%">
+            <option th:value="${value}" th:text="${text}"></option>
+        </select>
+        <script th:inline="javascript">
+            $('#' + [[${name}]]).select2({
+                ajax: {
+                    type: [[${method}]],
+                    url: [[${@environment.getProperty('server.servlet.context-path') + url}]],
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        let query = {
+                            input: params.term
+                        }
+                        let additionalParams = [[${additionalParams}]];
+                        console.log(additionalParams);
+                        if(additionalParams != null) {
+                            additionalParams.forEach(param => {
+                                query[param.value] = param.text;
+                            });
+                        }
+                        return query;
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data
+                        };
+                    },
+                    cache: true
+                },
+                placeholder: [[${title}]],
+                minimumInputLength: [[${minimumInputLength}]],
+                allowClear: true,
+                dropdownParent: $('#addMemberSubscription .modal-content')
             });
         </script>
     </div>

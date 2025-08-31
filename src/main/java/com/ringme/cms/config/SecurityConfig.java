@@ -70,7 +70,9 @@ public class SecurityConfig {
                         "/vendor/**",
                         "/webjars/**",
                         "/actuator/**",
-                        "/sys/**").permitAll()
+                        "/sys/**",
+                        "/payment/**",
+                        "/membership/ajax-search/**").permitAll()
                 .antMatchers("/**").authenticated().and()
 
                 .addFilterBefore(captchaFilter(), UsernamePasswordAuthenticationFilter.class)

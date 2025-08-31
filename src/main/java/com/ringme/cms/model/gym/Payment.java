@@ -23,9 +23,9 @@ public class Payment {
     private String description;
 
     @Column(name = "amount")
-    private Integer amount;
+    private Long amount;
 
-    @Column(name = "status")
+    @Column(name = "status") //-1 failed, 0 inactive, 1 success, 2 pending
     private Integer status;
 
     @Column(name = "payment_gateway")
@@ -33,6 +33,15 @@ public class Payment {
 
     @Column(name = "gateway_transaction_id")
     private String gatewayTransactionId;
+
+    @Column(name = "type") //0 refund, 1 purchase
+    private Integer type;
+
+    @Column(name = "payment_url")
+    private String paymentUrl;
+
+    @Column(name = "transaction_date")
+    private LocalDateTime transactionDate;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;

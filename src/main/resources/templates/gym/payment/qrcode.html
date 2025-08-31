@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scan QR Code to Pay</title>
+    <style>
+        /* Basic reset */
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+        }
+        /* Flexbox magic to perfectly center the content */
+        body {
+            display: flex;
+            justify-content: center; /* Center horizontally */
+            align-items: center;    /* Center vertically */
+            background-color: #f4f4f4; /* A light grey background */
+        }
+        /* Style for the image itself */
+        img {
+            max-width: 90%;
+            max-height: 90%;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            border-radius: 8px;
+        }
+        /* Style for the error message if the image fails to load */
+        .error {
+            font-family: sans-serif;
+            color: #dc3545;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Display the QR code image if it exists in the model -->
+<img th:if="${qrCodeImage}"
+     th:src="@{'data:image/png;base64,' + ${qrCodeImage}}"
+     alt="PayPal Payment QR Code"/>
+
+<!-- Display an error message if the 'error' attribute exists instead -->
+<div th:if="${error}" class="error">
+    <p th:text="${error}"></p>
+</div>
+
+</body>
+</html>

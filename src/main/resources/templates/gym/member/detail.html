@@ -244,8 +244,8 @@
                     <div class="tab-pane fade" id="membership" role="tabpanel" th:classappend="${tab == 2 ? 'show active' : ''}">
                         <div class="container-fluid pt-2" >
                             <div class="d-flex justify-content-center align-items-center">
-                                <button type="button" class="btn btn-secondary mr-1"><i class="fas fa-plus"></i> Đăng ký gói</button>
-                                <button type="button" class="btn btn-secondary ml-1"><i class="fas fa-money-bill"></i> Thanh toán</button>
+                                <button type="button" class="btn btn-secondary mr-1 open-modal-class" th:data-url="${@environment.getProperty('domain.app') + '/nexia-cms/subscription/create?id=' + model.id}"><i class="fas fa-plus"></i> Đăng ký gói</button>
+                                <button type="button" class="btn btn-secondary ml-1 open-modal-class" th:data-url="${@environment.getProperty('domain.app') + '/nexia-cms/payment/create?id=' + model.id}"><i class="fas fa-money-bill"></i> Thanh toán</button>
                             </div>
 
                             <div class="card card-default mx-3 mt-3">
@@ -347,7 +347,7 @@
                                                 <td th:if="${model.membership.totalVisit != null and model.membership.totalVisit != 0}" th:text="${model.numberOfVisit + ' của ' + model.membership.totalVisit}" style="align-content: center;"></td>
                                                 <td style="align-content: center;">
                                                     <div class="d-flex flex-row justify-content-center">
-                                                        <a th:href="@{'/music/audiobook/form?id=' + ${model.id}}" class="btn" title="Sửa">
+                                                        <a class="btn open-modal-class" title="Sửa" th:data-url="${@environment.getProperty('domain.app') + '/nexia-cms/subscription/update?id=' + model.id}">
                                                             <i class="far fa-edit" style="color: #00709e;"></i>
                                                         </a>
                                                         <a th:attr="onclick=|event.stopPropagation(); deleteRecord({action: '@{'/music/audiobook/delete/'+${model.id}}', method: 'POST'})|" style="cursor: pointer; align-content: center;" title="Hủy gói" class="btn btn-sm">
@@ -436,11 +436,41 @@
         </form>
         </div>
     <div id="modal-container"></div>
+    <div id="qr-code-modal">
+        <div class="modal fade" id="paypalQrCode" tabindex="-1" role="dialog" data-backdrop="static" data-keyboard="false">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Mã thanh toán</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="links">
+                                <img th:src="@{'data:image/png;base64,' + ${qrCodeImage}}" alt="PayPal QR Code"/>
+                                <a th:href="@{/payment/qr-image(url=${payPalLink})}" onclick="openQrWindow(this.href); return false;" >
+                                    Mở mã QR ở tab mới
+                                </a>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                        </div>
+                    </div>
+            </div>
+        </div>
+    </div>
     </div>
 
 
 <!-- PAGE JAVASCRIPT CODE -->
 <script layout:fragment="content_page_script">
+    var qrModel = "[[${qrCodeImage}]]"
+    if(qrModel !== null && qrModel !== "")
+    {
+        $('#paypalQrCode').modal('show');
+    }
     $(".content-header").remove();
     $('input[name="option"]').on('change', function() {
         $('#gender').val($(this).val());
@@ -466,11 +496,12 @@
     $('.open-modal-class').on('click', function(e) {
         e.preventDefault();
         const url = $(this).data('url');
-        console.log(url);
 
         $('#modal-container').load(url, function() {
             $('#editMemberSubscriptionModal').modal('show');
             $('#memberSubscriptionDetail').modal('show');
+            $('#addPayment').modal('show');
+            $('#addMemberSubscription').modal('show');
         });
     });
 
@@ -491,6 +522,101 @@
         // Update the URL in the browser without reloading the page
         window.history.pushState({ path: url.href }, '', url.href);
     });
+
+    $('.modal').on('show.bs.modal', function() {
+
+        const openModal = $('.modal.show');
+
+        if (openModal.length > 0) {
+            openModal.modal('hide');
+        }
+    });
+
+    function openQrWindow(url) {
+        // Define the dimensions and properties of the new window
+        const windowWidth = 500;
+        const windowHeight = 500;
+
+        // Calculate the position to center the window on the screen
+        const left = (screen.width / 2) - (windowWidth / 2);
+        const top = (screen.height / 2) - (windowHeight / 2);
+
+        // Define the features of the window (no toolbars, menus, etc.)
+        const windowFeatures = `
+                width=${windowWidth},
+                height=${windowHeight},
+                top=${top},
+                left=${left},
+                menubar=no,
+                toolbar=no,
+                location=no,
+                status=no,
+                resizable=yes,
+                scrollbars=no
+            `;
+
+        // Open the new window
+        window.open(url, "qrCodeWindow", windowFeatures);
+    }
+
+    const paymentId = "[[${paymentId}]]";
+    const shouldReload = "[[${shouldReload}]]"
+
+    if (paymentId !== null && paymentId !== "" ) {
+        const pollingInterval = setInterval(checkStatus, 3000);
+
+        async function checkStatus() {
+            try {
+                const response = await fetch(`http://localhost:8086/nexia-cms/payment/status?paymentId=${paymentId}`);
+                const data = await response.json();
+                if (data.status === 1) {
+                    clearInterval(pollingInterval);
+                    const openModal = $('.modal.show');
+
+                    if (openModal.length > 0) {
+                        openModal.modal('hide');
+                    }
+
+                    if(shouldReload !== null && shouldReload!== "" && shouldReload === "true")
+                    {
+                        toastSuccess("Thanh toán thành công", 3000);
+                        setTimeout(function() {
+                            window.location.href = window.location.href;
+                        }, 3000);
+                    }
+                    else {
+                        toastSuccess("Thanh toán thành công", 4000);
+                    }
+                }
+                else if(data.status === -1)
+                {
+                    clearInterval(pollingInterval);
+                    const openModal = $('.modal.show');
+
+                    if (openModal.length > 0) {
+                        openModal.modal('hide');
+                    }
+
+                    if(shouldReload !== null && shouldReload!== "" && shouldReload === "true")
+                    {
+                        toastError("Thanh toán đã hủy", 3000);
+                        setTimeout(function() {
+                            window.location.href = window.location.href;
+                        }, 3000);
+                    }
+                    else {
+                        toastError("Thanh toán đã hủy", 4000);
+                    }
+                }
+
+            } catch (error) {
+                console.error('Error during polling:', error);
+                clearInterval(pollingInterval);
+            }
+        }
+
+
+    }
 
     $(() => {
         let id = 'image';

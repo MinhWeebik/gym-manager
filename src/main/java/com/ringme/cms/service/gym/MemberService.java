@@ -1,10 +1,9 @@
-package com.ringme.cms.service.music;
+package com.ringme.cms.service.gym;
 
 import com.ringme.cms.common.UploadFile;
 import com.ringme.cms.dto.gym.MemberDto;
 import com.ringme.cms.model.gym.Member;
 import com.ringme.cms.model.gym.MemberSubscription;
-import com.ringme.cms.model.gym.Membership;
 import com.ringme.cms.repository.gym.MemberRepository;
 import com.ringme.cms.repository.gym.MemberSubscriptionRepository;
 import lombok.RequiredArgsConstructor;
@@ -18,10 +17,8 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.nio.file.Path;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service

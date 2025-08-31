@@ -131,6 +131,175 @@
 </div>
 </div>
 
+<div th:fragment="addPayment" class="modal fade" id="addPayment" tabindex="-1" role="dialog" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <form th:action="@{/payment/save-cash}" method="post" th:object="${model}" enctype="multipart/form-data" id="create-payment-form">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Thanh toán</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <input hidden="hidden" name="memberId" th:value="*{memberId}"/>
+                        <input hidden="hidden" name="tab" th:value="*{tab}" id="payment-hidden-tab"/>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <div th:insert="component :: input-text('Mô tả', 'description', *{description}, 0, 255, true, false)"></div>
+                                <p th:if="${#fields.hasErrors('description')}" th:errors="*{description}" class="text-danger m-0"></p>
+                            </div>
+                            <div th:with="
+                                    options=${T(java.util.Arrays).asList('paypal', 'Paypal', 'cash', 'Tiền mặt')}">
+                                <div th:replace="component :: select-default-v2('Phương thức', 'paymentGatewaySelect', *{paymentGateway}, true, false, ${options})"></div>
+                            </div>
+                            <input hidden="hidden" name="paymentGateway" id="paymentGateway"></input>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <div th:insert="component :: input-number-v2('Số tiền', 'amount', *{amount}, 1, null, false, false, false)"></div>
+                                <p th:if="${#fields.hasErrors('amount')}" th:errors="*{amount}" class="text-danger m-0"></p>
+                            </div>
+                            <div th:with="
+                                    options=${T(java.util.Arrays).asList( 1, 'Thu phí', 0, 'Hoàn trả')}">
+                                <div th:replace="component :: select-default-v2('Loại thanh toán', 'type', *{type}, true, false, ${options})"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-success mr-2" id="create-payment">Thanh toán</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                </div>
+            </div>
+        </form>
+    </div>
+    <script th:inline="javascript">
+        $(function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            var tab = urlParams.get("tab");
+            if(tab == null) tab = 1
+            $("#payment-hidden-tab").val(tab)
+            $("#paymentGateway").val($("#paymentGatewaySelect").val());
+            $("#paymentGatewaySelect").on("change", function() {
+                $("#paymentGateway").val($(this).val());
+            });
+            $('#addPayment #type').on('change', function() {
+                if ($(this).val() == 0) {
+                    $('#addPayment #paymentGatewaySelect').val('cash').prop('disabled', true);
+                    $("#paymentGateway").val('cash');
+                } else {
+                    $('#addPayment #paymentGatewaySelect').prop('disabled', false);
+                }
+            });
+            $("#addPayment #create-payment").click(function() {
+                if($('#addPayment #paymentGateway').val() == 'paypal'){
+                    var cashPayment = [[@{/payment/save-paypal}]];
+                    $("#create-payment-form").attr("action", cashPayment);
+                }
+                else {
+                    var cashPayment = [[@{/payment/save-cash}]];
+                    $("#create-payment-form").attr("action", cashPayment);
+                }
+            });
+        });
+    </script>
+</div>
+
+<div th:fragment="addMemberSubscription" class="modal fade" id="addMemberSubscription" tabindex="-1" role="dialog" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Đăng ký gói</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form th:action="@{/subscription/save}" method="post" th:object="${model}" enctype="multipart/form-data">
+                    <div class="modal-body">
+                        <input hidden="hidden" name="memberId" th:value="*{memberId}"></input>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <div th:insert="component :: select2-v4('GET', 'Các gói', 'membershipId', *{membershipId}, '/membership/ajax-search',' Nhập gói', '' , true, false, 0, null)"></div>
+                                    <p th:if="${#fields.hasErrors('membershipId')}" th:errors="*{membershipId}" class="text-danger m-0"></p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <div th:replace="component :: input-enable-v3('Định kỳ', 'isRecurring', *{isRecurring}, false, 'Có', 'Không')"></div>
+                                    <p th:if="${#fields.hasErrors('isRecurring')}" th:errors="*{isRecurring}" class="text-danger m-0"></p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <div th:with="
+                                    options=${T(java.util.Arrays).asList('paypal', 'Paypal', 'cash', 'Tiền mặt')}">
+                                        <div th:replace="component :: select-default-v2('Phương thức', 'paymentGateway', *{paymentGateway}, true, false, ${options})"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-success mr-2">Thanh toán</button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                    </div>
+                </form>
+            </div>
+        <script>
+            $(document).ready(function() {
+                let paymentGateway = 'paypal';
+                let type = 0;
+                $('#isRecurring').val('0');
+
+                $('#paymentGateway').on('change', function() {
+                    var selected = $(this).val();
+
+                    if (selected === 'cash') {
+                        paymentGateway = 'cash'
+                        updateData()
+                    } else {
+                        paymentGateway = 'paypal';
+                        updateData()
+                    }
+                });
+
+                let value = $('#membershipId').text();
+                if(value.includes("gói thêm"))
+                {
+                    type = 1
+                    updateData()
+                }
+                $('#membershipId').on('change', function () {
+                    let value = $("#membershipId option:selected").text();
+                    if(value.includes("gói thêm"))
+                    {
+                        type = 1;
+                        updateData()
+                    }
+                    else {
+                        type = 0;
+                        updateData()
+                    }
+                });
+                function updateData() {
+                    if(type === 1 || paymentGateway === 'cash') {
+                        $('.bootstrap-switch-id-isRecurringCheck').hide();
+                        $("#isRecurringCheck").bootstrapSwitch('state', false);
+                        $("label[for='isRecurringCheck']").hide();
+                        $('#isRecurring').val('0');
+                    }
+                    else {
+                        $('.bootstrap-switch-id-isRecurringCheck').show();
+                        $("label[for='isRecurringCheck']").show();
+                    }
+                }
+            });
+        </script>
+    </div>
+</div>
 </body>
 </html>
 

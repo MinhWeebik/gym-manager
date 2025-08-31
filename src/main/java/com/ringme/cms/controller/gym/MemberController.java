@@ -1,24 +1,17 @@
 package com.ringme.cms.controller.gym;
 
 import com.ringme.cms.dto.gym.MemberDto;
-import com.ringme.cms.dto.gym.MemberSubscriptionDto;
 import com.ringme.cms.model.gym.Member;
 import com.ringme.cms.model.gym.MemberSubscription;
 import com.ringme.cms.repository.gym.MemberRepository;
 import com.ringme.cms.repository.gym.MemberSubscriptionRepository;
-import com.ringme.cms.service.music.MemberService;
+import com.ringme.cms.service.gym.MemberService;
 import com.ringme.cms.utils.AppUtils;
-import javassist.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.hibernate.Hibernate;
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.MessageSource;
-import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.ModelMap;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
@@ -26,7 +19,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
