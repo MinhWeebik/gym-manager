@@ -7,10 +7,7 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
@@ -23,12 +20,14 @@ public class MembershipController {
 
     private final MembershipService membershipService;
 
-    @GetMapping("/ajax-search")
+    @GetMapping("/ajax-search/{id}")
     @ResponseBody
-    public ResponseEntity<List<AjaxSearchDto>> membershipAjaxSearch(@RequestParam(name = "input", required = false) String input) {
+    public ResponseEntity<List<AjaxSearchDto>> membershipAjaxSearch(
+            @PathVariable Long id,
+            @RequestParam(name = "input", required = false) String input) {
         try
         {
-            return new ResponseEntity<>(membershipService.ajaxSearchMembership(input), HttpStatus.OK);
+            return new ResponseEntity<>(membershipService.ajaxSearchMembership(input,id), HttpStatus.OK);
         }
         catch (Exception e)
         {

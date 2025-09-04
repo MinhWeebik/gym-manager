@@ -15,6 +15,8 @@ public interface MembershipRepository extends JpaRepository<Membership, Long> {
             "FROM membership c " +
             "WHERE c.status = 1 " +
             "AND (:input IS NULL OR (c.id = :input OR c.name LIKE CONCAT('%', :input, '%'))) " +
+            "AND (:type IS NULL OR c.type = :type) " +
             "LIMIT 20", nativeQuery = true)
-    List<String[]> ajaxSearchMembership(@Param("input") String input);
+    List<String[]> ajaxSearchMembership(@Param("input") String input,
+                                        @Param("type") Integer type);
 }

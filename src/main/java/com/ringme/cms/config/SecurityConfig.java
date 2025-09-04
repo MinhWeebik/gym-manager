@@ -72,7 +72,9 @@ public class SecurityConfig {
                         "/actuator/**",
                         "/sys/**",
                         "/payment/**",
-                        "/membership/ajax-search/**").permitAll()
+                        "/subscription/**",
+                        "/membership/ajax-search/**",
+                        "/paypal/**").permitAll()
                 .antMatchers("/**").authenticated().and()
 
                 .addFilterBefore(captchaFilter(), UsernamePasswordAuthenticationFilter.class)

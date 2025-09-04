@@ -1,61 +1,82 @@
 package com.ringme.cms.service.gym;
 
-import com.paypal.api.payments.*;
-import com.paypal.base.rest.APIContext;
-import com.paypal.base.rest.PayPalRESTException;
+import com.paypal.core.PayPalHttpClient;
+import com.paypal.http.HttpResponse;
+import com.paypal.orders.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
+import java.io.IOException;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class PaypalService {
 
-    private final APIContext apiContext;
+    private final PayPalHttpClient payPalHttpClient;
 
-    public Payment createPayment(
-            Double total,
-            String currency,
-            String method,
-            String intent,
-            String description,
-            String cancelUrl,
-            String successUrl) throws PayPalRESTException {
+    /**
+     * Creates a one-time order using the v2 SDK.
+     * @return The created Order object, which includes the approval link.
+     */
+    public Order createOrder(Double total, String currency, String description, String cancelUrl, String successUrl) throws IOException {
+        // 1. Create the request object
+        OrdersCreateRequest request = new OrdersCreateRequest();
+        request.prefer("return=representation");
 
-        Amount amount = new Amount();
-        amount.setCurrency(currency);
-        amount.setTotal(String.format("%.0f", total));
+        // 2. Build the request body
+        OrderRequest orderRequest = new OrderRequest();
+        orderRequest.checkoutPaymentIntent("CAPTURE"); // Critical for one-time payments
 
-        Transaction transaction = new Transaction();
-        transaction.setDescription(description);
-        transaction.setAmount(amount);
+        // 3. Define the purchase unit (what the user is buying)
+        PurchaseUnitRequest purchaseUnit = new PurchaseUnitRequest()
+                .description(description)
+                .amountWithBreakdown(new AmountWithBreakdown()
+                        .currencyCode(currency)
+                        // Use Locale.US to ensure dot decimal separator, and format to 2 decimal places
+                        .value(String.format(Locale.US, "%.0f", total)));
 
-        List<Transaction> transactions = new ArrayList<>();
-        transactions.add(transaction);
+        orderRequest.purchaseUnits(List.of(purchaseUnit));
 
-        Payer payer = new Payer();
-        payer.setPaymentMethod(method);
+        // 4. Set the redirect URLs
+        orderRequest.applicationContext(new ApplicationContext()
+                .cancelUrl(cancelUrl)
+                .returnUrl(successUrl));
 
-        Payment payment = new Payment();
-        payment.setIntent(intent);
-        payment.setPayer(payer);
-        payment.setTransactions(transactions);
+        request.requestBody(orderRequest);
 
-        RedirectUrls redirectUrls = new RedirectUrls();
-        redirectUrls.setCancelUrl(cancelUrl);
-        redirectUrls.setReturnUrl(successUrl);
-        payment.setRedirectUrls(redirectUrls);
-
-        return payment.create(apiContext);
+        // 5. Execute the request
+        HttpResponse<Order> response = payPalHttpClient.execute(request);
+        return response.result();
     }
 
-    public Optional<String> getApprovalLink(Payment approvedPayment) {
-        return approvedPayment.getLinks().stream()
-                .filter(link -> "approval_url".equalsIgnoreCase(link.getRel()))
-                .map(Links::getHref)
+    /**
+     * Captures the payment for an order after the user has approved it.
+     * This replaces the old "execute payment" logic.
+     * @param orderId The ID of the order to capture (from the 'token' URL parameter).
+     * @return The captured order details.
+     */
+    public Order captureOrder(String orderId) throws IOException {
+        OrdersCaptureRequest request = new OrdersCaptureRequest(orderId);
+        // An empty request body is required for the capture call.
+        request.requestBody(new OrderRequest());
+
+        HttpResponse<Order> response = payPalHttpClient.execute(request);
+        return response.result();
+    }
+
+    /**
+     * Finds the approval link in the Order object's links.
+     * @param order The Order object returned from createOrder.
+     * @return An Optional containing the approval link URL.
+     */
+    public Optional<String> getApprovalLink(Order order) {
+        return order.links().stream()
+                // The new relation type is "approve", not "approval_url"
+                .filter(link -> "approve".equalsIgnoreCase(link.rel()))
+                .map(LinkDescription::href)
                 .findFirst();
     }
 }

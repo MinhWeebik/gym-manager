@@ -1,6 +1,8 @@
 package com.ringme.cms.service.gym;
 
 import com.ringme.cms.dto.gym.MemberSubscriptionDto;
+import com.ringme.cms.dto.gym.MonthlyPaymentDto;
+import com.ringme.cms.dto.gym.MonthlyPaymentResultDto;
 import com.ringme.cms.dto.gym.PaymentDto;
 import com.ringme.cms.model.gym.MemberSubscription;
 import com.ringme.cms.model.gym.Payment;
@@ -12,9 +14,13 @@ import lombok.extern.log4j.Log4j2;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Service
 @RequiredArgsConstructor
@@ -60,5 +66,31 @@ public class PaymentService {
             throw new NotFoundException("No payment found");
         }
         return payment.getStatus();
+    }
+
+    public Map<String ,Object> getMemberPaymentGraphData(Long memberId)
+    {
+        Map<String ,Object> map = new HashMap<>();
+        map.put("labels", List.of("Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4", "Tháng 5", "Tháng 6", "Tháng 7", "Tháng 8", "Tháng 9", "Tháng 10", "Tháng 11", "Tháng 12"));
+        List<MonthlyPaymentResultDto> dataset = new ArrayList<>();
+        MonthlyPaymentResultDto dataSetData = new MonthlyPaymentResultDto();
+        dataSetData.setLabel("Doanh thu");
+        List<BigDecimal> paymentDataPerMonth = IntStream.range(0, 12)
+                .mapToObj(i -> BigDecimal.ZERO)
+                .collect(Collectors.toList());
+        dataSetData.setBackgroundColor("rgba(54, 162, 235, 0.6)");
+        List<MonthlyPaymentDto> monthlyData = paymentRepository.findNetTotalAmountByMonthForCurrentYear(memberId);
+        if(!monthlyData.isEmpty())
+        {
+            for (MonthlyPaymentDto item : monthlyData) {
+                String[] time = item.getPaymentMonth().split("-");
+                int position = Integer.parseInt(time[1]) - 1;
+                paymentDataPerMonth.set(position, item.getNetTotalAmount());
+            }
+        }
+        dataSetData.setData(paymentDataPerMonth);
+        dataset.add(dataSetData);
+        map.put("datasets", dataset);
+        return map;
     }
 }

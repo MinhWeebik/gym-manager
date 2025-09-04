@@ -84,7 +84,7 @@ public class MemberController
                 formDto = modelMapper.map(member, MemberDto.class);
                 List<MemberSubscription> allSubscription = memberSubscriptionRepository.getAllSubscription(member.getId());
                 for (MemberSubscription memberSubscription : allSubscription) {
-                    if(memberSubscription.getStatus() == 1 || memberSubscription.getStatus() == 2)
+                    if(memberSubscription.getStatus() == 1 || memberSubscription.getStatus() == 2 || memberSubscription.getStatus() == 3)
                     {
                         if(memberSubscription.getMembership().getType() == 0)
                         {
@@ -126,7 +126,7 @@ public class MemberController
                 if(formDto.getOldSubscription() != null && !formDto.getOldSubscription().isEmpty())
                 {
                     formDto.getOldSubscription()
-                            .sort(Comparator.comparing(MemberSubscription::getEndAt).reversed());
+                            .sort(Comparator.comparing(MemberSubscription::getUpdatedAt).reversed());
                 }
                 formDto.setDateOfBirthString(member.getDateOfBirth().format(formatter));
             }

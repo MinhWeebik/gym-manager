@@ -26,7 +26,7 @@ public class MemberSubscription {
     @Column(name = "end_at")
     private LocalDate endAt;
 
-    @Column(name = "status") //-2 FROZEN, -1 CANCELLED, 0 EXPIRED, 1 ACTIVE, 2 PENDING
+    @Column(name = "status") //-2 FROZEN, -1 CANCELLED, 0 EXPIRED, 1 ACTIVE, 2 PENDING, 3 RENEWAL_FAILED
     private Integer status;
 
     @Column(name = "number_of_visit")

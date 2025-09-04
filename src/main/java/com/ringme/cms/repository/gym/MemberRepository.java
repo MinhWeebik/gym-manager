@@ -1,11 +1,14 @@
 package com.ringme.cms.repository.gym;
 
 import com.ringme.cms.model.gym.Member;
+import com.ringme.cms.model.gym.MemberSubscription;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+
+import java.util.List;
 
 public interface MemberRepository extends JpaRepository<Member,Long> {
 
@@ -67,4 +70,8 @@ public interface MemberRepository extends JpaRepository<Member,Long> {
                          @Param("gender") Integer gender,
                          @Param("email") String email,
                          @Param("phoneNumber") String phoneNumber, Pageable pageable);
+
+    @Query(value = "SELECT m.id FROM member m INNER JOIN member_subscriptions ms ON ms.member_id = m.id WHERE ms.id = :id",nativeQuery = true)
+    Long findIdByMemberSubscriptionId(@Param("id") Long id);
+
 }

@@ -1,6 +1,7 @@
 package com.ringme.cms.service.gym;
 
 import com.ringme.cms.dto.gym.MemberSubscriptionDto;
+import com.ringme.cms.dto.gym.RecalculateDto;
 import com.ringme.cms.model.gym.Member;
 import com.ringme.cms.model.gym.MemberSubscription;
 import com.ringme.cms.model.gym.Membership;
@@ -31,6 +32,8 @@ public class MemberSubscriptionService {
     private final MemberRepository memberRepository;
 
     private final MembershipRepository  membershipRepository;
+
+    private final PaypalSubscriptionService  paypalSubscriptionService;
 
     public MemberSubscription save(MemberSubscriptionDto formDto) throws Exception {
         try {
@@ -78,6 +81,7 @@ public class MemberSubscriptionService {
             } else {
                 memberSubscription = memberSubscriptionRepository.findById(formDto.getId()).orElseThrow();
                 modelMapper.map(formDto, memberSubscription);
+                memberSubscription.setStatus(formDto.getStatusSubscription());
                 memberSubscription.setUpdatedAt(LocalDateTime.now());
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
                 String[] parts = formDto.getStartEndString().split(" - ");
@@ -91,4 +95,101 @@ public class MemberSubscriptionService {
             throw new RuntimeException(e);
         }
     }
+
+    public void softDelete(Long id) throws Exception{
+        try {
+            MemberSubscription memberSubscription = memberSubscriptionRepository.findById(id).orElseThrow();
+            memberSubscription.setStatus(-1);
+            memberSubscriptionRepository.save(memberSubscription);
+            updateStartEndDate(memberRepository.findIdByMemberSubscriptionId(memberSubscription.getId()),memberSubscription.getMembership().getType());
+            if(memberSubscription.getIsRecurring() == 1 && memberSubscription.getPaypalSubscriptionId().startsWith("I-"))
+            {
+                paypalSubscriptionService.cancelSubscription(memberSubscription.getPaypalSubscriptionId(), "User requested to cancel subscription.");
+            }
+        } catch (Exception e) {
+            log.error("Exception: {}", e.getMessage(), e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void updateStartEndDate(Long memberId, Integer type)
+    {
+        List<MemberSubscription> memberSubscriptionList = memberSubscriptionRepository.findByMemberIdAndType(memberId, type);
+        if(memberSubscriptionList.size() > 1)
+        {
+            memberSubscriptionList.sort(Comparator.comparing(MemberSubscription::getStartAt));
+            LocalDate tempEnd =  memberSubscriptionList.get(0).getEndAt();
+            for(int i = 1; i < memberSubscriptionList.size(); i++)
+            {
+                MemberSubscription memberSubscription = memberSubscriptionList.get(i);
+                tempEnd = tempEnd.plusDays(1);
+                if(memberSubscription.getStartAt() != tempEnd)
+                {
+                    memberSubscription.setStartAt(tempEnd);
+                    tempEnd = tempEnd.plusMonths(memberSubscription.getMembership().getDuration());
+                    memberSubscription.setEndAt(tempEnd);
+                    memberSubscriptionRepository.save(memberSubscription);
+                }
+                else {
+                    tempEnd = memberSubscription.getEndAt();
+                }
+            }
+        }
+
+    }
+
+    public Long resub(Long id, Integer status)
+    {
+        MemberSubscription memberSubscription = memberSubscriptionRepository.findById(id).orElseThrow();
+        memberSubscription.setStatus(1);
+        Long memberId = memberRepository.findIdByMemberSubscriptionId(memberSubscription.getId());
+        List<MemberSubscription> curMembership = memberSubscriptionRepository.findByMemberIdAndType(memberId, memberSubscription.getMembership().getType());
+        LocalDate newStartDate;
+        LocalDate newEndDate;
+        if(!curMembership.isEmpty())
+        {
+            Optional<LocalDate> maxEndAt = curMembership.stream()
+                    .map(MemberSubscription::getEndAt)
+                    .max(LocalDate::compareTo);
+            newStartDate = maxEndAt.get().plusDays(1);
+            newEndDate = newStartDate.plusMonths(memberSubscription.getMembership().getDuration());
+        }
+        else {
+            newStartDate = LocalDate.now();
+            newEndDate = newStartDate.plusMonths(memberSubscription.getMembership().getDuration());
+        }
+        memberSubscription.setStartAt(newStartDate);
+        memberSubscription.setEndAt(newEndDate);
+        memberSubscriptionRepository.save(memberSubscription);
+        return memberId;
+    }
+
+    public void recalculate(RecalculateDto formDto) {
+        List<MemberSubscription> memberSubscriptionList = memberSubscriptionRepository.findByMemberIdAndType(formDto.getId(), formDto.getType());
+        if(!memberSubscriptionList.isEmpty())
+        {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            memberSubscriptionList.sort(Comparator.comparing(MemberSubscription::getStartAt));
+            memberSubscriptionList.get(0).setStartAt(LocalDate.parse(formDto.getDateString(), formatter));
+            memberSubscriptionList.get(0).setEndAt(memberSubscriptionList.get(0).getStartAt().plusMonths(memberSubscriptionList.get(0).getMembership().getDuration()));
+            memberSubscriptionRepository.save(memberSubscriptionList.get(0));
+            LocalDate tempEnd =  memberSubscriptionList.get(0).getEndAt();
+            for(int i = 1; i < memberSubscriptionList.size(); i++)
+            {
+                MemberSubscription memberSubscription = memberSubscriptionList.get(i);
+                tempEnd = tempEnd.plusDays(1);
+                if(memberSubscription.getStartAt() != tempEnd)
+                {
+                    memberSubscription.setStartAt(tempEnd);
+                    tempEnd = tempEnd.plusMonths(memberSubscription.getMembership().getDuration());
+                    memberSubscription.setEndAt(tempEnd);
+                    memberSubscriptionRepository.save(memberSubscription);
+                }
+                else {
+                    tempEnd = memberSubscription.getEndAt();
+                }
+            }
+        }
+    }
 }
+

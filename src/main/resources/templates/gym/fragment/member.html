@@ -27,8 +27,8 @@
 <!--                                <p th:if="${#fields.hasErrors('isRecurring')}" th:errors="*{isRecurring}" class="text-danger m-0"></p>-->
 <!--                            </div>-->
                             <div th:with="
-                                    options=${T(java.util.Arrays).asList(-1, 'Đã hủy', 0, 'Hết hạn', 1, 'Hoạt động', 2, 'Đang chờ')}">
-                                <div th:replace="component :: select-default-v2('Trạng thái', 'status', *{status}, true, false, ${options})"></div>
+                                    options=${T(java.util.Arrays).asList(-1, 'Đã hủy', 0, 'Hết hạn', 1, 'Hoạt động', 2, 'Đang chờ', 3, 'Gia hạn thất bại')}">
+                                <div th:replace="component :: select-default-v2('Trạng thái', 'statusSubscription', *{statusSubscription}, true, false, ${options})"></div>
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -45,17 +45,61 @@
                     <button type="button" class="btn btn-danger" th:disabled="${model.isRecurring == 0
               or model.paypalSubscriptionId == null
               or model.paypalSubscriptionId == ''
-              or model.status != 1}">Hủy định kỳ</button>
+              or model.statusSubscription != 1
+              or !#strings.startsWith(model.paypalSubscriptionId, 'I-')}" th:onclick="|event.stopPropagation(); cancelSubscription()|">Hủy định kỳ</button>
                     <button type="button" class="btn btn-primary" th:disabled="${model.isRecurring == 1
               or model.paypalSubscriptionId == null
               or model.paypalSubscriptionId == ''
-              or model.status != 1}">Đăng ký định kỳ lại</button>
+              or model.statusSubscription != 1
+              or !#strings.startsWith(model.paypalSubscriptionId, 'I-')
+              or allowResub == null}" th:onclick="|event.stopPropagation(); reSubscribe()|">Đăng ký định kỳ lại</button>
                     <button type="submit" class="btn btn-success mr-2">Lưu</button>
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
                 </div>
             </div>
         </form>
+        <form id="cancelForm" th:action="@{/subscription/pause/{id}(id=${model.id})}" method="post">
+            <input hidden="hidden" name="id" value=""/>
+        </form>
+        <form id="resumeForm" th:action="@{/subscription/resume/{id}(id=${model.id})}" method="post">
+            <input hidden="hidden" name="id" value=""/>
+        </form>
     </div>
+    <script>
+        function cancelSubscription() {
+            Swal.fire({
+                title: 'Xác nhận hủy định kỳ',
+            text: 'Bạn có chắc muốn hủy định kỳ gói này không',
+            icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: 'Xác nhận',
+            cancelButtonText: 'Hủy'
+        }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById("cancelForm").submit();
+                }
+            });
+        }
+
+        function reSubscribe() {
+            Swal.fire({
+                title: 'Xác nhận đăng ký lại định kỳ',
+                text: 'Bạn có chắc muốn đăng ký định kỳ lại gói này không',
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: 'Xác nhận',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById("resumeForm").submit();
+                }
+            });
+        }
+    </script>
 </div>
 
 <div th:fragment="memberSubscriptionDetail" class="modal fade" id="memberSubscriptionDetail">
@@ -85,6 +129,7 @@
                 <tr>
                     <td style="font-weight: bold;">Trạng thái</td>
                     <td>
+                        <span th:if="${model.status == 3}" class="badge badge-warning" style="white-space: normal; cursor: pointer">Gia hạn thất bại</span>
                         <span th:if="${model.status == 2}" class="badge badge-warning" style="white-space: normal; cursor: pointer">Đang chờ</span>
                         <span th:if="${model.status == 1}" class="badge badge-success" style="white-space: normal; cursor: pointer">Hoạt động</span>
                         <span th:if="${model.status == 0}" class="badge badge-secondary" style="white-space: normal; cursor: pointer;">Hết hạn</span>
@@ -222,7 +267,7 @@
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="form-group">
-                                    <div th:insert="component :: select2-v4('GET', 'Các gói', 'membershipId', *{membershipId}, '/membership/ajax-search',' Nhập gói', '' , true, false, 0, null)"></div>
+                                    <div th:insert="component :: select2-v4('GET', 'Các gói', 'membershipId', *{membershipId}, '/membership/ajax-search/' + *{memberId},' Nhập gói', '' , true, false, 0, null)"></div>
                                     <p th:if="${#fields.hasErrors('membershipId')}" th:errors="*{membershipId}" class="text-danger m-0"></p>
                                 </div>
                             </div>
@@ -298,6 +343,37 @@
                 }
             });
         </script>
+    </div>
+</div>
+
+<div th:fragment="recalculateDate" class="modal fade" id="recalculateDate" tabindex="-1" role="dialog" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Tính lại ngày</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form th:action="@{/subscription/recalculate}" method="post" th:object="${model}" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <input hidden="hidden" name="type" th:value="*{type}"></input>
+                    <input hidden="hidden" name="id" th:value="*{id}"></input>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <div th:insert="component :: input-datetimepicker('Ngày bắt đầu', 'dateString', *{dateString}, 'DD/MM/YYYY', true, false)"></div>
+                                <p th:if="${#fields.hasErrors('dateString')}" th:errors="*{dateString}" class="text-danger m-0"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-success mr-2">Tính toán</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 </body>

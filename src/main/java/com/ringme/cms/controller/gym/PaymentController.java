@@ -1,9 +1,6 @@
 package com.ringme.cms.controller.gym;
 
-import com.paypal.api.payments.Payment;
-import com.paypal.api.payments.PaymentExecution;
-import com.paypal.base.rest.APIContext;
-import com.paypal.base.rest.PayPalRESTException;
+import com.paypal.orders.Order;
 import com.ringme.cms.dto.gym.MemberSubscriptionDto;
 import com.ringme.cms.dto.gym.PaymentDto;
 import com.ringme.cms.model.gym.MemberSubscription;
@@ -18,6 +15,7 @@ import javassist.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -29,6 +27,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
+import java.io.IOException;
 import java.time.format.DateTimeFormatter;
 import java.util.Base64;
 import java.util.Map;
@@ -39,6 +38,9 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class PaymentController {
 
+    @Value("${ipv4.address}")
+    private String ipv4;
+
     private final ModelMapper modelMapper;
 
     private final PaymentService paymentService;
@@ -46,8 +48,6 @@ public class PaymentController {
     private final PaypalService paypalService;
 
     private final QrCodeService qrCodeService;
-
-    private final APIContext apiContext;
 
     private final PaymentRepository paymentRepository;
 
@@ -104,28 +104,27 @@ public class PaymentController {
                         .orElse("redirect:/member/detail?id=" + formDto.getMemberId() + "&tab=" + formDto.getTab());
             }
             com.ringme.cms.model.gym.Payment curPayment = paymentService.save(formDto);
-            Payment payment = paypalService.createPayment(
+            Order order = paypalService.createOrder(
                     Double.parseDouble(formDto.getAmount().toString()),
                     "USD",
-                    "paypal",
-                    "sale",
                     formDto.getDescription(),
-                    "http://192.168.1.214:8086/nexia-cms/payment/cancel/" + curPayment.getId(),
-                    "http://192.168.1.214:8086/nexia-cms/payment/success"
+                    "http://" + ipv4  + ":8086/nexia-cms/payment/cancel/" + curPayment.getId(),
+                    "http://" + ipv4  + ":8086/nexia-cms/payment/success"
             );
 
-            String approvalLink = paypalService.getApprovalLink(payment)
-                    .orElseThrow(() -> new RuntimeException("PayPal approval link not found."));
-            curPayment.setGatewayTransactionId(payment.getId());
+            String approvalLink = paypalService.getApprovalLink(order)
+                    .orElseThrow(() -> new RuntimeException("PayPal approval link not found in V2 order."));
+            String orderId = order.id();
+
+            curPayment.setGatewayTransactionId(orderId);
             curPayment.setPaymentUrl(approvalLink);
             paymentRepository.save(curPayment);
             byte[] qrCodeBytes = qrCodeService.generateQRCodeImage(approvalLink, 350, 350);
-
             String qrCodeBase64 = Base64.getEncoder().encodeToString(qrCodeBytes);
 
             redirectAttributes.addFlashAttribute("qrCodeImage", qrCodeBase64);
             redirectAttributes.addFlashAttribute("payPalLink", approvalLink);
-            redirectAttributes.addFlashAttribute("paymentId", payment.getId());
+            redirectAttributes.addFlashAttribute("paymentId", orderId);
             if(formDto.getShouldReload() != null)
             {
                 redirectAttributes.addFlashAttribute("shouldReload", formDto.getShouldReload());
@@ -140,43 +139,43 @@ public class PaymentController {
 
     @GetMapping("/success")
     public String paymentSuccess(
-            @RequestParam("paymentId") String paymentId,
+            @RequestParam("token") String orderId,
             @RequestParam("PayerID") String payerId
     ) {
-        log.info("Executing payment. PaymentId: {}, PayerId: {}", paymentId, payerId);
+        log.info("Executing payment. PaymentId: {}, PayerId: {}", orderId, payerId);
 
         try {
-            Payment payment = new Payment();
-            payment.setId(paymentId);
+            Order capturedOrder = paypalService.captureOrder(orderId);
 
-            PaymentExecution paymentExecute = new PaymentExecution();
-            paymentExecute.setPayerId(payerId);
-            Payment executedPayment = payment.execute(apiContext, paymentExecute);
-
-            if ("approved".equalsIgnoreCase(executedPayment.getState())) {
-                log.info("Payment successful for PaymentId: {}", executedPayment.getId());
-                com.ringme.cms.model.gym.Payment paymentModel = paymentRepository.findByGatewayTransactionId(paymentId);
+            if ("COMPLETED".equalsIgnoreCase(capturedOrder.status())) {
+                log.info("Payment successful for V2 OrderId: {}", capturedOrder.id());
+                com.ringme.cms.model.gym.Payment paymentModel = paymentRepository.findByGatewayTransactionId(orderId);
                 if (paymentModel != null) {
                     paymentModel.setStatus(1);
                     paymentRepository.save(paymentModel);
                 }
-                MemberSubscription memberSubscription = memberSubscriptionRepository.findByPaypalSubscriptionId(paymentId);
+                MemberSubscription memberSubscription = memberSubscriptionRepository.findByPaypalSubscriptionId(orderId);
                 if (memberSubscription != null) {
                     memberSubscription.setStatus(1);
                     memberSubscriptionRepository.save(memberSubscription);
                 }
                 return "gym/payment/success";
             } else {
-                com.ringme.cms.model.gym.Payment paymentModel = paymentRepository.findByGatewayTransactionId(paymentId);
+                com.ringme.cms.model.gym.Payment paymentModel = paymentRepository.findByGatewayTransactionId(orderId);
                 if (paymentModel != null) {
                     paymentModel.setStatus(-1);
                     paymentRepository.save(paymentModel);
                 }
-                log.warn("Payment not approved. State: {}. Details: {}", executedPayment.getState(), executedPayment.getFailureReason());
+                MemberSubscription memberSubscription = memberSubscriptionRepository.findByPaypalSubscriptionId(orderId);
+                if (memberSubscription != null) {
+                    memberSubscription.setStatus(-1);
+                    memberSubscriptionRepository.save(memberSubscription);
+                }
+                log.warn("Payment not completed. Status: {}", capturedOrder.status());
                 return "gym/payment/cancel";
             }
-        } catch (PayPalRESTException e) {
-            log.error("Error executing payment for PaymentId: " + paymentId, e);
+        } catch (IOException e) {
+            log.error("Error executing payment for PaymentId: " + orderId, e);
             return "gym/payment/cancel";
         }
     }
@@ -228,6 +227,21 @@ public class PaymentController {
         {
             Integer status = paymentService.getPaymentStatus(paymentId);
             return ResponseEntity.ok(Map.of("status", status));
+        }
+        catch (Exception e)
+        {
+            log.error("Error: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @GetMapping("/member-pament-graph-data")
+    public ResponseEntity<Map<String, Object>> getMemberPaymentGraphData(@RequestParam(name = "id") Long memberId)
+    {
+        try
+        {
+             Map<String, Object> data = paymentService.getMemberPaymentGraphData(memberId);
+             return ResponseEntity.ok(data);
         }
         catch (Exception e)
         {

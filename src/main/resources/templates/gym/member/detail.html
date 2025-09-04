@@ -17,7 +17,6 @@
                 <div th:text="${'#' + model.id}" class="member-id-label"></div>
             </div>
             <div class="col-md-6 d-flex justify-content-end align-items-center">
-
             </div>
         </div>
     </div>
@@ -27,7 +26,7 @@
             <div class="col-md-3" style="width: 100%"></div>
             <div class="col-md-9 extra-info-text"><span th:if="${startEndString != null}" th:text="${startEndString}"></span>
                 <span th:if="${startEndString == null}">Người dùng chưa đăng ký gói thành viên nào</span>
-                <i class="fa-solid fa-check" style="color: black; margin-left: 15px"></i>
+                <i class="fa-solid" th:classappend="${model.status == 1 ? 'fa-check' : 'fa-times'}" style="color: black; margin-left: 15px"></i>
             </div>
         </div>
     </div>
@@ -113,7 +112,6 @@
                 <div class="tab-content pt-3 tab-style ">
                     <div class="tab-pane fade" id="detail" role="tabpanel" th:classappend="${tab == 1 ? 'active show' : ''}">
                             <input type="hidden" name="id" th:value="${model.id}">
-                            <input type="hidden" name="status" th:value="${model.status}">
                         <div class="container-fluid pt-2">
                             <div class="row">
                                 <div class="col-md-6 pl-4 pr-2">
@@ -146,6 +144,16 @@
                                         </div>
 
                                         <div class="form-group d-flex align-items-center">
+                                                <label for="status" class="mr-2 label-fixed">Trạng thái</label>
+                                            <select class="form-control" id="status" th:field="${model.status}" name="status" required>
+                                                <option value="1" th:selected="${model.status == 1}">Hoạt động</option>
+                                                <option value="0" th:selected="${model.status == 0}">Không hoạt động</option>
+                                            </select>
+                                        </div>
+
+
+
+                                        <div class="form-group d-flex align-items-center">
                                             <label class="mr-2 label-fixed">Giới tính <span style="color: red;">*</span></label>
                                             <div class="radio-group d-flex align-items-center">
                                                 <div class="form-check form-check-inline mb-0">
@@ -162,7 +170,7 @@
 
                                         <div class="form-group">
                                             <label for="note">Note</label>
-                                            <textarea id="note" name="note" th:text="${model.note}" class="form-control" style="height: 190px"></textarea>
+                                            <textarea id="note" name="note" th:text="${model.note}" class="form-control" style="height: 144px"></textarea>
                                         </div>
                                         <button type="submit" class="btn btn-success float-left mt-1 mb-3" style="width: 70px; height: 30px" >Lưu</button>
                                     </div>
@@ -254,6 +262,7 @@
                                         <div class="current-member-title d-flex align-items-center">
                                             <span>Các gói thành viên hiện tại</span> <i class="fa fa-id-card ml-2"></i>
                                         </div>
+                                        <button type="button" class="btn btn-secondary mt-2 open-modal-class" th:data-url="${@environment.getProperty('domain.app') + '/nexia-cms/subscription/recalculate-form?type=0&id=' + model.id}"><i class="fas fa-calculator"></i> Tính lại ngày</button>
                                     </div>
                                     <div class="table-responsive mb-2 mt-3">
                                         <table class="table table-sm custom-table table-bordered table-hover text-center" style="table-layout: auto; width: 100%; font-weight: 600;">
@@ -271,11 +280,13 @@
                                             </thead>
                                             <tbody>
                                                 <tr th:each="model,item : ${model.normalSubscription}" th:attr="data-id=${model.id}">
-                                                    <td th:text="${model.membership.name}" style="align-content: center;"></td>
+                                                    <td style="align-content: center;"><span th:text="${model.membership.name}"></span>
+                                                        <span class="ml-2" th:if="${model.paypalSubscriptionId != null && #strings.startsWith(model.paypalSubscriptionId, 'I-')}"><i class="fa-solid fa-rotate"></i></span></td>
                                                     <td th:text="${'$' + model.membership.price}" style="align-content: center;"></td>
                                                     <td th:text="${#dates.format(new java.util.Date(model.startAt), 'dd/MM/yyyy')}" style="align-content: center;"></td>
                                                     <td th:text="${#dates.format(new java.util.Date(model.endAt), 'dd/MM/yyyy')}" style="align-content: center;"></td>
                                                     <td style="align-content: center;">
+                                                        <span th:if="${model.status == 3}" class="badge badge-warning" style="white-space: normal; cursor: pointer">Gia hạn thất bại</span>
                                                         <span th:if="${model.status == 2}" class="badge badge-warning" style="white-space: normal; cursor: pointer">Đang chờ</span>
                                                         <span th:if="${model.status == 1}" class="badge badge-success" style="white-space: normal; cursor: pointer">Hoạt động</span>
                                                         <span th:if="${model.status == 0}" class="badge badge-secondary" style="white-space: normal; cursor: pointer;">Hết hạn</span>
@@ -292,7 +303,7 @@
                                                             <a class="btn open-modal-class" title="Sửa" th:data-url="${@environment.getProperty('domain.app') + '/nexia-cms/subscription/update?id=' + model.id}">
                                                                 <i class="far fa-edit" style="color: #00709e;"></i>
                                                             </a>
-                                                            <a th:attr="onclick=|event.stopPropagation(); deleteRecord({action: '@{'/music/audiobook/delete/'+${model.id}}', method: 'POST'})|" style="cursor: pointer; align-content: center;" title="Hủy gói" class="btn btn-sm">
+                                                            <a th:attr="onclick=|event.stopPropagation(); deleteRecord({action: '@{'/subscription/delete/'+${model.id}}', method: 'POST'})|" style="cursor: pointer; align-content: center;" title="Hủy gói" class="btn btn-sm">
                                                                 <i class="fas fa-times" style="color: #ff0000;"></i>
                                                             </a>
                                                         </div>
@@ -312,6 +323,7 @@
                                         <div class="current-member-title d-flex align-items-center">
                                             <span>Các gói khác</span> <i class="fa fa-plus-circle ml-2"></i>
                                         </div>
+                                        <button type="button" class="btn btn-secondary mt-2 open-modal-class" th:data-url="${@environment.getProperty('domain.app') + '/nexia-cms/subscription/recalculate-form?type=1&id=' + model.id}"><i class="fas fa-calculator"></i> Tính lại ngày</button>
                                     </div>
                                     <div class="table-responsive mb-2 mt-3">
                                         <table class="table table-sm custom-table table-bordered table-hover text-center" style="table-layout: auto; width: 100%; font-weight: 600;">
@@ -350,7 +362,7 @@
                                                         <a class="btn open-modal-class" title="Sửa" th:data-url="${@environment.getProperty('domain.app') + '/nexia-cms/subscription/update?id=' + model.id}">
                                                             <i class="far fa-edit" style="color: #00709e;"></i>
                                                         </a>
-                                                        <a th:attr="onclick=|event.stopPropagation(); deleteRecord({action: '@{'/music/audiobook/delete/'+${model.id}}', method: 'POST'})|" style="cursor: pointer; align-content: center;" title="Hủy gói" class="btn btn-sm">
+                                                        <a th:attr="onclick=|event.stopPropagation(); deleteRecord({action: '@{'/subscription/delete/'+${model.id}}', method: 'POST'})|" style="cursor: pointer; align-content: center;" title="Hủy gói" class="btn btn-sm">
                                                             <i class="fas fa-times" style="color: #ff0000;"></i>
                                                         </a>
                                                     </div>
@@ -408,9 +420,13 @@
                                                         <a class="btn open-modal-class" title="Chi tiết" th:data-url="${@environment.getProperty('domain.app') + '/nexia-cms/subscription/detail?id=' + model.id}">
                                                             <i class="fas fa-info" style="color: #00709e;"></i>
                                                         </a>
-                                                        <a th:attr="onclick=|event.stopPropagation(); deleteRecord({action: '@{'/music/audiobook/delete/'+${model.id}}', method: 'POST'})|" style="cursor: pointer; align-content: center;" title="Đăng ký lại" class="btn btn-sm">
+                                                        <a th:if="${model.paypalSubscriptionId == null || (model.paypalSubscriptionId != null && !#strings.startsWith(model.paypalSubscriptionId, 'I-'))}"
+                                                           th:attr="onclick=|event.stopPropagation(); reSignup(${model.id})|" style="cursor: pointer; align-content: center;" title="Đăng ký lại" class="btn btn-sm">
                                                             <i class="fa-solid fa-rotate-right" style="color: #ff0000;"></i>
                                                         </a>
+                                                        <form id="resubForm" method="post">
+                                                            <input hidden="hidden" name="id" value=""/>
+                                                        </form>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -425,10 +441,52 @@
                         </div>
                     </div>
                     <div class="tab-pane fade" id="account" role="tabpanel" th:classappend="${tab == 3 ? 'show active' : ''}">
-                        <p>Contact content goes here...</p>
+                        <div class="container-fluid pt-2" >
+                            <div class="d-flex justify-content-center align-items-center">
+                                <button type="button" class="btn btn-secondary open-modal-class" th:data-url="${@environment.getProperty('domain.app') + '/nexia-cms/payment/create?id=' + model.id}"><i class="fas fa-money-bill"></i> Thanh toán</button>
+                            </div>
+                            <div class="container-fluid">
+                                <div class="card card-default mx-3 mt-3">
+                                    <div class="card-body">
+                                        <div style="position: relative;">
+                                            <canvas id="memberPaymentChart" style="height: 400px !important;"></canvas>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+<!--                            <div class="container-fluid">-->
+<!--                                <div class="">Lịch sử thanh toán</div>-->
+
+<!--                                <div class="card">-->
+<!--                                    <div class="card-body">-->
+<!--                                        <table id="paymentHistoryDatatable" class="table table-bordered table-striped">-->
+<!--                                            <thead>-->
+<!--                                            <tr>-->
+<!--                                                <th>Rendering engine</th>-->
+<!--                                                <th>Browser</th>-->
+<!--                                                <th>Platform(s)</th>-->
+<!--                                                <th>Engine version</th>-->
+<!--                                                <th>CSS grade</th>-->
+<!--                                            </tr>-->
+<!--                                            </thead>-->
+<!--                                            <tbody>-->
+<!--                                            <tr>-->
+<!--                                                <td>Trident</td>-->
+<!--                                                <td>Internet Explorer 4.0</td>-->
+<!--                                                <td>Win 95+</td>-->
+<!--                                                <td>4</td>-->
+<!--                                                <td>X</td>-->
+<!--                                            </tr>-->
+<!--                                            </tbody>-->
+<!--                                        </table>-->
+<!--                                    </div>-->
+<!--                                </div>-->
+<!--                            </div>-->
+                        </div>
                     </div>
-                    <div class="tab-pane fade" id="billing" role="tabpanel" th:classappend="${tab == 4 ? 'show active' : ''}">
-                        <p>Contact content goes here...</p>
+                    <div class="tab-pane fade" id="booking" role="tabpanel" th:classappend="${tab == 4 ? 'show active' : ''}">
+                        <p>Billing content goes here...</p>
                     </div>
                 </div>
                 </div>
@@ -502,6 +560,7 @@
             $('#memberSubscriptionDetail').modal('show');
             $('#addPayment').modal('show');
             $('#addMemberSubscription').modal('show');
+            $('#recalculateDate').modal('show');
         });
     });
 
@@ -617,6 +676,82 @@
 
 
     }
+
+    function reSignup(subscriptionId) {
+        const resubForm = document.getElementById("resubForm");
+
+        Swal.fire({
+            title: 'Xác nhận đăng ký lại',
+            text: 'Chọn phương thức thanh toán đăng ký lại.',
+            icon: 'question',
+            showCancelButton: true,
+            showDenyButton: true,
+            confirmButtonText: 'Tiền mặt',
+            denyButtonText: 'Paypal',
+            cancelButtonText: 'Hủy'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                let urlTemplate = '[[@{/subscription/resub/ID (paymentGateway='cash')}]]';
+                resubForm.action = urlTemplate.replace("ID", subscriptionId);
+                resubForm.submit();
+            } else if (result.isDenied) {
+                let urlTemplate = '[[@{/subscription/resub/ID (paymentGateway='paypal')}]]';
+                resubForm.action = urlTemplate.replace("ID", subscriptionId);
+                resubForm.submit();
+            }
+        });
+    }
+
+    async function renderChart() {
+        const ctx = document.getElementById('memberPaymentChart').getContext('2d');
+        const chartOptions = {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            },
+            plugins: {
+                title: {
+                    display: false
+                },
+                legend: {
+                    display: true,
+                    position: 'top'
+                }
+            },
+            responsive: true,
+            maintainAspectRatio: false
+        };
+
+        const myBarChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: [],
+                datasets: []
+            },
+            options: chartOptions
+        });
+
+        try {
+            var memberId = '[[${model.id}]]'
+            const response = await fetch(`http://localhost:8086/nexia-cms/payment/member-pament-graph-data?id=${memberId}`);
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
+            const apiData = await response.json();
+
+            myBarChart.data.labels = apiData.labels;
+            myBarChart.data.datasets = apiData.datasets;
+            myBarChart.update();
+
+        } catch (error) {
+            console.error("Failed to fetch chart data:", error);
+        }
+    }
+
+    renderChart();
 
     $(() => {
         let id = 'image';

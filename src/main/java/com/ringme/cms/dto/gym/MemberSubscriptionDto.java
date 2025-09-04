@@ -17,7 +17,7 @@ import java.time.LocalDate;
 public class MemberSubscriptionDto {
     private Long id;
     private String startEndString;
-    private Integer status;
+    private Integer statusSubscription;
     private Integer numberOfVisit;
     private Integer isRecurring;
     private String paypalSubscriptionId;

@@ -41,6 +41,9 @@ public class Membership {
     @Column(name = "type") //0 normal 1 addon
     private Integer type;
 
+    @Column(name = "paypal_plan_id")
+    private String paypalPlanId;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
