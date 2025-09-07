@@ -20,7 +20,7 @@ import java.util.List;
 @Builder
 @CheckFile(fileField = "imageUpload", mimeTypes = {"image/jpeg", "image/png"}, maxFileSize = 5 * 1024 * 1024,
         messageFileSize = "The uploaded file must be smaller than 5MB.",
-        messageMimeTypes = "Only .jpg, .png, .jpeg files are allowed to be uploaded."
+        messageMimeTypes = "Only .jpg, .png, .jpeg files are allowed to be uploaded.", required = false
 )
 public class MemberDto {
     private Long id;

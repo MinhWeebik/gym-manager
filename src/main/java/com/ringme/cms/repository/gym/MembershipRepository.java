@@ -1,6 +1,8 @@
 package com.ringme.cms.repository.gym;
 
 import com.ringme.cms.model.gym.Membership;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -19,4 +21,17 @@ public interface MembershipRepository extends JpaRepository<Membership, Long> {
             "LIMIT 20", nativeQuery = true)
     List<String[]> ajaxSearchMembership(@Param("input") String input,
                                         @Param("type") Integer type);
+
+    @Query(value = "SELECT * FROM membership " +
+            "WHERE (LOWER(:name) IS NULL OR name LIKE LOWER(CONCAT('%', :name, '%'))) " +
+            "AND ((:status is null and status != 0) OR status = :status) " +
+            "AND (:type IS NULL OR type = :type) " +
+            "ORDER BY created_at DESC",
+            countQuery = "SELECT count(*) FROM membership " +
+                    "WHERE (LOWER(:name) IS NULL OR name LIKE LOWER(CONCAT('%', :name, '%'))) " +
+                    "AND ((:status is null and status != 0) OR status = :status) " +
+                    "AND (:type IS NULL OR type = :type) ", nativeQuery = true)
+    Page<Membership> getAll(@Param("name") String name,
+                            @Param("status") Integer status,
+                            @Param("type") Integer type, Pageable pageable);
 }

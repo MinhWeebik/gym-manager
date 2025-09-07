@@ -174,4 +174,124 @@ public class PaypalSubscriptionService {
             throw new RuntimeException("Failed to cancel subscription", e);
         }
     }
+
+    public String createPlan(String productId, String planName, String amount, String currency, String interval, int intervalCount) {
+        String accessToken = paypalConfig.getAccessToken();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("Authorization", "Bearer " + accessToken);
+        String requestJson = String.format("""
+        {
+          "product_id": "%s",
+          "name": "%s",
+          "description": "A new subscription plan created via manual API call.",
+          "status": "ACTIVE",
+          "billing_cycles": [
+            {
+              "frequency": {
+                "interval_unit": "%s",
+                "interval_count": %d
+              },
+              "tenure_type": "REGULAR",
+              "sequence": 1,
+              "total_cycles": 0,
+              "pricing_scheme": {
+                "fixed_price": {
+                  "value": "%s",
+                  "currency_code": "%s"
+                }
+              }
+            }
+          ],
+          "payment_preferences": {
+            "auto_bill_outstanding": true,
+            "setup_fee_failure_action": "CANCEL",
+            "payment_failure_threshold": 2
+          }
+        }
+        """, productId, planName, interval.toUpperCase(), intervalCount, amount, currency);
+
+        HttpEntity<String> request = new HttpEntity<>(requestJson, headers);
+        String url = paypalConfig.getBaseUrl() + "/v1/billing/plans";
+
+        try {
+            ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, request, JsonNode.class);
+
+            if (response.getStatusCode() == HttpStatus.CREATED && response.getBody() != null) {
+                String newPlanId = response.getBody().path("id").asText();
+                log.info("Successfully created manual PayPal plan with ID: {}", newPlanId);
+                return newPlanId;
+            } else {
+                log.error("Failed to create PayPal plan. Status: {}, Body: {}", response.getStatusCode(), response.getBody());
+                throw new RuntimeException("Failed to create PayPal plan. Status: " + response.getStatusCode());
+            }
+        } catch (Exception e) {
+            log.error("Exception while creating PayPal plan", e);
+            throw new RuntimeException("Exception while creating PayPal plan", e);
+        }
+    }
+
+    public void deactivatePlan(String payPalPlanId) throws Exception {
+        String accessToken = paypalConfig.getAccessToken();
+        String url = paypalConfig.getBaseUrl() + "/v1/billing/plans/" + payPalPlanId + "/deactivate";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(accessToken);
+        headers.set("Content-Type", "application/json");
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+        ResponseEntity<String> response = restTemplate.exchange(
+                url,
+                HttpMethod.POST,
+                entity,
+                String.class
+        );
+
+        if (response.getStatusCode() != HttpStatus.NO_CONTENT) {
+            throw new Exception("Failed to deactivate PayPal plan. Status: " + response.getStatusCode() + " Body: " + response.getBody());
+        }
+
+        log.info("Successfully deactivated PayPal plan: " + payPalPlanId);
+    }
+
+    public boolean updatePlanPrice(String payPalPlanId, String newPrice, String currency) {
+        String accessToken = paypalConfig.getAccessToken();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("Authorization", "Bearer " + accessToken);
+
+        String requestJson = String.format("""
+        {
+          "pricing_schemes": [
+            {
+              "billing_cycle_sequence": 1,
+              "pricing_scheme": {
+                "fixed_price": {
+                  "value": "%s",
+                  "currency_code": "%s"
+                }
+              }
+            }
+          ]
+        }
+        """, newPrice, currency);
+
+        HttpEntity<String> request = new HttpEntity<>(requestJson, headers);
+        String url = paypalConfig.getBaseUrl() + "/v1/billing/plans/" + payPalPlanId + "/update-pricing-schemes";
+
+        try {
+            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, request, String.class);
+
+            if (response.getStatusCode() == HttpStatus.NO_CONTENT) {
+                log.info("Successfully updated price for PayPal plan ID: {}", payPalPlanId);
+                return true;
+            } else {
+                log.error("Failed to update PayPal plan price. Status: {}, Body: {}", response.getStatusCode(), response.getBody());
+                throw new RuntimeException("Failed to update PayPal plan price. Status: " + response.getStatusCode());
+            }
+        } catch (Exception e) {
+            log.error("Exception while updating PayPal plan price for ID: {}", payPalPlanId, e);
+            throw new RuntimeException("Exception while updating PayPal plan price", e);
+        }
+    }
 }

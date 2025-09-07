@@ -1,15 +1,20 @@
 package com.ringme.cms.controller.gym;
 
 import com.ringme.cms.dto.gym.MemberDto;
+import com.ringme.cms.dto.gym.MemberSubscriptionDto;
 import com.ringme.cms.model.gym.Member;
 import com.ringme.cms.model.gym.MemberSubscription;
+import com.ringme.cms.model.gym.Payment;
 import com.ringme.cms.repository.gym.MemberRepository;
 import com.ringme.cms.repository.gym.MemberSubscriptionRepository;
+import com.ringme.cms.repository.gym.PaymentRepository;
 import com.ringme.cms.service.gym.MemberService;
+import com.ringme.cms.service.gym.PaymentService;
 import com.ringme.cms.utils.AppUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.modelmapper.ModelMapper;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
@@ -19,6 +24,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -36,6 +42,8 @@ public class MemberController
     private final MemberRepository memberRepository;
     private final ModelMapper modelMapper;
     private final MemberSubscriptionRepository memberSubscriptionRepository;
+    private final PaymentRepository paymentRepository;
+    private final PaymentService paymentService;
 
     @RequestMapping(value = {"/index"})
     public String index(@RequestParam(name = "pageNo", required = false, defaultValue = "1") Integer pageNo,
@@ -71,9 +79,31 @@ public class MemberController
         return "gym/member/index";
     }
 
+    @GetMapping("/create")
+    public String create(ModelMap model) {
+        try {
+            MemberDto formDto = (MemberDto) model.getOrDefault("model", new MemberDto());
+            if(formDto.getGender() == null)
+            {
+                formDto.setGender(1);
+            }
+            model.putIfAbsent("model", formDto);
+            return "gym/member/create";
+        } catch (Exception e) {
+            log.error("Exception: {}", e.getMessage(), e);
+            return "404";
+        }
+    }
+
     @GetMapping("/detail")
     public String detail(@RequestParam("id") Long id,
-                         @RequestParam(value = "tab", required = false) Integer tab, ModelMap model) throws Exception {
+                         @RequestParam(value = "tab", required = false) Integer tab,
+                         @RequestParam(value = "paymentPageNo", required = false, defaultValue = "1") Integer paymentPageNo,
+                         @RequestParam(value = "paymentPageSize", required = false, defaultValue = "10") Integer paymentPageSize,
+                         @RequestParam(value = "paymentDescription", required = false) String paymentDescription,
+                         @RequestParam(value = "paymentGatewaySearch", required = false) String paymentGateway,
+                         @RequestParam(value = "paymentStatus", required = false) Integer paymentStatus,
+                         @RequestParam(value = "paymentType", required = false) Integer paymentType, ModelMap model) throws Exception {
         log.info("id: {}", id);
         try {
             if(tab == null || tab <= 0) tab = 1;
@@ -130,9 +160,20 @@ public class MemberController
                 }
                 formDto.setDateOfBirthString(member.getDateOfBirth().format(formatter));
             }
+            if(paymentPageNo == null || paymentPageNo <= 0) paymentPageNo = 1;
+            if(paymentPageSize == null || paymentPageSize <= 0) paymentPageSize = 10;
+            Page<Payment> paymentObject = paymentService.getAll(id, paymentDescription, paymentGateway, paymentStatus, paymentType, paymentPageNo, paymentPageSize);
             model.put("image", member.getImageUrl());
             model.put("model", formDto);
             model.put("tab", tab);
+            model.put("payment", paymentObject.getContent());
+            model.put("paymentPageNo", paymentPageNo);
+            model.put("paymentPageSize", paymentPageSize);
+            model.put("paymentDescription", paymentDescription);
+            model.put("paymentGatewaySearch", paymentGateway);
+            model.put("paymentStatus", paymentStatus);
+            model.put("paymentType", paymentType);
+            model.put("paymentTotalPage", paymentObject.getTotalPages());
             return "gym/member/detail";
         } catch (Exception e) {
             log.error("Exception: {}", e.getMessage(), e);

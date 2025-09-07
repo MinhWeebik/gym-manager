@@ -26,6 +26,10 @@ public class CustomFilter extends OncePerRequestFilter {
         String contextPath = request.getContextPath();
         String requestURI = request.getRequestURI();
         log.debug("Custom filter " + request.getRequestURI());
+        if (antPathMatcher.match(contextPath + "/check-in-websocket/**", requestURI)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
         if (SecurityContextHolder.getContext().getAuthentication() != null) {
             if (!requestURI.equals(contextPath + "/")
                     && !requestURI.equals(contextPath + "/index")
@@ -81,12 +85,14 @@ public class CustomFilter extends OncePerRequestFilter {
 
         boolean rs = uri.endsWith(".js")
                 || uri.endsWith(".svg")
+                || uri.endsWith(".mp3")
                 || uri.endsWith(".css")
                 || (uri.endsWith(".png"))
                 || uri.endsWith(".jpeg")
                 || (uri.endsWith(".jpg")&& !uri.endsWith("captcha.jpg"))
                 || uri.startsWith(contextPath + "/images")
                 || uri.startsWith(contextPath + "/img")
+                || uri.startsWith(contextPath + "/sound")
                 || uri.startsWith(contextPath + "/file")
                 || uri.startsWith(contextPath + "/css")
                 || uri.startsWith(contextPath + "/js")

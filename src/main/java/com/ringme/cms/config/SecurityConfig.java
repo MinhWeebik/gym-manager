@@ -67,6 +67,7 @@ public class SecurityConfig {
                         "/img/**",
                         "/css/**",
                         "/js/**",
+                        "/sound/**",
                         "/vendor/**",
                         "/webjars/**",
                         "/actuator/**",
@@ -74,7 +75,17 @@ public class SecurityConfig {
                         "/payment/**",
                         "/subscription/**",
                         "/membership/ajax-search/**",
-                        "/paypal/**").permitAll()
+                        "/paypal/**",
+                        "/ws/**",                    // Main WebSocket endpoint
+                        "/ws",                       // WebSocket handshake
+                        "/websocket/**",             // Alternative WebSocket path
+                        "/topic/**",                 // STOMP topic endpoint
+                        "/app/**",                   // STOMP app endpoint
+                        "/user/**",                  // STOMP user endpoint
+                        "/**/*.sockjs",              // SockJS fallback
+                        "/sockjs-node/**",           // SockJS node
+                        "/check-in-websocket/**",
+                        "/check-in/**").permitAll()
                 .antMatchers("/**").authenticated().and()
 
                 .addFilterBefore(captchaFilter(), UsernamePasswordAuthenticationFilter.class)

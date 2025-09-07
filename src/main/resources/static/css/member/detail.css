@@ -132,3 +132,8 @@
 .links a { color: #0070ba; text-decoration: none; text-align: center; }
 .links a:hover { text-decoration: underline; }
 .links { margin-top: 15px; display: flex; flex-direction: column; gap: 10px; }
+
+.big-izitoast {
+    transform: scale(1.25) !important;    /* 1.5x bigger */
+    transform-origin: bottom right !important;  /* keeps it aligned */
+}

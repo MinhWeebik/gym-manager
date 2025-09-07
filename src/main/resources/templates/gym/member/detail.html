@@ -87,7 +87,7 @@
                     </div>
                 </div>
 
-                <button type="button" class="detail-button"><i class="fas fa-clipboard-check"></i> Điểm danh</button>
+                <button type="button" class="detail-button" th:onclick="'checkIn(' + ${model.id} + ')'"><i class="fas fa-clipboard-check"></i> Điểm danh</button>
                 <button type="button" class="detail-button"><i class="fas fa-list-alt"></i> Lịch sử điểm danh</button>
                 <button type="button" class="detail-button"><i class="fas fa-shopping-cart"></i> Mua hàng</button>
             </div>
@@ -275,7 +275,7 @@
                                                 <th>Trạng thái</th>
                                                 <th>Định kỳ</th>
                                                 <th>Số buổi</th>
-                                                <th>Hành động</th>
+                                                <th>chức năng</th>
                                             </tr>
                                             </thead>
                                             <tbody>
@@ -303,8 +303,8 @@
                                                             <a class="btn open-modal-class" title="Sửa" th:data-url="${@environment.getProperty('domain.app') + '/nexia-cms/subscription/update?id=' + model.id}">
                                                                 <i class="far fa-edit" style="color: #00709e;"></i>
                                                             </a>
-                                                            <a th:attr="onclick=|event.stopPropagation(); deleteRecord({action: '@{'/subscription/delete/'+${model.id}}', method: 'POST'})|" style="cursor: pointer; align-content: center;" title="Hủy gói" class="btn btn-sm">
-                                                                <i class="fas fa-times" style="color: #ff0000;"></i>
+                                                            <a th:attr="onclick=|event.stopPropagation(); deleteRecord({action: '@{'/subscription/delete/'+${model.id}}', method: 'POST',title: 'Xác nhận hủy gói',text: 'Bạn có chắc muốn hủy gói này không'})|" style="cursor: pointer; align-content: center;" title="Hủy gói" class="btn btn-sm">
+                                                                <i class="fas fa-trash-alt" style="color: #ff0000;"></i>
                                                             </a>
                                                         </div>
                                                     </td>
@@ -336,7 +336,7 @@
                                                 <th>Trạng thái</th>
                                                 <th>Định kỳ</th>
                                                 <th>Số buổi</th>
-                                                <th>Hành động</th>
+                                                <th>chức năng</th>
                                             </tr>
                                             </thead>
                                             <tbody>
@@ -362,8 +362,8 @@
                                                         <a class="btn open-modal-class" title="Sửa" th:data-url="${@environment.getProperty('domain.app') + '/nexia-cms/subscription/update?id=' + model.id}">
                                                             <i class="far fa-edit" style="color: #00709e;"></i>
                                                         </a>
-                                                        <a th:attr="onclick=|event.stopPropagation(); deleteRecord({action: '@{'/subscription/delete/'+${model.id}}', method: 'POST'})|" style="cursor: pointer; align-content: center;" title="Hủy gói" class="btn btn-sm">
-                                                            <i class="fas fa-times" style="color: #ff0000;"></i>
+                                                        <a th:attr="onclick=|event.stopPropagation(); deleteRecord({action: '@{'/subscription/delete/'+${model.id}}', method: 'POST',title: 'Xác nhận hủy gói',text: 'Bạn có chắc muốn hủy gói này không'})|" style="cursor: pointer; align-content: center;" title="Hủy gói" class="btn btn-sm">
+                                                            <i class="fas fa-trash-alt" style="color: #ff0000;"></i>
                                                         </a>
                                                     </div>
                                                 </td>
@@ -394,7 +394,7 @@
                                                 <th>Trạng thái</th>
                                                 <th>Định kỳ</th>
                                                 <th>Số buổi</th>
-                                                <th>Hành động</th>
+                                                <th>chức năng</th>
                                             </tr>
                                             </thead>
                                             <tbody>
@@ -446,43 +446,119 @@
                                 <button type="button" class="btn btn-secondary open-modal-class" th:data-url="${@environment.getProperty('domain.app') + '/nexia-cms/payment/create?id=' + model.id}"><i class="fas fa-money-bill"></i> Thanh toán</button>
                             </div>
                             <div class="container-fluid">
-                                <div class="card card-default mx-3 mt-3">
+                                <div class="card card-default mt-3">
                                     <div class="card-body">
-                                        <div style="position: relative;">
-                                            <canvas id="memberPaymentChart" style="height: 400px !important;"></canvas>
+                                        <div style="position: relative; height: 220px">
+                                            <canvas id="memberPaymentChart"></canvas>
                                         </div>
 
                                     </div>
                                 </div>
                             </div>
-<!--                            <div class="container-fluid">-->
-<!--                                <div class="">Lịch sử thanh toán</div>-->
+                            <div class="container-fluid">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <div>
+                                            <div class="current-member-title d-flex align-items-center">
+                                                <span>Lịch sử thanh toán</span> <i class="fa fa-clock ml-2"></i>
+                                            </div>
+                                            <form th:action="@{/member/detail}" method="get">
+                                                <input hidden="hidden" th:value="${tab}" name="tab"></input>
+                                                <input hidden="hidden" th:value="${model.id}" name="id"></input>
+                                            <div class="row mt-3">
+                                                    <div class="col-md-6">
+                                                        <div class="form-group" th:insert="component :: input-text('Miêu tả', 'paymentDescription', ${paymentDescription}, 0, 255, false, false)"></div>
+                                                        <div class="form-group" th:with="options=${T(java.util.Arrays).asList(
+                                                                '', 'Tất cả',
+                                                                '1', 'Thành công',
+                                                                '0', 'Không hoạt động',
+                                                                '2', 'Đang chờ',
+                                                                '-1', 'Thất bại'
+                                                            )}">
+                                                            <div th:replace="component :: select-default-v2('Trạng thái', 'paymentStatus', ${paymentStatus}, false, false, ${options})"></div>
+                                                        </div>
+                                                        <div class="d-flex justify-content-start align-items-center">
+                                                            <button type="submit" class="btn btn-primary">Tìm kiếm</button>
+                                                            <button type="button" class="btn btn-danger ml-2" id="resetPaymentForm">Đặt lại</button>
+                                                        </div>
+                                                    </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-group" th:with="options=${T(java.util.Arrays).asList(
+                                                                '', 'Tất cả',
+                                                                'cash', 'Tiền mặt',
+                                                                'paypal', 'Paypal'
+                                                            )}">
+                                                        <div th:replace="component :: select-default-v2('Phương thức thanh toán', 'paymentGatewaySearch', ${paymentGatewaySearch}, false, false, ${options})"></div>
+                                                    </div>
+                                                    <div class="form-group" th:with="options=${T(java.util.Arrays).asList(
+                                                                '', 'Tất cả',
+                                                                '1', 'Thanh toán',
+                                                                '0', 'Hoàn tiền'
+                                                            )}">
+                                                        <div th:replace="component :: select-default-v2('Loại thanh toán', 'paymentType', ${paymentType}, false, false, ${options})"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            </form>
+                                            <form id="regenerateForm">
+                                                <input hidden="hidden" value="">
+                                            </form>
+                                        </div>
+                                        <div class="table-responsive mb-2 mt-3">
+                                            <table class="table table-sm custom-table table-bordered table-hover text-center" style="table-layout: auto; width: 100%; font-weight: 600;">
+                                                <thead class="thead-light align-content-center">
+                                                <tr>
+                                                    <th>Ngày giao dịch</th>
+                                                    <th>Miêu tả</th>
+                                                    <th>Số tiền</th>
+                                                    <th>Trạng thái</th>
+                                                    <th>Phương thức thanh toán</th>
+                                                    <th>Loại thanh toán</th>
+                                                    <th>chức năng</th>
+                                                </tr>
+                                                </thead>
+                                                <tbody>
+                                                <tr th:each="payment,item : ${payment}" th:attr="data-id=${payment.id}">
+                                                    <td th:text="${#dates.format(new java.util.Date(payment.transactionDate), 'dd/MM/yyyy')}" style="align-content: center;"></td>
+                                                    <td th:text="${payment.description}" style="align-content: center;"></td>
+                                                    <td th:text="${'$' + payment.amount}" style="align-content: center;"></td>
+                                                    <td style="align-content: center;">
+                                                        <span th:if="${payment.status == 2}" class="badge badge-warning" style="white-space: normal; cursor: pointer">Đang chờ</span>
+                                                        <span th:if="${payment.status == 1}" class="badge badge-success" style="white-space: normal; cursor: pointer">Thành công</span>
+                                                        <span th:if="${payment.status == 0}" class="badge badge-secondary" style="white-space: normal; cursor: pointer;">Không hoạt động</span>
+                                                        <span th:if="${payment.status == -1}" class="badge badge-danger" style="white-space: normal; cursor: pointer;">Thất bại</span>
+                                                    </td>
+                                                    <td style="align-content: center;">
+                                                        <span th:if="${payment.paymentGateway == 'cash'}" class="badge badge-success" style="white-space: normal; cursor: pointer">Tiền mặt</span>
+                                                        <span th:if="${payment.paymentGateway == 'paypal'}" class="badge badge-primary" style="white-space: normal; cursor: pointer;">Paypal</span>
+                                                    </td>
+                                                    <td style="align-content: center;">
+                                                        <span th:if="${payment.type == 0}" class="badge badge-danger" style="white-space: normal; cursor: pointer">Hoàn tiền</span>
+                                                        <span th:if="${payment.type == 1}" class="badge badge-success" style="white-space: normal; cursor: pointer;">Thanh toán</span>
+                                                    </td>
+                                                    <td style="align-content: center;">
+                                                        <div class="d-flex flex-row justify-content-center">
+                                                            <a th:if="${payment.status == 2 && payment.gatewayTransactionId!=null}" class="btn" title="Sinh mã qr" th:data-url="${@environment.getProperty('domain.app') + '/nexia-cms/subscription/detail?id=' + model.id}"
+                                                                   th:attr="onclick=|event.stopPropagation(); regenerateQr('${payment.id}','${model.id}')|">
+                                                                <i class="fa fa-qrcode"></i>
+                                                            </a>
+                                                            <a th:attr="onclick=|event.stopPropagation(); deleteRecord({action: '@{'/payment/delete/'+${payment.id}}', method: 'POST',title: 'Xác nhận xóa',text: 'Bạn có chắc muốn xóa thanh toán này không'})|" style="cursor: pointer; align-content: center;" title="Xóa" class="btn btn-sm">
+                                                                <i class="fas fa-trash-alt" style="color: #ff0000;"></i>
+                                                            </a>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr th:if="${payment?.size() == 0}">
+                                                    <td colspan="100">Không kết quả</td>
+                                                </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <hungtvt-pagination th:replace="buu-component :: pagination10(${paymentPageNo}, ${paymentTotalPage}, ${paymentPageSize}, 'buuPageSize', 'buuPagination', 'paymentPageNo', 'paymentPageSize')"></hungtvt-pagination>
 
-<!--                                <div class="card">-->
-<!--                                    <div class="card-body">-->
-<!--                                        <table id="paymentHistoryDatatable" class="table table-bordered table-striped">-->
-<!--                                            <thead>-->
-<!--                                            <tr>-->
-<!--                                                <th>Rendering engine</th>-->
-<!--                                                <th>Browser</th>-->
-<!--                                                <th>Platform(s)</th>-->
-<!--                                                <th>Engine version</th>-->
-<!--                                                <th>CSS grade</th>-->
-<!--                                            </tr>-->
-<!--                                            </thead>-->
-<!--                                            <tbody>-->
-<!--                                            <tr>-->
-<!--                                                <td>Trident</td>-->
-<!--                                                <td>Internet Explorer 4.0</td>-->
-<!--                                                <td>Win 95+</td>-->
-<!--                                                <td>4</td>-->
-<!--                                                <td>X</td>-->
-<!--                                            </tr>-->
-<!--                                            </tbody>-->
-<!--                                        </table>-->
-<!--                                    </div>-->
-<!--                                </div>-->
-<!--                            </div>-->
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="tab-pane fade" id="booking" role="tabpanel" th:classappend="${tab == 4 ? 'show active' : ''}">
@@ -524,6 +600,23 @@
 
 <!-- PAGE JAVASCRIPT CODE -->
 <script layout:fragment="content_page_script">
+    $("#resetPaymentForm").on("click", function() {
+        $("#paymentDescription").val("");
+        $("#paymentGatewaySearch").prop("selectedIndex", 0);
+        $("#paymentStatus").prop("selectedIndex", 0);
+        $("#paymentType").prop("selectedIndex", 0);
+    });
+
+    function regenerateQr(paymentId, memberId)
+    {
+        var regenerateForm = document.querySelector("#regenerateForm");
+        const params = new URLSearchParams(window.location.search);
+        const tab = params.get("tab");
+        regenerateForm.action = `http://localhost:8086/nexia-cms/payment/regenerate-qr?paymentId=${paymentId}&memberId=${memberId}&tab=${tab}`;
+        regenerateForm.method = 'post';
+        regenerateForm.submit();
+    }
+
     var qrModel = "[[${qrCodeImage}]]"
     if(qrModel !== null && qrModel !== "")
     {
@@ -752,6 +845,75 @@
     }
 
     renderChart();
+
+    document.addEventListener("DOMContentLoaded", function(event) {
+        var scrollpos = localStorage.getItem('scrollpos');
+        if (scrollpos) {
+            window.scrollTo(0, parseInt(scrollpos));
+            localStorage.removeItem('scrollpos');
+        }
+        window.addEventListener("scroll", function() {
+            localStorage.setItem('scrollpos', window.scrollY);
+        });
+    });
+
+    async function checkIn(memberId)
+    {
+        const response = await fetch(`http://localhost:8086/nexia-cms/check-in/manual?id=${memberId}`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+        if (response.ok) {
+            const result = await response.json();
+            const data = result.data;
+            iziToast.show({
+                class: 'big-izitoast',
+                title: `${data.firstName} ${data.lastName}`,
+                message: `${data.membershipName} - ${data.startAt} - ${data.endAt}`,
+                theme: 'light', // dark
+                color: 'green',
+                image: `${data.imageUrl}`,
+                imageWidth: 60,
+                layout: 1,
+                displayMode: 0, // once, replace
+                position: 'bottomRight', // bottomRight, bottomLeft, topRight, topLeft, topCenter, bottomCenter, center
+                targetFirst: true,
+                timeout: 5000
+            });
+        }
+        else if (response.status === 403)
+        {
+            iziToast.show({
+                class: 'big-izitoast',
+                title: `Thất bại`,
+                message: `Thành viên chưa đăng ký gói nào hoặc gói đã hết hạn`,
+                theme: 'light', // dark
+                color: 'red',
+                layout: 1,
+                displayMode: 0, // once, replace
+                position: 'bottomRight', // bottomRight, bottomLeft, topRight, topLeft, topCenter, bottomCenter, center
+                targetFirst: true,
+                timeout: 5000
+            });
+        }
+        else {
+            iziToast.show({
+                class: 'big-izitoast',
+                title: `Thất bại`,
+                message: `Có lỗi xảy ra khi điểm danh thành viên`,
+                theme: 'light', // dark
+                color: 'red',
+                layout: 1,
+                displayMode: 0, // once, replace
+                position: 'bottomRight', // bottomRight, bottomLeft, topRight, topLeft, topCenter, bottomCenter, center
+                targetFirst: true,
+                timeout: 5000
+            });
+        }
+
+    }
 
     $(() => {
         let id = 'image';

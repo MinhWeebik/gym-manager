@@ -3,7 +3,10 @@ package com.ringme.cms.controller.gym;
 import com.paypal.orders.Order;
 import com.ringme.cms.dto.gym.MemberSubscriptionDto;
 import com.ringme.cms.dto.gym.PaymentDto;
+import com.ringme.cms.model.gym.Member;
 import com.ringme.cms.model.gym.MemberSubscription;
+import com.ringme.cms.model.gym.Payment;
+import com.ringme.cms.repository.gym.MemberRepository;
 import com.ringme.cms.repository.gym.MemberSubscriptionRepository;
 import com.ringme.cms.repository.gym.PaymentRepository;
 import com.ringme.cms.service.gym.MemberSubscriptionService;
@@ -38,6 +41,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class PaymentController {
 
+    private final MemberRepository memberRepository;
     @Value("${ipv4.address}")
     private String ipv4;
 
@@ -155,7 +159,7 @@ public class PaymentController {
                     paymentRepository.save(paymentModel);
                 }
                 MemberSubscription memberSubscription = memberSubscriptionRepository.findByPaypalSubscriptionId(orderId);
-                if (memberSubscription != null) {
+                if (memberSubscription != null && memberSubscription.getStatus() == 2) {
                     memberSubscription.setStatus(1);
                     memberSubscriptionRepository.save(memberSubscription);
                 }
@@ -200,6 +204,34 @@ public class PaymentController {
         } catch (Exception e) {
             log.error("Error executing payment for PaymentId: " + id, e);
             return "gym/payment/cancel";
+        }
+    }
+
+    @PostMapping("/regenerate-qr")
+    public String regenerateQR(@RequestParam("paymentId") Long paymentId, @RequestParam("memberId") Long memberId, @RequestParam("tab") Integer tab,
+                               RedirectAttributes redirectAttributes,
+                               HttpServletRequest request)
+    {
+        try
+        {
+            Payment payment = paymentRepository.findById(paymentId).orElseThrow();
+            if(payment.getPaymentUrl() != null && !payment.getPaymentUrl().isEmpty())
+            {
+                byte[] qrCodeBytes = qrCodeService.generateQRCodeImage(payment.getPaymentUrl(), 350, 350);
+                String qrCodeBase64 = Base64.getEncoder().encodeToString(qrCodeBytes);
+                redirectAttributes.addFlashAttribute("qrCodeImage", qrCodeBase64);
+                redirectAttributes.addFlashAttribute("paymentId", payment.getGatewayTransactionId());
+                redirectAttributes.addFlashAttribute("payPalLink", payment.getPaymentUrl());
+                    redirectAttributes.addFlashAttribute("shouldReload", true);
+            }
+            else throw new Exception("QR code not found");
+            return "redirect:/member/detail?id=" + memberId + "&tab=" + tab;
+        }
+        catch (Exception e)
+        {
+            redirectAttributes.addFlashAttribute("error", "Sinh mã QR thất bại");
+            log.error("Exception: {}", e.getMessage(), e);
+            return AppUtils.goBack(request).orElse("redirect:/member/detail?id=" + memberId + "&tab=" + tab);
         }
     }
 
@@ -248,6 +280,21 @@ public class PaymentController {
             log.error("Error: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+    }
+
+    @PostMapping(value = {"/delete/{id}"})
+    public String delete(@PathVariable(required = true) Long id,
+                         HttpServletRequest request,
+                         RedirectAttributes redirectAttributes) {
+        log.info("id: {}", id);
+        try {
+            paymentService.softDelete(id);
+            redirectAttributes.addFlashAttribute("success", "Xóa thành công!");
+        } catch (Exception e) {
+            log.error("Exception: {}", e.getMessage(), e);
+            redirectAttributes.addFlashAttribute("error", "Error in server!");
+        }
+        return AppUtils.goBack(request).orElse("redirect:/member/index");
     }
 
 }

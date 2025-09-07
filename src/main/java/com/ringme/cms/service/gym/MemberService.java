@@ -1,5 +1,6 @@
 package com.ringme.cms.service.gym;
 
+import com.github.f4b6a3.uuid.UuidCreator;
 import com.ringme.cms.common.UploadFile;
 import com.ringme.cms.dto.gym.MemberDto;
 import com.ringme.cms.model.gym.Member;
@@ -18,8 +19,10 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -107,9 +110,15 @@ public class MemberService {
             Member member;
             if (formDto.getId() == null) {
                 member = modelMapper.map(formDto, Member.class);
+                member.setStatus(1);
+                member.setCreatedAt(LocalDateTime.now());
+                member.setUpdatedAt(LocalDateTime.now());
+                UUID newId = UuidCreator.getTimeOrderedEpoch();
+                member.setUuid(newId.toString());
             } else {
                 member = memberRepository.findById(formDto.getId()).orElseThrow();
                 modelMapper.map(formDto, member);
+                member.setUpdatedAt(LocalDateTime.now());
             }
 
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");

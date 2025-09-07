@@ -12,6 +12,10 @@ import javassist.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -92,5 +96,22 @@ public class PaymentService {
         dataset.add(dataSetData);
         map.put("datasets", dataset);
         return map;
+    }
+
+    public Page<Payment> getAll(Long id,String paymentDescription,String paymentGateway,Integer paymentStatus,Integer paymentType,Integer paymentPageNo,Integer paymentPageSize)
+    {
+        Pageable pageable = PageRequest.of(paymentPageNo-1, paymentPageSize);
+        return paymentRepository.getAll(id, paymentDescription, paymentGateway, paymentStatus, paymentType, pageable);
+    }
+
+    public void softDelete(Long id) throws Exception{
+        try {
+            Payment payment = paymentRepository.findById(id).orElseThrow();
+            payment.setStatus(-1);
+            paymentRepository.save(payment);
+        } catch (Exception e) {
+            log.error("Exception: {}", e.getMessage(), e);
+            throw new RuntimeException(e);
+        }
     }
 }

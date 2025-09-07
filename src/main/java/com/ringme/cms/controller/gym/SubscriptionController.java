@@ -42,7 +42,7 @@ public class SubscriptionController {
                     paymentRepository.save(paymentModel);
                 }
                 MemberSubscription memberSubscription = memberSubscriptionRepository.findByPaypalSubscriptionId(subscriptionId);
-                if (memberSubscription != null) {
+                if (memberSubscription != null && memberSubscription.getStatus() == 2) {
                     memberSubscription.setStatus(1);
                     memberSubscriptionRepository.save(memberSubscription);
                 }

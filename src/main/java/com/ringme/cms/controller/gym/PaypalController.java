@@ -12,16 +12,18 @@ import com.ringme.cms.service.gym.PaymentService;
 import com.ringme.cms.service.gym.PaypalSubscriptionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
 import java.util.Map;
 
 @Controller
@@ -37,6 +39,9 @@ public class PaypalController
 
     private final PaymentService paymentService;
     private final MemberRepository memberRepository;
+    private final PaypalSubscriptionService payPalSubscriptionService;
+    @Value("${paypal.product.id}")
+    private String DEFAULT_PRODUCT_ID;
 
     @PostMapping("/webhook")
     public ResponseEntity<String> handleWebhook(@RequestHeader Map<String, String> headers, @RequestBody String payload) {
@@ -106,4 +111,58 @@ public class PaypalController
 
         return new ResponseEntity<>("Webhook processed", HttpStatus.OK);
     }
+
+    @PostMapping("/create-plan")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> handleCreatePlan(@RequestParam String planName,
+                                   @RequestParam String price,
+                                   @RequestParam Integer duration) {
+        try {
+            String decodedPlanName = URLDecoder.decode(planName, StandardCharsets.UTF_8.name());
+            String newPlanId = payPalSubscriptionService.createPlan(
+                    DEFAULT_PRODUCT_ID,
+                    decodedPlanName,
+                    price,
+                    "USD",
+                    "MONTH",
+                    duration
+            );
+            Map<String, Object> map = new HashMap<>();
+            map.put("planId", newPlanId);
+            return ResponseEntity.ok(map);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @PostMapping("/deactivate-plan")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> handleDeactivePlan(@RequestParam String planId) {
+        try {
+            paypalSubscriptionService.deactivatePlan(planId);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @PostMapping("/update-plan-price")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> handleUpdatePlanPrice(@RequestParam String planId,
+                                                                @RequestParam String price) {
+        try {
+            Boolean status = paypalSubscriptionService.updatePlanPrice(planId, price, "USD");
+            if(status)
+            {
+                return ResponseEntity.ok().build();
+            }
+            else{
+                return ResponseEntity.badRequest().build();
+            }
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+
 }

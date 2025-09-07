@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body data-rsssl=1>
+<script th:src="@{/webjars/jquery/3.6.0/jquery.min.js}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.4/html5-qrcode.min.js" integrity="sha512-k/KAe4Yff9EUdYI5/IAHlwUswqeipP+Cp5qnrsUjTPCgl51La2/JhyyjNciztD7mWNKLSXci48m7cctATKfLlQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<style>
+    html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+    }
+    body {
+        display: flex;
+        justify-content: center; /* Center horizontally */
+        align-items: center;   /* Center vertically */
+        background: #2c3e50;
+    }
+    main {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+    }
+
+    #reader {
+        width: 600px;
+        border: 5px solid rgba(255, 255, 255, 0.8);
+        box-shadow: 0 0 15px rgba(0,0,0,0.5);
+    }
+
+    #result {
+        text-align: center;
+        font-size: 1.5rem;
+        color: white;
+        font-family: sans-serif;
+        font-weight: bold;
+        min-height: 2em;
+    }
+</style>
+<main>
+    <div id="reader"></div>
+    <div id="result">
+    </div>
+</main>
+<script>
+    const successSound = new Audio('[[@{/sound/success.mp3}]]');
+    const errorSound = new Audio('[[@{/sound/failed.mp3}]]')
+    let isProcessing = false;
+    const scanner = new Html5QrcodeScanner('reader', {
+        qrbox: {
+            width: 250,
+            height: 250,
+        },
+        fps: 20,
+    });
+    scanner.render(success, error);
+
+    function success(result, decodedResult) {
+        // 1. Check the flag right at the beginning. Use console.log for debugging.
+        console.log("Scanner success triggered. isProcessing is currently:", isProcessing);
+        if (isProcessing) {
+            return;
+        }
+
+        // 2. Set the flag and pause the scanner immediately.
+        isProcessing = true;
+        scanner.pause();
+        console.log(`Code matched = ${result}`, decodedResult);
+        const resultDiv = document.getElementById('result')
+        const readerDiv = document.getElementById('reader')
+
+        $.ajax({
+            url: "http://localhost:8086/nexia-cms/check-in/auto?uuid=" + result,
+            method: "POST",
+            dataType: "json",
+            success: function(response) {
+                console.log("API Success:", response);
+                var responseData = response.data
+                if(response.code === 200) {
+                    successSound.play();
+                    resultDiv.style.color = "lightgreen"
+                    readerDiv.style.borderColor = "lightgreen"
+                    resultDiv.innerText = "Điểm danh thành công cho " + responseData.firstName + " " + responseData.lastName;
+                } else {
+                    errorSound.play();
+                    resultDiv.style.color = "red"
+                    readerDiv.style.borderColor = "red"
+                    resultDiv.innerText = responseData.message || "Có lỗi xảy ra khi điểm danh";
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("API Error:", status, error);
+                errorSound.play();
+                resultDiv.style.color = "red";
+                readerDiv.style.borderColor = "red"
+                if(xhr.status === 403)
+                {
+                    resultDiv.innerText = "Thành viên chưa đăng ký gói nào hoặc gói đã hết hạn.";
+                }
+                else {
+                    resultDiv.innerText = "Có lỗi xảy ra khi điểm danh thành viên.";
+                }
+
+            },
+            complete: function() {
+                console.log("API call complete. Resetting scanner state.");
+                setTimeout(() => {
+                    document.getElementById('result').innerText = '';
+                    readerDiv.style.borderColor = "rgba(255, 255, 255, 0.8)"
+                    scanner.resume();
+                    isProcessing = false;
+                    console.log("Scanner is now active again.");
+                }, 2000);
+            }
+        });
+    }
+    function error(err) {
+    }
+</script>
+
+</body>
+</html>
+

@@ -66,6 +66,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/3.3.4/css/bootstrap3/bootstrap-switch.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/3.3.4/js/bootstrap-switch.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/izitoast/dist/css/iziToast.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/izitoast/dist/js/iziToast.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
     <style>
         .select2-container--default .select2-selection--multiple .select2-selection__choice {
             background-color: #17a2b7;
@@ -181,6 +185,9 @@
             <li class="nav-item">
                 <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" th:attr="onclick=|openFullscreenWindow('@{/check-in/index}'); return false;|" title="Quét điểm danh"><i class="fa fa-qrcode"></i></a>
+            </li>
         </ul>
         <!-- Right navbar links -->
         <ul class="navbar-nav ml-auto">
@@ -268,6 +275,82 @@
 <script layout:fragment="content_page_script"></script>
 
 <script>
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const socket = new SockJS('http://localhost:8086/nexia-cms/check-in-websocket');
+        const stompClient = Stomp.over(socket);
+
+        const connectCallback = function (frame) {
+            console.log('Successfully connected to WebSocket hub: ' + frame);
+            stompClient.subscribe('/topic/check-ins', function (message) {
+
+                // 3. A message has arrived! Display the alert.
+                const checkInData = JSON.parse(message.body);
+
+                if(checkInData.code === 200) {
+                    var data = checkInData.data;
+                    iziToast.show({
+                        class: 'big-izitoast',
+                        title: `${data.firstName} ${data.lastName}`,
+                        message: `${data.membershipName} - ${data.startAt} - ${data.endAt}`,
+                        theme: 'light', // dark
+                        color: 'green',
+                        image: `${data.imageUrl}`,
+                        imageWidth: 60,
+                        layout: 1,
+                        displayMode: 0, // once, replace
+                        position: 'bottomRight', // bottomRight, bottomLeft, topRight, topLeft, topCenter, bottomCenter, center
+                        targetFirst: true,
+                        timeout: 5000
+                    });
+                }
+                else if(checkInData.code === 403)
+                {
+                    iziToast.show({
+                        class: 'big-izitoast',
+                        title: `Thất bại`,
+                        message: `Thành viên chưa đăng ký gói nào hoặc gói đã hết hạn`,
+                        theme: 'light', // dark
+                        color: 'red',
+                        layout: 1,
+                        displayMode: 0, // once, replace
+                        position: 'bottomRight', // bottomRight, bottomLeft, topRight, topLeft, topCenter, bottomCenter, center
+                        targetFirst: true,
+                        timeout: 5000
+                    });
+                }
+                else {
+                    iziToast.show({
+                        class: 'big-izitoast',
+                        title: `Thất bại`,
+                        message: `Có lỗi xảy ra khi điểm danh thành viên`,
+                        theme: 'light', // dark
+                        color: 'red',
+                        layout: 1,
+                        displayMode: 0, // once, replace
+                        position: 'bottomRight', // bottomRight, bottomLeft, topRight, topLeft, topCenter, bottomCenter, center
+                        targetFirst: true,
+                        timeout: 5000
+                    });
+                }
+
+                // Use the data to show a real-time notification
+
+            });
+        };
+
+        const errorCallback = function (error) {
+            console.error("Could not connect to WebSocket. Retrying in 5 seconds...", error);
+            setTimeout(connect, 5000); // Simple auto-reconnect logic
+        };
+
+        function connect() {
+            stompClient.connect({}, connectCallback, errorCallback);
+        }
+
+        connect(); // Initial connection attempt
+    });
+
     var APPNAME = "[[${@environment.getProperty('server.servlet.context-path')}]]";
     var ROOT_URL= window.location.origin  + APPNAME;
     console.log("APPNAME: " + APPNAME);
@@ -543,6 +626,18 @@
                 toastError('Error', 3000);
             }
         })
+    }
+
+    function openFullscreenWindow(url) {
+        const screenWidth = window.screen.availWidth;
+        const screenHeight = window.screen.availHeight;
+
+        window.open(
+            url,
+            "_blank",
+            `toolbar=no,location=no,status=no,menubar=no,scrollbars=yes,resizable=yes,
+    width=${screenWidth},height=${screenHeight},top=0,left=0`
+        );
     }
 </script>
 

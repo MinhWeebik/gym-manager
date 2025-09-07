@@ -2,6 +2,7 @@ package com.ringme.cms.repository.gym;
 
 import com.ringme.cms.model.gym.Member;
 import com.ringme.cms.model.gym.MemberSubscription;
+import com.ringme.cms.model.gym.Membership;
 import jdk.jshell.JShell;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -27,6 +28,19 @@ public interface MemberSubscriptionRepository extends JpaRepository<MemberSubscr
             "WHERE m.status > 0 AND ms.type = :type AND m.member_id = :id",
             nativeQuery = true)
     List<MemberSubscription> findByMemberIdAndType(@Param("id") Long id, @Param("type") Integer type);
+
+    @Query(value = "SELECT DISTINCT m.* FROM member_subscriptions m " +
+            "INNER JOIN membership ms ON m.membership_id = ms.id " +
+            "WHERE m.status = 1 AND ms.type = :type AND m.member_id = :id",
+            nativeQuery = true)
+    List<MemberSubscription> findActiveByMemberIdAndType(@Param("id") Long id, @Param("type") Integer type);
+
+    @Query(value = "SELECT DISTINCT m.* FROM member_subscriptions m " +
+            "INNER JOIN membership ms ON m.membership_id = ms.id " +
+            "INNER JOIN member mb ON mb.id = m.member_id " +
+            "WHERE m.status = 1 AND ms.type = :type AND mb.uuid = :uuid",
+            nativeQuery = true)
+    List<MemberSubscription> findActiveByMemberUUIDAndType(@Param("uuid") String uuid, @Param("type") Integer type);
 
     @Query(value = "SELECT * FROM member_subscriptions WHERE end_at < CURDATE() AND status = 1 AND isRecurring = 0 AND paypal_subscription_id LIKE 'I-%';",
             nativeQuery = true)
@@ -56,4 +70,7 @@ public interface MemberSubscriptionRepository extends JpaRepository<MemberSubscr
             "  status = 2 " +
             "  AND DATE_ADD(transaction_date, INTERVAL 30 MINUTE) <= NOW();", nativeQuery = true)
     void autoUpdatePendingPayment();
+
+    @Query(value = "SELECT * FROM member_subscriptions WHERE :id = membership_id AND status = 1", nativeQuery = true)
+    List<MemberSubscription> findByMembershipId(@Param("id") Long id);
 }

@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface MemberRepository extends JpaRepository<Member,Long> {
 
@@ -74,4 +75,5 @@ public interface MemberRepository extends JpaRepository<Member,Long> {
     @Query(value = "SELECT m.id FROM member m INNER JOIN member_subscriptions ms ON ms.member_id = m.id WHERE ms.id = :id",nativeQuery = true)
     Long findIdByMemberSubscriptionId(@Param("id") Long id);
 
+    Optional<Member> findByUuid(String uuid);
 }
