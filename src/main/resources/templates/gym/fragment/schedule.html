@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+    <body>
+    <div th:fragment="createScheduleOption" class="modal fade" id="createScheduleOption" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Tạo lịch hẹn</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-responsive mb-2 mt-3 d-flex align-items-center justify-content-center">
+                        <div>Ngày: <span th:text="${startDate}"></span></div>
+                        <div th:if="${startTime != null}" class="ml-3">Từ: <span th:text="${startTime}"></span></div>
+                        <div th:if="${endTime != null}" class="ml-3">Đến: <span th:text="${endTime}"></span></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+<!--                    <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="createBlockedTimeUrl()">Chặn thời gian</button>-->
+                    <button th:if="${trainerId == null}" type="button" class="btn btn-primary" data-dismiss="modal" onclick="createClassUrl()">Thêm lớp</button>
+                    <button th:if="${trainerId != null}" type="button" class="btn btn-primary" data-dismiss="modal" onclick="createBookingUrl()">Thêm buổi pt riêng</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                </div>
+            </div>
+        </div>
+        <script>
+            function createClassUrl()
+            {   const trainerId = '[[${trainerId}]]'
+                const urlParams = new URLSearchParams(window.location.search);
+                const initialView = urlParams.get('view') || 'agendaWeek';
+                const initialDate = urlParams.get('date');
+                var trainerUrl = '';
+                if(trainerId != 'null'){
+                    trainerUrl = '&trainerId=' + trainerId;
+                }
+                const url = '[[@{/schedule/form}]]' + '?view=' + initialView + '&date='
+                    + initialDate + '&startDate=' + '[[${startDate}]]' + '&startTime=' + '[[${startTime}]]' + '&endTime=' + '[[${endTime}]]' + trainerUrl;
+                window.location.href = url;
+            }
+
+            function createBookingUrl()
+            {
+                const trainerId = '[[${trainerId}]]'
+                const urlParams = new URLSearchParams(window.location.search);
+                const initialView = urlParams.get('view') || 'agendaWeek';
+                const initialDate = urlParams.get('date');
+                var trainerUrl = '';
+                if(trainerId != 'null'){
+                    trainerUrl = '&trainerId=' + trainerId;
+                }
+                const url = '[[@{/schedule/form-appointment}]]' + '?view=' + initialView + '&date='
+                    + initialDate + '&startDate=' + '[[${startDate}]]' + '&startTime=' + '[[${startTime}]]' + '&endTime=' + '[[${endTime}]]' + trainerUrl;
+                window.location.href = url;
+            }
+
+            // function createBlockedTimeUrl()
+            // {
+            //     const urlParams = new URLSearchParams(window.location.search);
+            //     const initialView = urlParams.get('view') || 'agendaWeek';
+            //     const initialDate = urlParams.get('date');
+            //     const url = '[[@{/schedule/form-blocked-time}]]' + '?view=' + initialView + '&date='
+            //         + initialDate + '&startDate=' + '[[${startDate}]]' + '&startTime=' + '[[${startTime}]]' + '&endTime=' + '[[${endTime}]]';
+            //     window.location.href = url;
+            // }
+        </script>
+    </div>
+
+    <div th:fragment="updateScheduleOption" class="modal fade" id="updateScheduleOption" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <span th:if="${type==1}">
+                            Cập nhật lịch hẹn
+                        </span>
+                        <span th:if="${type==2}">
+                            Cập nhật thời gian chặn
+                        </span>
+                        <span th:if="${type==0}">
+                            Cập nhật buổi pt kèm riêng
+                        </span>
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                        <div th:if="${type==1}">
+                            <table class="table custom-table table-bordered table-sm table-striped" th:object="${model}">
+                                <tbody id="body-detail">
+                                <tr>
+                                    <td style="font-weight: bold;">Tên lớp</td>
+                                    <td th:text="*{classes.name}"></td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight: bold;">Số lượng thành viên</td>
+                                    <td ><span th:text="${numberOfAttendances}"></span>/<span th:text="*{capacity}"></span></td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight: bold;">Giá (xu)</td>
+                                    <td th:text="*{price}"></td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight: bold;">Ngày</td>
+                                    <td th:text="${#dates.format(new java.util.Date(model.date), 'dd/MM/yyyy')}"></td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight: bold;">Từ</td>
+                                    <td th:text="*{from}"></td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight: bold;">Đến</td>
+                                    <td th:text="*{to}"></td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight: bold;">Lặp lại</td>
+                                    <td>
+                                        <span th:if="${model.repeat.name() == 'NONE'}">Không lặp</span>
+                                        <span th:if="${model.repeat.name() == 'WEEKLY'}">Hằng tuần</span>
+                                        <span th:if="${model.repeat.name() == 'FORTNIGHTLY'}">Mỗi 2 tuần</span>
+                                        <span th:if="${model.repeat.name() == 'THREE_WEEKLY'}">Mỗi 3 tuần</span>
+                                        <span th:if="${model.repeat.name() == 'FOUR_WEEKLY'}">Mỗi 4 tuần</span>
+                                        <span th:if="${model.repeat.name() == 'SIX_WEEKLY'}">Mỗi 6 tuần</span>
+                                        <span th:if="${model.repeat.name() == 'EIGHT_WEEKLY'}">Mỗi 8 tuần</span>
+                                        <span th:if="${model.repeat.name() == 'MONTHLY'}">Hằng tháng</span>
+                                        <span th:if="${model.repeat.name() == 'DAILY'}">Hằng ngày</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight: bold;">Huấn luyện viên</td>
+                                    <td th:text="${model.trainer.firstName + ' ' + model.trainer.lastName}"></td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight: bold;">Ngày kết thúc lặp</td>
+                                    <td>
+                                        <span th:if="${model.repeat.name() == 'NONE'}">Không lặp</span>
+                                        <span th:if="${model.repeat.name() != 'NONE' && model.endRecur==null}">Không có ngày kết thúc</span>
+                                        <span th:if="${model.repeat.name() != 'NONE' && model.endRecur!=null}" th:text="*{endRecur}"></span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight: bold;">Note</td>
+                                    <td th:text="*{note}"></td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                    <div th:if="${type==2}">
+                        <table class="table custom-table table-bordered table-sm table-striped" th:object="${model}">
+                            <tbody id="body-detail">
+                            <tr>
+                                <td style="font-weight: bold;">Ngày</td>
+                                <td th:text="${#dates.format(new java.util.Date(model.date), 'dd/MM/yyyy')}"></td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: bold;">Từ</td>
+                                <td th:text="*{from}"></td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: bold;">Đến</td>
+                                <td th:text="*{to}"></td>
+                            </tr>
+<!--                            <tr>-->
+<!--                                <td style="font-weight: bold;">Lặp lại</td>-->
+<!--                                <td>-->
+<!--                                    <span th:if="${model.repeat.name() == 'NONE'}">Không lặp</span>-->
+<!--                                    <span th:if="${model.repeat.name() == 'WEEKLY'}">Hằng tuần</span>-->
+<!--                                    <span th:if="${model.repeat.name() == 'FORTNIGHTLY'}">Mỗi 2 tuần</span>-->
+<!--                                    <span th:if="${model.repeat.name() == 'THREE_WEEKLY'}">Mỗi 3 tuần</span>-->
+<!--                                    <span th:if="${model.repeat.name() == 'FOUR_WEEKLY'}">Mỗi 4 tuần</span>-->
+<!--                                    <span th:if="${model.repeat.name() == 'SIX_WEEKLY'}">Mỗi 6 tuần</span>-->
+<!--                                    <span th:if="${model.repeat.name() == 'EIGHT_WEEKLY'}">Mỗi 8 tuần</span>-->
+<!--                                    <span th:if="${model.repeat.name() == 'MONTHLY'}">Hằng tháng</span>-->
+<!--                                    <span th:if="${model.repeat.name() == 'DAILY'}">Hằng ngày</span>-->
+<!--                                </td>-->
+<!--                            </tr>-->
+<!--                            <tr>-->
+<!--                                <td style="font-weight: bold;">Ngày kết thúc lặp</td>-->
+<!--                                <td>-->
+<!--                                    <span th:if="${model.repeat.name() == 'NONE'}">Không lặp</span>-->
+<!--                                    <span th:if="${model.repeat.name() != 'NONE' && model.endRecur==null}">Không có ngày kết thúc</span>-->
+<!--                                    <span th:if="${model.repeat.name() != 'NONE' && model.endRecur!=null}" th:text="*{endRecur}"></span>-->
+<!--                                </td>-->
+<!--                            </tr>-->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div th:if="${type==0}">
+                        <table class="table custom-table table-bordered table-sm table-striped" th:object="${model}">
+                            <tbody id="body-detail">
+                            <tr>
+                                <td style="font-weight: bold;">Thành viên tham gia</td>
+                                <td th:text="${model.member.firstName + ' ' + model.member.lastName}"></td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: bold;">Huấn luyện viên</td>
+                                <td th:text="${model.trainer.firstName + ' ' + model.trainer.lastName}"></td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: bold;">Trạng thái</td>
+                                <td style="align-content: center;">
+                                    <span th:if="${model.status == 0}" class="badge badge-danger" style="white-space: normal; cursor: pointer;">Không hoạt động</span>
+                                    <span th:if="${model.status == 1}" class="badge badge-success" style="white-space: normal; cursor: pointer">Đã đăng ký</span>
+                                    <span th:if="${model.status == -1}" class="badge badge-danger" style="white-space: normal; cursor: pointer">Không đến</span>
+                                    <span th:if="${model.status == 2}" class="badge badge-warning" style="white-space: normal; cursor: pointer">Đã điểm danh</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: bold;">Ngày</td>
+                                <td th:text="${#dates.format(new java.util.Date(model.date), 'dd/MM/yyyy')}"></td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: bold;">Từ</td>
+                                <td th:text="*{from}"></td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: bold;">Đến</td>
+                                <td th:text="*{to}"></td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: bold;">Lặp lại</td>
+                                <td>
+                                    <span th:if="${model.repeat.name() == 'NONE'}">Không lặp</span>
+                                    <span th:if="${model.repeat.name() == 'WEEKLY'}">Hằng tuần</span>
+                                    <span th:if="${model.repeat.name() == 'FORTNIGHTLY'}">Mỗi 2 tuần</span>
+                                    <span th:if="${model.repeat.name() == 'THREE_WEEKLY'}">Mỗi 3 tuần</span>
+                                    <span th:if="${model.repeat.name() == 'FOUR_WEEKLY'}">Mỗi 4 tuần</span>
+                                    <span th:if="${model.repeat.name() == 'SIX_WEEKLY'}">Mỗi 6 tuần</span>
+                                    <span th:if="${model.repeat.name() == 'EIGHT_WEEKLY'}">Mỗi 8 tuần</span>
+                                    <span th:if="${model.repeat.name() == 'MONTHLY'}">Hằng tháng</span>
+                                    <span th:if="${model.repeat.name() == 'DAILY'}">Hằng ngày</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: bold;">Ngày kết thúc lặp</td>
+                                <td>
+                                    <span th:if="${model.repeat.name() == 'NONE'}">Không lặp</span>
+                                    <span th:if="${model.repeat.name() != 'NONE' && model.endRecur==null}">Không có ngày kết thúc</span>
+                                    <span th:if="${model.repeat.name() != 'NONE' && model.endRecur!=null}" th:text="*{endRecur}"></span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: bold;">Note</td>
+                                <td th:text="*{note}"></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="blockEventUrl()" th:if="${type < 2}">Chặn</button>
+                    <button type="button" class="btn btn-danger" th:attr="onclick=|event.stopPropagation(); deleteRecord({
+                      action: '@{/schedule/delete-class/{id}/{type}(id=${model.id}, type=${type})}',
+                      method: 'POST',
+                      title: 'Xác nhận xóa',
+                      text: 'Bạn có chắc muốn xóa cái này không'
+                  })|"><span th:if="${type == 1}">Xóa lịch</span>
+                        <span th:if="${type == 2}">Xóa thời gian chặn</span>
+                        <span th:if="${type == 0}">Xóa buổi</span></button>
+                    <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="openMemberListUrl()" th:if="${type == 1}">Danh sách thành viên</button>
+<!--                    <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="updateBlockedTimeUrl()" th:if="${type == 2}">Sửa thời gian chặn</button>-->
+                    <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="updateEventUrl()" th:if="${type == 1 || type == 0}">
+                        <span th:if="${type == 1}">Sửa lịch</span>
+                        <span th:if="${type == 0}">Sửa buổi</span>
+                    </button>
+
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                </div>
+            </div>
+        </div>
+        <script>
+            function updateEventUrl()
+            {
+                const type = '[[${type}]]'
+                const urlParams = new URLSearchParams(window.location.search);
+                const initialView = urlParams.get('view') || 'agendaWeek';
+                const initialDate = urlParams.get('date');
+                var url;
+                if(type == 1)
+                {
+                    url = '[[@{/schedule/form}]]' + '?view=' + initialView + '&date='
+                        + initialDate + '&id=' + '[[${model.id}]]' + '&trainerId=' + '[[${trainerId}]]';
+                }
+                if(type == 0)
+                {
+                    url = '[[@{/schedule/form-appointment}]]' + '?view=' + initialView + '&date='
+                        + initialDate + '&id=' + '[[${model.id}]]' + '&trainerId=' + '[[${trainerId}]]';
+                }
+                window.location.href = url;
+            }
+
+            function blockEventUrl()
+            {
+                const urlParams = new URLSearchParams(window.location.search);
+                const initialView = urlParams.get('view') || 'agendaWeek';
+                const initialDate = urlParams.get('date');
+                var url;
+                if(type == 1)
+                {
+                    url = '[[@{/schedule/block-event}]]' + '?view=' + initialView + '&date='
+                        + initialDate + '&id=' + '[[${model.id}]]' + '&dateStr=' + '[[${date}]]' + '&trainerId=' + '[[${trainerId}]]';
+                }
+                if(type == 0)
+                {
+                    url = '[[@{/schedule/block-appointment}]]' + '?view=' + initialView + '&date='
+                        + initialDate + '&id=' + '[[${model.id}]]' + '&dateStr=' + '[[${date}]]' + '&trainerId=' + '[[${trainerId}]]';
+                }
+                window.location.href = url;
+            }
+
+            function openMemberListUrl()
+            {
+                const urlParams = new URLSearchParams(window.location.search);
+                const initialView = urlParams.get('view') || 'agendaWeek';
+                const initialDate = urlParams.get('date');
+                var url;
+                url = '[[@{/schedule/attendance/index}]]' + '?view=' + initialView + '&date='
+                    + initialDate + '&id=' + '[[${model.id}]]' + '&dateStr=' + '[[${date}]]' + '&trainerId=' + '[[${trainerId}]]';
+                window.location.href = url;
+            }
+
+            // function updateBlockedTimeUrl()
+            // {
+            //     const urlParams = new URLSearchParams(window.location.search);
+            //     const initialView = urlParams.get('view') || 'agendaWeek';
+            //     const initialDate = urlParams.get('date');
+            //     var url;
+            //     url = '[[@{/schedule/form-blocked-time}]]' + '?view=' + initialView + '&date='
+            //         + initialDate + '&id=' + '[[${model.id}]]';
+            //     window.location.href = url;
+            // }
+        </script>
+    </div>
+
+    </body>
+</html>

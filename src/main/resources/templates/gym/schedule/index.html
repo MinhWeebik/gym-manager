@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en" layout:decorate="~{cms_layout_1.html}"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <style>
+        .fc-event {
+            position: relative;
+            /* Add some padding on the right to make space for the icon */
+            /*padding-right: 20px !important;*/
+        }
+
+        /* 2. Style and position the icon itself */
+        .recurring-icon {
+            position: absolute;
+            top: 3px;       /* Adjust as needed */
+            right: 5px;     /* Adjust as needed */
+            font-size: 0.8em; /* Make it a bit smaller than the title text */
+            color: rgba(255, 255, 255, 0.75); /* A slightly transparent white looks good */
+        }
+
+        /* Optional: Make the icon more visible on hover */
+        .fc-event:hover .recurring-icon {
+            color: rgba(255, 255, 255, 1);
+        }
+    </style>
+</head>
+<body>
+<!-- Main content -->
+<!-- Main content -->
+<div class="content" layout:fragment="page_content">
+    <!-- Use ONE container-fluid to hold everything -->
+    <div class="container-fluid">
+        <div class="row">
+            <!-- This single column will be the direct parent for BOTH cards -->
+            <div class="col-12">
+                <div class="card mb-3 sticky-top z-2">
+                    <div class="card-body">
+                        <!--
+                            IMPROVED LAYOUT:
+                            Using flexbox utilities for a cleaner, more robust alignment.
+                        -->
+                        <div class="row d-flex justify-content-between align-items-center">
+
+                            <!-- Filter on the left -->
+                            <div class="col-md-4">
+                                <div class="form-group mb-md-0"> <!-- mb-md-0 removes bottom margin on medium screens and up -->
+                                    <select id="trainerId" name="trainerId" class="form-control">
+                                        <option value="">Lọc theo Huấn luyện viên</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Button on the right -->
+                            <div class="col-md-auto"> <!-- col-md-auto takes only the width it needs -->
+                                <button id="toggle-edit-mode" class="btn btn-warning">
+                                    <i class="fas fa-pencil-alt"></i> Bật chế độ chỉnh sửa
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!--
+                  2. YOUR SCROLLABLE CONTENT (THE CALENDAR)
+                  This is now a SIBLING to the sticky card above.
+                -->
+                <div class="card card-primary">
+                    <div class="card-body p-0">
+                        <!-- THE CALENDAR -->
+                        <div id="calendar"></div>
+                    </div>
+                    <!-- /.card-body -->
+                </div>
+                <!-- /.card -->
+
+            </div>
+            <!-- /.col -->
+        </div>
+        <!-- /.row -->
+    </div><!-- /.container-fluid -->
+
+    <div id="modal-container"></div>
+</div>
+
+<!-- PAGE JAVASCRIPT CODE -->
+<script layout:fragment="content_page_script">
+
+    var trainerId = null;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const initialView = urlParams.get('view') || 'agendaWeek';
+    const initialDate = urlParams.get('date');
+
+    $('#trainerId').select2({
+        placeholder: 'Tìm kiếm huấn luyện viên...',
+        allowClear: true,
+        ajax: {
+            url: '[[@{/trainer/ajax-search}]]',
+            dataType: 'json',
+            delay: 250,
+
+            data: function (params) {
+                return {
+                    item: params.term
+                };
+            },
+            processResults: function (data, params) {
+                var allOption = {
+                    id: '',
+                    text: 'Tất cả lớp học'
+                };
+                data.unshift(allOption);
+                return {
+                    results: data
+                };
+            },
+            cache: true
+        }
+    });
+
+    function setSelect2FromURL() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const trainerParam = urlParams.get('trainerId');
+
+        // 1. Do nothing if there's no trainerId in the URL
+        if (!trainerParam) {
+            return;
+        }
+
+        // 2. Make an AJAX call to the API.
+        // We send an empty 'input' to get the full list of trainers,
+        // because the API isn't designed to find a single user by ID.
+        $.ajax({
+            type: 'GET',
+            url: '[[@{/trainer/ajax-search}]]',
+            data: {
+                input: '' // Pass an empty 'input' parameter to get all results
+            },
+            dataType: 'json',
+            success: function(allTrainers) {
+
+                if (allTrainers && allTrainers.length > 0) {
+                    const targetTrainer = allTrainers.find(trainer => trainer.id == trainerParam);
+                    if (targetTrainer) {
+                        var option = new Option(targetTrainer.text, targetTrainer.id, true, true);
+                        $('#trainerId').append(option).trigger('change');
+                    }
+                }
+            },
+            error: function() {
+                console.error("Failed to fetch the list of trainers.");
+            }
+        });
+    }
+
+    // --- AND CALL IT ---
+    setSelect2FromURL();
+
+    $('#trainerId').on('change', function(e) {
+        var selectedValue = $(this).val();
+        const currentUrl = new URL(window.location.href);
+        if (selectedValue) {
+            trainerId = selectedValue;
+            currentUrl.searchParams.set('trainerId', selectedValue);
+        } else {
+            trainerId = null
+            currentUrl.searchParams.delete('trainerId');
+        }
+        history.pushState({ trainerId: selectedValue }, '', currentUrl.toString());
+        $('#calendar').fullCalendar('refetchEvents');
+    });
+
+    function updateEvent(event, revertFunc) {
+        Swal.fire({
+            title: 'Xác nhận thay đổi',
+            text: "Bạn có chắc chắn muốn di chuyển lịch tập này không?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Đồng ý!',
+            cancelButtonText: 'Hủy bỏ'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                if(event.type == 2) {
+                    event.id = event.id.split('-').pop();
+                }
+
+                if(event.type == 0) {
+                    event.id = event.id.split('-').pop();
+                }
+
+                var eventData = {
+                    title: event.title,
+                    start: event.start.format(),
+                    end: (event.end) ? event.end.format() : null
+                };
+
+                $.ajax({
+                    url: '[[@{/schedule/update}]]' + '/' + event.id + '/' + event.type,
+                    type: 'PUT',
+                    contentType: 'application/json',
+                    data: JSON.stringify(eventData),
+                    success: function(response) {
+                        console.log('Event updated successfully');
+                        toastSuccess("Lưu thành công", 1000);
+                        $('#calendar').fullCalendar('refetchEvents');
+                    },
+                    error: function(xhr) {
+                        console.error('Error updating event:', xhr.responseText);
+                        toastError(xhr.responseText, 3000)
+                        revertFunc(); // Server failed, so revert
+                    }
+                });
+
+            } else {
+                revertFunc();
+                console.log('User cancelled the event update.');
+            }
+        });
+    }
+
+    $(document).on('hidden.bs.modal', '#updateScheduleOption', function () {
+        $('#modal-container').empty();
+    });
+
+    function isSelectionAllowed(selectionInfo) {
+        const selectionStart = selectionInfo.start;
+        let cutoffTime = new Date();
+        cutoffTime.setHours(cutoffTime.getHours() + 12);
+        return selectionStart > cutoffTime;
+    }
+
+    $(function () {
+
+        var isEditModeEnabled = false;
+
+        var calendarElement = $('#calendar');
+        var toggleButton = $('#toggle-edit-mode');
+
+        var date = new Date()
+        var d    = date.getDate(),
+            m    = date.getMonth(),
+            y    = date.getFullYear()
+        /* initialize the calendar
+         -----------------------------------------------------------------*/
+        $('#calendar').fullCalendar({
+            defaultView: initialView,
+            defaultDate: initialDate,
+            locale: 'vi',
+            header    : {
+                left  : 'prev,next today',
+                center: 'title',
+                right : 'month,agendaWeek,agendaDay'
+            },
+            viewRender: function(view, element) {
+                let dateForUrl;
+                if (view.name === 'month' || view.name === 'basicWeek' || view.name === 'basicDay') {
+                    dateForUrl = view.intervalStart.format('YYYY-MM-DD');
+                } else {
+                    dateForUrl = view.start.format('YYYY-MM-DD');
+                }
+
+                const currentView = view.name;
+
+                const currentParams = new URLSearchParams(window.location.search);
+                currentParams.set('view', currentView);
+                currentParams.set('date', dateForUrl);
+
+                const newPath = window.location.pathname + '?' + currentParams.toString();
+                window.history.replaceState({}, '', newPath);
+            },
+            buttonText: {
+                today: 'Hôm nay',
+                month: 'Tháng',
+                week : 'Tuần',
+                day  : 'Ngày'
+            },
+            events: {
+                url: '[[@{/schedule/calender-data}]]',
+                data: function() {
+                    return {
+                        trainerId: trainerId
+                    };
+                },
+                failure: function() {
+                    alert('There was an error fetching events!');
+                },
+                color: '#3788d8',
+            },
+            selectAllow: function(selectInfo) {
+                var start = selectInfo.start;
+                var end = selectInfo.end;
+
+                var inclusiveEnd = end.clone();
+                let cutoffTime = new Date();
+                // console.log(cutoffTime);
+                cutoffTime.setHours(cutoffTime.getHours() + 12);
+                inclusiveEnd.subtract(1, 'millisecond');
+                if (start.isSame(inclusiveEnd, 'day')) {
+                    if(trainerId == null)
+                    {
+                        return true;
+                    }
+                    if (start > cutoffTime) {
+                        return true; // Selection is valid
+                    } else {
+                        return false; // Selection is invalid
+                    }
+                } else {
+                    return false;
+                }
+            },
+            editable  : false,
+            droppable : true,
+            selectable: true,
+            allDaySlot: false,
+            eventRender: function(event, element) {
+                if (event.recurring === true) {
+                    // We still create the icon...
+                    var iconHtml = '<i class="fas fa-sync-alt recurring-icon"></i>';
+                    // ...but we append it to the main event element.
+                    element.append(iconHtml);
+                }
+
+                if (event.overlap === false) {
+                    element.find('.fc-time').remove();
+                }
+            },
+            eventDrop: function(event, delta, revertFunc) {
+                updateEvent(event, revertFunc);
+            },
+            eventResize: function(event, delta, revertFunc) {
+                updateEvent(event, revertFunc);
+            },
+            eventClick: function(event, jsEvent, view) {
+                if(event.type == 2 || event.type == 0)
+                {
+                    event.id = event.id.split('-').pop();
+                }
+                var url = '[[@{/schedule/update-option}]]' + '?id=' + event.id + '&type=' + event.type + '&date=' + event.start.format() + '&trainerId=' + trainerId;
+
+                $('#modal-container').load(url, function() {
+                    $('#updateScheduleOption').modal('show');
+                });
+            },
+            height: 'auto',
+            select: function(start, end) {
+                var url = '[[@{/schedule/create-option}]]' + '?start=' + start.format() + '&end=' + end.format() + '&trainerId=' + trainerId;
+
+                $('#modal-container').load(url, function() {
+                    $('#createScheduleOption').modal('show');
+                });
+            }
+        });
+
+        toggleButton.on('click', function() {
+            // --- 5. Toggle the state ---
+            isEditModeEnabled = !isEditModeEnabled; // Flip the boolean (false -> true -> false)
+
+            // --- 6. Update FullCalendar's 'editable' option ---
+            // This is the key FullCalendar API call
+            calendarElement.fullCalendar('option', 'editable', isEditModeEnabled);
+
+            // --- 7. Update the button's appearance for user feedback ---
+            if (isEditModeEnabled) {
+                // We are now IN edit mode
+                $(this).removeClass('btn-warning').addClass('btn-success');
+                $(this).html('<i class="fas fa-check"></i> Đang trong chế độ chỉnh sửa');
+
+                // Optional: You could also change the calendar's border color
+                calendarElement.css('border-color', '#28a745'); // Green border
+
+                // Provide a visual cue on the events themselves
+                // calendarElement.find('.fc-event').addClass('editable-event');
+
+            } else {
+                // We have just EXITED edit mode
+                $(this).removeClass('btn-success').addClass('btn-warning');
+                $(this).html('<i class="fas fa-pencil-alt"></i> Bật chế độ chỉnh sửa');
+
+                calendarElement.css('border-color', ''); // Reset border
+                // calendarElement.find('.fc-event').removeClass('editable-event');
+            }
+        });
+    })
+</script>
+</body>
+</html>

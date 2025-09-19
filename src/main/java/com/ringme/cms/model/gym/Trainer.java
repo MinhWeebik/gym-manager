@@ -70,4 +70,10 @@ public class Trainer {
 
     @OneToMany(mappedBy = "trainer", fetch = FetchType.LAZY)
     private List<Appointment> appointments;
+
+    @OneToMany(mappedBy = "trainer", fetch = FetchType.LAZY)
+    private List<BlockedTime> blockedTimes;
+
+    @OneToMany(mappedBy = "trainer", fetch = FetchType.LAZY)
+    private List<MemberSubscription> memberSubscriptions;
 }

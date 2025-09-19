@@ -88,7 +88,7 @@
                 </div>
 
                 <button type="button" class="detail-button" th:onclick="'checkIn(' + ${model.id} + ')'"><i class="fas fa-clipboard-check"></i> Điểm danh</button>
-                <button type="button" class="detail-button"><i class="fas fa-list-alt"></i> Lịch sử điểm danh</button>
+                <button type="button" class="detail-button open-modal-class" th:data-url="${@environment.getProperty('domain.app') + '/nexia-cms/check-in/history?id=' + model.id}"><i class="fas fa-list-alt"></i> Lịch sử điểm danh</button>
                 <button type="button" class="detail-button"><i class="fas fa-shopping-cart"></i> Mua hàng</button>
             </div>
             <div class="col-md-9">
@@ -323,7 +323,6 @@
                                         <div class="current-member-title d-flex align-items-center">
                                             <span>Các gói khác</span> <i class="fa fa-plus-circle ml-2"></i>
                                         </div>
-                                        <button type="button" class="btn btn-secondary mt-2 open-modal-class" th:data-url="${@environment.getProperty('domain.app') + '/nexia-cms/subscription/recalculate-form?type=1&id=' + model.id}"><i class="fas fa-calculator"></i> Tính lại ngày</button>
                                     </div>
                                     <div class="table-responsive mb-2 mt-3">
                                         <table class="table table-sm custom-table table-bordered table-hover text-center" style="table-layout: auto; width: 100%; font-weight: 600;">
@@ -334,7 +333,7 @@
                                                 <th>Ngày bắt đầu</th>
                                                 <th>Ngày kết thúc</th>
                                                 <th>Trạng thái</th>
-                                                <th>Định kỳ</th>
+                                                <th>HLV</th>
                                                 <th>Số buổi</th>
                                                 <th>chức năng</th>
                                             </tr>
@@ -351,10 +350,7 @@
                                                     <span th:if="${model.status == 0}" class="badge badge-secondary" style="white-space: normal; cursor: pointer;">Hết hạn</span>
                                                     <span th:if="${model.status == -1}" class="badge badge-danger" style="white-space: normal; cursor: pointer;">Đã hủy</span>
                                                 </td>
-                                                <td style="align-content: center;">
-                                                    <span th:if="${model.isRecurring == 1}" class="badge badge-success" style="white-space: normal; cursor: pointer">Có</span>
-                                                    <span th:if="${model.isRecurring == 0}" class="badge badge-danger" style="white-space: normal; cursor: pointer;">Không</span>
-                                                </td>
+                                                <td th:text="${model.trainer.firstName + ' ' + model.trainer.lastName}" style="align-content: center;"></td>
                                                 <td th:if="${model.membership.totalVisit == null or model.membership.totalVisit == 0}" style="align-content: center;">Không giới hạn</td>
                                                 <td th:if="${model.membership.totalVisit != null and model.membership.totalVisit != 0}" th:text="${model.numberOfVisit + ' của ' + model.membership.totalVisit}" style="align-content: center;"></td>
                                                 <td style="align-content: center;">
@@ -654,6 +650,7 @@
             $('#addPayment').modal('show');
             $('#addMemberSubscription').modal('show');
             $('#recalculateDate').modal('show');
+            $('#checkinDetail').modal('show');
         });
     });
 

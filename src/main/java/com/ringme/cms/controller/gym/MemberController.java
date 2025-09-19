@@ -1,5 +1,6 @@
 package com.ringme.cms.controller.gym;
 
+import com.ringme.cms.dto.AjaxSearchDto;
 import com.ringme.cms.dto.gym.MemberDto;
 import com.ringme.cms.dto.gym.MemberSubscriptionDto;
 import com.ringme.cms.model.gym.Member;
@@ -16,6 +17,8 @@ import lombok.extern.log4j.Log4j2;
 import org.modelmapper.ModelMapper;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.validation.BindingResult;
@@ -203,6 +206,49 @@ public class MemberController
             log.error("Exception: {}", e.getMessage(), e);
             return AppUtils.goBackWithError(request, redirectAttributes, "model", bindingResult, formDto, "Error in server!")
                     .orElse("redirect:/member/detail?id=" + formDto.getId());
+        }
+    }
+
+    @GetMapping(value = {"/render-search"})
+    public String search(@RequestParam(name = "pageNo", required = false, defaultValue = "1") Integer pageNo,
+                         @RequestParam(name = "pageSize", required = false, defaultValue = "10") Integer pageSize,
+                         @RequestParam(name = "name", required = false) String name,
+                         @RequestParam(name = "email", required = false) String email,
+                         @RequestParam(name = "phoneNumber", required = false) String phoneNumber,
+                         @RequestParam(name = "gender", required = false) Integer gender,
+                         @RequestParam(name = "exceptIds", required = false) List<Long> exceptIds,
+                         @RequestParam(name = "signUpAmount",  required = false) Integer signUpAmount,
+                         ModelMap model) throws Exception {
+
+        if (pageNo == null || pageNo <= 0) pageNo = 1;
+        if (pageSize == null || pageSize <= 0) pageSize = 10;
+
+        try {
+            Page<Member> models = memberService.search(name, email, phoneNumber, gender,exceptIds, pageNo, pageSize);
+            model.put("pageNo", pageNo);
+            model.put("pageSize", pageSize);
+            model.put("totalPage", models.getTotalPages());
+            model.put("models", models.toList());
+            model.put("signUpAmount",signUpAmount);
+            return "gym/attendance/modal_search :: content-search-song";
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @GetMapping("/ajax-search/{trainerId}")
+    @ResponseBody
+    public ResponseEntity<List<AjaxSearchDto>> memberAjaxSearch(
+            @RequestParam(name = "input", required = false) String input,
+            @PathVariable(name = "trainerId") Long trainerId) {
+        try
+        {
+            return new ResponseEntity<>(memberService.ajaxSearchMember(input, trainerId), HttpStatus.OK);
+        }
+        catch (Exception e)
+        {
+            log.error("Error: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 }

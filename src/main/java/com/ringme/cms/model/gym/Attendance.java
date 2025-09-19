@@ -4,6 +4,7 @@ import lombok.*;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Getter
@@ -19,11 +20,11 @@ public class Attendance {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "status")
+    @Column(name = "status") //0 inactive, 1 booked, 2 checked in
     private Integer status;
 
     @Column(name = "booking_time")
-    private LocalDateTime bookingTime;
+    private LocalDate bookingTime;
 
     @Column(name = "check_in_time")
     private LocalDateTime checkInTime;
@@ -34,7 +35,7 @@ public class Attendance {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "member_id")
     private Member member;
 

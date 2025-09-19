@@ -159,6 +159,19 @@ public class Helper {
         return listAjax;
     }
 
+    public static List<AjaxSearchDto> listAjaxMember(List<String[]> input) {
+        log.info("List<String[]> input|" + input);
+        List<AjaxSearchDto> listAjax = new ArrayList<>();
+        for (String[] strings : input) {
+            AjaxSearchDto dto = new AjaxSearchDto();
+            dto.setId(strings[0]);
+            dto.setText(strings[1] + " - Còn: " + strings[2] + " buổi");
+            listAjax.add(dto);
+        }
+        log.info("List<AjaxSearchDto> listAjax|" + listAjax);
+        return listAjax;
+    }
+
     public static List<AjaxSearchDto> listAjax(List<String[]> input) {
         List<AjaxSearchDto> listAjax = new ArrayList<>();
         for (String[] strings : input) {

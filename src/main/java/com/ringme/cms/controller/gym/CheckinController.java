@@ -2,10 +2,13 @@ package com.ringme.cms.controller.gym;
 
 import com.ringme.cms.config.RabbitConfig;
 import com.ringme.cms.dto.gym.CheckinDto;
+import com.ringme.cms.dto.gym.PaymentDto;
 import com.ringme.cms.model.gym.Member;
 import com.ringme.cms.model.gym.MemberSubscription;
+import com.ringme.cms.model.gym.RawCheckInLog;
 import com.ringme.cms.repository.gym.MemberRepository;
 import com.ringme.cms.repository.gym.MemberSubscriptionRepository;
+import com.ringme.cms.repository.gym.RawCheckInLogRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -14,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -36,6 +40,7 @@ public class CheckinController {
     private final MemberSubscriptionRepository memberSubscriptionRepository;
     private final MemberRepository memberRepository;
     private final SimpMessagingTemplate messagingTemplate;
+    private final RawCheckInLogRepository rawCheckInLogRepository;
 
     @Value("${queue.checkin}")
     private String queueCheckin;
@@ -174,6 +179,19 @@ public class CheckinController {
             log.error(e.getMessage());
             messagingTemplate.convertAndSend("/topic/check-ins", map);
             return ResponseEntity.internalServerError().body(map);
+        }
+    }
+
+    @GetMapping("/history")
+    public String update(@RequestParam(value = "id") Long memberId, ModelMap model) {
+        log.info("member id: {}", memberId);
+        try {
+            List<RawCheckInLog> logHistory = rawCheckInLogRepository.findByMemberId(memberId);
+            model.put("model", logHistory);
+            return "gym/fragment/member :: checkinDetail";
+        } catch (Exception e) {
+            log.error("Exception: {}", e.getMessage(), e);
+            return "404";
         }
     }
 }

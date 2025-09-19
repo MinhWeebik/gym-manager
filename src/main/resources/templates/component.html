@@ -249,39 +249,44 @@
 
     <div th:fragment="select2-v3(method, label, name, value, url, title, text, required, disabled, readonly, minimumInputLength, additionalParams)">
         <label th:for="${name}"><span>[[${label}]] <span th:if="${required}" style="color: red;">*</span></span></label>
-        <select th:id="${name}" th:name="${name}" class="form-control" th:required="${required}" th:disabled="${disabled}" th:readonly="${readonly}" style="width: 100%">
-            <option th:value="${value}" th:text="${text}"></option>
+        <select th:classappend="${readonly ? 'select2-locked' : ''}" th:id="${name}" th:name="${name}" class="form-control" th:required="${required}" th:disabled="${disabled}" style="width: 100%">
+            <option th:if="${value != null}" th:value="${value}" th:text="${text}" selected="selected"></option>
         </select>
+
         <script th:inline="javascript">
-            $('#' + [[${name}]]).select2({
-                ajax: {
-                    type: [[${method}]],
-                    url: [[${@environment.getProperty('server.servlet.context-path') + url}]],
-                    dataType: 'json',
-                    delay: 250,
-                    data: function(params) {
-                        let query = {
-                            input: params.term
-                        }
-                        let additionalParams = [[${additionalParams}]];
-                        console.log(additionalParams);
-                        if(additionalParams != null) {
-                            additionalParams.forEach(param => {
-                                query[param.value] = param.text;
-                            });
-                        }
-                        return query;
+            $(document).ready(function() {
+                // 1. Initialize Select2 with all your existing options
+                $('#' + [[${name}]]).select2({
+                    ajax: {
+                        type: [[${method}]],
+                        url: [[${@environment.getProperty('server.servlet.context-path') + url}]],
+                        dataType: 'json',
+                        delay: 250,
+                        data: function(params) {
+                            let query = {
+                                input: params.term
+                            };
+                            let additionalParams = [[${additionalParams}]];
+                            if (additionalParams != null) {
+                                additionalParams.forEach(param => {
+                                    // A potential issue here: param.value and param.text might not be what you intend.
+                                    // Assuming param is an object like { value: 'keyName', text: 'theValue' }
+                                    query[param.value] = param.text;
+                                });
+                            }
+                            return query;
+                        },
+                        processResults: function(data) {
+                            return {
+                                results: data
+                            };
+                        },
+                        cache: true
                     },
-                    processResults: function(data) {
-                        return {
-                            results: data
-                        };
-                    },
-                    cache: true
-                },
-                placeholder: [[${title}]],
-                minimumInputLength: [[${minimumInputLength}]],
-                allowClear: true
+                    placeholder: [[${title}]],
+                    minimumInputLength: [[${minimumInputLength}]],
+                    allowClear: true
+                });
             });
         </script>
     </div>

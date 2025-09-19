@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en" layout:decorate="~{cms_layout_1.html}"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <style>
+        a.disabled-delete-button {
+            pointer-events: none;
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+<!-- Main content -->
+<div class="content" layout:fragment="page_content">
+    <div class="container-fluid">
+        <div class="card card-default">
+            <div class="card-body">
+                <form th:action="@{/schedule/attendance/index}" method="get">
+                    <input hidden="hidden" name="view" th:value="${view}">
+                    <input hidden="hidden" name="id" th:value="${id}">
+                    <input hidden="hidden" name="date" th:value="${date}">
+                    <input hidden="hidden" name="dateStr" th:value="${dateStr}">
+                    <div class="row">
+                        <div class="col-3" th:insert="component :: input-text('Tên', 'name', ${name}, 0, 255, false, false)"></div>
+                        <div class="col-3" th:insert="component :: input-text('Email', 'email', ${email}, 0, 255, false, false)"></div>
+                        <div class="col-3" th:insert="component :: input-text('SĐT', 'phoneNumber', ${phoneNumber}, 0, 255, false, false)"></div>
+                        <div class="col-3" th:with="options=${T(java.util.Arrays).asList(
+                            '', 'Tất cả',
+                            '1', 'Nam',
+                            '0', 'Nữ'
+                        )}">
+                            <div th:replace="component :: select-default-v2('Giới tính', 'gender', ${gender}, false, false, ${options})"></div>
+                        </div>
+                        <div class="col-12 text-center mt-3">
+                            <a style="width: 130px" th:href="@{/schedule/index(view=${view}, date=${date}, trainerId=${trainerId})}" type="button" class="btn btn-danger mx-2">
+                                <i class="fa-solid fa-arrow-left"></i><span class="px-2">Quay lại lịch</span>
+                            </a>
+                            <button type="submit" style="cursor: pointer; width: 130px" class="btn btn-primary my-0 mx-1">
+                                <i class="fas fa-search"></i><span class="px-2">Tìm kiếm</span>
+                            </button>
+                            <button th:disabled="${!allowAdd}" type="button" onclick="$('#modal-search-song').modal('show');" style="cursor: pointer; width: 130px" class="btn btn-primary my-0 mx-1">
+                                <i class="fas fa-plus"></i><span class="px-2">Thêm</span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card card-default">
+            <div class="card-body">
+                <div class="table-responsive mb-2 mt-3">
+                    <table id="table-list" class="table table-sm custom-table table-bordered table-hover text-center" style="table-layout: auto; width: 100%; font-weight: 600;">
+                        <thead class="thead-light align-content-center">
+                        <tr>
+                            <th>Ảnh</th>
+                            <th>Tên</th>
+                            <th>Ngày sinh</th>
+                            <th>Giới tính</th>
+                            <th>Email</th>
+                            <th>SĐT</th>
+                            <th>Trạng thái</th>
+                            <th>Chức năng</th>
+                        </tr>
+                        </thead>
+                        <tbody id="bodyTableContext">
+                        <tr th:each="model,item : ${models}" th:attr="data-id=${model.id}">
+                            <td>
+                                <div class="dropdown">
+                                    <img class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                                         style="height: 60px;width:60px" th:src="${@environment.getProperty('domain.nginx')} + ${model.imageUrl}" th:if="${model.imageUrl!=null}">
+                                    <img class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                                         style="height: 60px;width:60px" th:src="@{/img/no_pfp_male.jpg}" th:if="${model.imageUrl==null and model.gender == 1}">
+                                    <img class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                                         style="height: 60px;width:60px" th:src="@{/img/no_pfp_female.jpg}" th:if="${model.imageUrl==null and model.gender == 0}">
+                                    <div class="dropdown-menu p-1" aria-labelledby="dropdownMenu2">
+                                        <img style="height: 200px;width:200px" th:src="${@environment.getProperty('domain.nginx')} + ${model.imageUrl}" th:if="${model.imageUrl!=null}">
+                                        <img style="height: 200px;width:200px" th:src="@{/img/no_pfp_male.jpg}" th:if="${model.imageUrl==null and model.gender==1}">
+                                        <img style="height: 200px;width:200px" th:src="@{/img/no_pfp_female.jpg}" th:if="${model.imageUrl==null and model.gender==0}">
+                                    </div>
+                                </div>
+                            </td>
+                            <td style="align-content: center;" th:text="${model.firstName + ' ' + model.lastName}"></td>
+                            <td th:text="${#dates.format(new java.util.Date(model.dateOfBirth), 'dd/MM/yyyy')}" style="align-content: center;"></td>
+                            <td style="align-content: center;">
+                                <span th:if="${model.gender == 0}">Nữ</span>
+                                <span th:if="${model.gender == 1}">Nam</span>
+                            </td>
+                            <td style="align-content: center;">
+                                <span th:if="${model.email == null or #strings.isEmpty(model.email)}">Người dùng chưa đặt email</span>
+                                <span th:if="${model.email != null and !#strings.isEmpty(model.email)}" th:text="${model.email}"></span>
+                            </td>
+                            <td style="align-content: center;" th:text="${model.phoneNumber}"></td>
+                            <td style="align-content: center;">
+                                <span th:if="${model.status == 0}" class="badge badge-danger" style="white-space: normal; cursor: pointer;">Không hoạt động</span>
+                                <span th:if="${model.status == 1}" class="badge badge-success" style="white-space: normal; cursor: pointer">Đã đăng ký</span>
+                                <span th:if="${model.status == -1}" class="badge badge-danger" style="white-space: normal; cursor: pointer">Không đến</span>
+                                <span th:if="${model.status == 2}" class="badge badge-warning" style="white-space: normal; cursor: pointer">Đã điểm danh</span>
+                            </td>
+                            <td style="align-content: center;">
+                                <div class="d-flex flex-row justify-content-center">
+                                    <a th:href="@{/member/detail(id=${model.id}, tab=4)}"
+                                       class="btn" title="Chi tiết">
+                                        <i class="fa fa-eye" style="color: #00709e;"></i>
+                                    </a>
+                                    <a th:classappend="${!allowAdd} ? ' disabled-delete-button' : ''" th:attr="onclick=|removeSong(event, ${model?.id})|" style="cursor: pointer; align-content: center;" title="Xóa" class="btn btn-sm">
+                                        <i class="fas fa-trash-alt" style="color: #ff0000;"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr id="no-result" th:if="${models?.size() == 0}">
+                            <td colspan="100" th:text="#{noResult}"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <hungtvt-pagination th:replace="buu-component :: pagination(${pageNo}, ${totalPage}, ${pageSize}, 'buuPageSize', 'buuPagination')"></hungtvt-pagination>
+            </div>
+        </div>
+    </div>
+        <modal-search-member th:replace="gym/attendance/modal_search :: modal-search-content(@{/attendance/get-content-ids}, ${id}, ${dateStr}, ${signUpAmount})"></modal-search-member>
+</div>
+<!-- PAGE JAVASCRIPT CODE -->
+<script layout:fragment="content_page_script">
+    countRow();
+    function addSong(e, id) {
+        $.ajax({
+            url: '[[@{/attendance/add}]]',
+            type: 'POST',
+            data: {
+                scheduledClassId: '[[${id}]]',
+                memberId: id,
+                bookingTime: '[[${dateStr}]]',
+            },
+            xhrFields: {
+                withCredentials: true
+            },
+            success: function(data) {
+                console.log(data);
+                let trNew = $('<tr></tr>');
+                let tr = $(e.target).closest('tr');
+                let originalCells = tr.find('td');
+
+                originalCells.each(function(index) {
+                    if (index === 0 || index === 7) {
+                        return;
+                    }
+                    let clonedCell = $(this).clone();
+
+                    if (index === 2) {
+                        let aTag = clonedCell.find('a');
+                        if (aTag.length) {
+                            aTag.removeAttr('href');
+                            aTag.css({
+                                'color': 'inherit',
+                                'text-decoration': 'none',
+                                'cursor': 'default'
+                            });
+                        }
+                    }
+
+                    if (index === 8) {
+                        let statusBadge = clonedCell.find('span.badge');
+
+                        if (statusBadge.length) {
+                            statusBadge.text('Đã đăng ký');
+                        }
+                    }
+                    trNew.append(clonedCell);
+                });
+
+                let detailUrl = `[[@{/member/detail?tab=4}]]&id=${id}`;
+
+                trNew.append(`
+                <td class="text-center">
+                    <div class="d-flex justify-content-center">
+                        <a href="${detailUrl}" class="btn" title="Chi tiết">
+                            <i class="fa fa-eye" style="color: #00709e;"></i>
+                        </a>
+                        <a onclick="removeSong(event, ${id})"
+                           style="cursor: pointer;" title="Xóa" class="btn btn-sm">
+                            <i class="fas fa-trash-alt" style="color: #ff0000;"></i>
+                        </a>
+                    </div>
+                </td>
+            `);
+
+                $('#bodyTableContext').prepend(trNew);
+                tr.remove();
+                writeIndex();
+                countRow();
+                searchSong(null, true);
+                countRow();
+            },
+            error: function(xhr, status, error) {
+                toastError("Error adding content!", 3000);
+            }
+        });
+    }
+
+    function removeSong(e, id) {
+        toastLoading();
+
+        $.ajax({
+            url: '[[@{/attendance/remove}]]',
+            type: 'POST',
+            data: {
+                scheduledClassId: '[[${id}]]',
+                memberId: id,
+                bookingTime: '[[${dateStr}]]',
+            },
+            xhrFields: {
+                withCredentials: true
+            },
+            success: function(data) {
+                console.log(data);
+                $(e.target).closest('tr').remove();
+                writeIndex();
+                toastSuccess("Xóa thành công!", 3000);
+                searchSong(null, true);
+                countRow();
+            },
+            error: function(xhr, status, error) {
+                toastError("Error removing content!", 3000);
+            }
+        });
+    }
+
+    var cacheTimeout;
+    function writeIndex() {
+        clearTimeout(cacheTimeout);
+        cacheTimeout = setTimeout(() => {
+            $('#bodyTableContext').find('tr').each(function(index, item) {
+                console.log(index)
+                $(item).find('.index').text(index + 1);
+            });
+        }, 300);
+    }
+
+    function countRow()
+    {
+        let rowCount = $('#table-list tbody tr').length;
+        console.log("row count: " + rowCount)
+        if(rowCount === 1)
+        {
+            $('#no-result').show()
+        }
+        else
+        {
+            $('#no-result').hide()
+        }
+    }
+</script>
+</body>
+</html>

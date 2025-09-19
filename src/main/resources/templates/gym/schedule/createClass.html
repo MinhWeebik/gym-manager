@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en" layout:decorate="~{cms_layout_1.html}"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <style>
+        /* Add this to your CSS file */
+        .select2-container--default.select2-container--disabled .select2-selection--single,
+        .select2-locked + .select2-container--default .select2-selection--single {
+            background-color: #eee; /* Light gray background */
+            cursor: not-allowed;     /* Show a "disabled" cursor */
+        }
+
+        /* This is the magic rule to prevent clicks */
+        .select2-locked + .select2-container--default {
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+<div class="content" layout:fragment="page_content">
+    <div class="container-fluid">
+        <div class="card card-default">
+            <div class="card-body">
+                <form th:action="@{/schedule/save-class(returnTrainerId = ${trainerId})}" method="post" th:object="${form}" enctype="multipart/form-data">
+                    <div class="row">
+                        <input hidden="hidden" name="view" th:value="*{view}"/>
+                        <input hidden="hidden" name="date" th:value="*{date}"/>
+                        <input hidden="hidden" name="id" th:value="*{id}"/>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <div th:replace="component :: select2-v2('GET', 'Chọn lớp', 'classId', *{classId}, '/class/ajax-search', 'Nhập lớp', ${className} , true, false, 0, null)"></div>
+                                <p th:if="${#fields.hasErrors('classId')}" th:errors="*{classId}" class="text-danger m-0"></p>
+                            </div>
+                        </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <div th:replace="component :: select2-v3('GET', 'Chọn huấn luyện viên', 'trainerId', *{trainerId}, '/trainer/ajax-search', 'Nhập huấn luyện viên', ${trainerName} , true, false,${trainerId != null}, 0, null)"></div>
+                                    <p th:if="${#fields.hasErrors('trainerId')}" th:errors="*{trainerId}" class="text-danger m-0"></p>
+                                </div>
+                            </div>
+                        <div class="col-md-6">
+                            <label for="startDateStr"><span>Ngày</span></label>
+                            <div class="input-group date" id="startDateStr">
+                                <input name="startDateStr" style="height: 31px;" type="text" th:value="*{startDateStr}" class="form-control" autocomplete="off">
+                                <div class="input-group-addon input-group-append">
+                                    <div class="input-group-text">
+                                        <i class="glyphicon glyphicon-calendar fa fa-calendar"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <p th:if="${#fields.hasErrors('startDateStr')}" th:errors="*{startDateStr}" class="text-danger m-0"></p>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <div th:insert="component :: input-number-v2('Số lượng tiếp nhận', 'capacity', *{capacity}, 1, null, true, false, false)"></div>
+                                <p th:if="${#fields.hasErrors('capacity')}" th:errors="*{capacity}" class="text-danger m-0"></p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="from">Từ <span style="color: red;">*</span></label>
+                                <input required type="text" id="from" style="height: 31px" name="fromStr" th:value="*{fromStr}" class="form-control" placeholder="Chọn giờ...">
+                                <p th:if="${#fields.hasErrors('fromStr')}" th:errors="*{fromStr}" class="text-danger m-0"></p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="to">Đến <span style="color: red;">*</span></label>
+                                <input required type="text" id="to" style="height: 31px" name="toStr" th:value="*{toStr}" class="form-control" placeholder="Chọn giờ...">
+                                <p th:if="${#fields.hasErrors('toStr')}" th:errors="*{toStr}" class="text-danger m-0"></p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <div th:insert="component :: input-number-v2('Giá (xu)', 'price', *{price}, 1, null, true, false, false)"></div>
+                                <p th:if="${#fields.hasErrors('price')}" th:errors="*{price}" class="text-danger m-0"></p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group" th:with="options=${T(java.util.Arrays).asList(
+                                                                'NONE', 'Không lặp',
+                                                                'WEEKLY', 'Hằng tuần',
+                                                                'FORTNIGHTLY', 'Mỗi 2 tuần',
+                                                                'THREE_WEEKLY', 'Mỗi 3 tuần',
+                                                                'FOUR_WEEKLY', 'Mỗi 4 tuần',
+                                                                'SIX_WEEKLY', 'Mỗi 6 tuần',
+                                                                'EIGHT_WEEKLY', 'Mỗi 8 tuần',
+                                                                'MONTHLY', 'Hằng tháng',
+                                                                'DAILY', 'Hằng ngày'
+                                                            )}">
+                                <div th:replace="component :: select-default-v2('Lặp lại', 'repeat', *{repeat}, true, false, ${options})"></div>
+                            </div>
+                            <p th:if="${#fields.hasErrors('repeat')}" th:errors="*{repeat}" class="text-danger m-0"></p>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="endRecurStr"><span>Ngày kết thúc lặp</span></label>
+                                <div class="input-group date" id="endRecurStr">
+                                    <input name="endRecurStr" style="height: 31px;" type="text" th:value="*{endRecurStr}" class="form-control" autocomplete="off">
+                                    <div class="input-group-addon input-group-append">
+                                        <div class="input-group-text">
+                                            <i class="glyphicon glyphicon-calendar fa fa-calendar"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="backgroundColor">Chọn màu <span style="color: red;">*</span></label>
+                                <input required type="text" style="height: 31px" id="backgroundColor" name="backgroundColor" th:value="*{backgroundColor}" class="form-control" value="#42445a">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group" th:insert="component :: input-text('Note', 'note', *{note}, 0, 255, false, false)"></div>
+                        </div>
+                        <div class="col-12 text-center mt-2">
+                            <a style="width: 130px" th:href="@{/schedule/index(view=*{view}, date=*{date}, trainerId=${trainerId})}" type="button" class="btn btn-danger mx-2">
+                                <i class="fa-solid fa-arrow-left"></i><span class="px-2">Quay lại lịch</span>
+                            </a>
+                            <button style="width: 130px" type="submit" class="btn btn-primary mx-2">
+                                <i class="fa-regular fa-floppy-disk"></i><span class="px-2">Lưu</span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script layout:fragment="content_page_script">
+
+    const toTimePicker = $("#to").flatpickr({
+        enableTime: true,    // This enables the time picker functionality.
+        noCalendar: true,    // This hides the calendar part, making it a time-only picker.
+        dateFormat: "H:i"
+    });
+
+    const fromTimePicker = $("#from").flatpickr({
+        enableTime: true,    // This enables the time picker functionality.
+        noCalendar: true,    // This hides the calendar part, making it a time-only picker.
+        dateFormat: "H:i",
+        onChange: function(selectedDates, dateStr, instance) {
+            if (selectedDates.length) {
+                const fromDate = selectedDates[0];
+                const minToTime = new Date(fromDate.getTime());
+                minToTime.setMinutes(minToTime.getMinutes() + 30);
+                toTimePicker.set('minTime', minToTime);
+                const toTime = toTimePicker.selectedDates[0];
+                if (toTime && toTime < selectedDates[0]) {
+                    toTimePicker.clear();
+                }
+            }
+        }
+    });
+
+    toTimePicker.config.onChange.push(function(selectedDates, dateStr, instance) {
+        if (selectedDates.length) {
+            fromTimePicker.set('maxTime', dateStr);
+        }
+    });
+
+    const initialFromDate = fromTimePicker.selectedDates[0];
+    const initialToTime = toTimePicker.input.value;
+
+    if (initialFromDate) {
+        const minToTime = new Date(initialFromDate.getTime());
+        minToTime.setMinutes(minToTime.getMinutes() + 30);
+        toTimePicker.set('minTime', minToTime);
+    }
+
+    if (initialToTime) {
+        fromTimePicker.set('maxTime', initialToTime);
+    }
+
+    const colorInput = document.getElementById('backgroundColor');
+    const initialColor = colorInput.value || '#42445a';
+
+    // 1. Create the Pickr instance
+    const pickr = Pickr.create({
+        el: '#backgroundColor', // The input field you want to bind to
+        theme: 'classic',          // or 'monolith', or 'nano'
+        useAsButton: true,          // The input field itself will act as the button
+        default: initialColor,       // Default color
+
+        // Optional: Pre-defined color swatches
+        swatches: [
+            '#F44336', '#E91E63', '#9C27B0', '#673AB7',
+            '#3F51B5', '#2196F3', '#03A9F4', '#00BCD4',
+            '#009688', '#4CAF50', '#8BC34A', '#CDDC39',
+        ],
+
+        // Configure the components of the color picker
+        components: {
+            preview: true,
+            opacity: true,
+            hue: true,
+            interaction: {
+                hex: true,
+                rgba: true,
+                hsla: false,
+                input: true,  // Show the input field in the picker
+                clear: true,
+                save: true
+            }
+        },
+
+        // Change the string representation of the color
+        defaultRepresentation: 'HEXA'
+    });
+
+    // 2. Set up the event listeners to update your input
+    pickr.on('save', (color, instance) => {
+        // When the user clicks "Save", update the input's value
+        const savedColor = color.toHEXA().toString();
+        instance.options.el.value = savedColor;
+        console.log('Saved color:', savedColor);
+        pickr.hide(); // Hide the picker after saving
+    });
+
+    pickr.on('change', (color, source, instance) => {
+        // On 'change', update the input's value in real-time
+        const changedColor = color.toHEXA().toString();
+        instance.options.el.value = changedColor;
+    });
+
+    pickr.on('clear', (instance) => {
+        // When the user clicks "Clear"
+        instance.options.el.value = ''; // Clear the input's value
+    });
+
+    $('#startDateStr').datetimepicker({
+        allowInputToggle: true,
+        showClose: true,
+        showClear: true,
+        showTodayButton: true,
+        format: 'DD/MM/YYYY',
+        icons: {
+            time: 'fa fa-clock',
+            date: 'fa fa-calendar',
+            up: 'fa fa-arrow-up',
+            down: 'fa fa-arrow-down',
+            previous: 'fa fa-chevron-left',
+            next: 'fa fa-chevron-right',
+            today: 'fa fa-calendar-check',
+            clear: 'fa fa-trash',
+            close: 'fa fa-times'
+        }
+    });
+
+    $('#endRecurStr').datetimepicker({
+        allowInputToggle: true,
+        showClose: true,
+        showClear: true,
+        showTodayButton: true,
+        format: 'DD/MM/YYYY',
+        icons: {
+            time: 'fa fa-clock',
+            date: 'fa fa-calendar',
+            up: 'fa fa-arrow-up',
+            down: 'fa fa-arrow-down',
+            previous: 'fa fa-chevron-left',
+            next: 'fa fa-chevron-right',
+            today: 'fa fa-calendar-check',
+            clear: 'fa fa-trash',
+            close: 'fa fa-times'
+        }
+    });
+
+    var startDate = $('#startDateStr').data("DateTimePicker").date();
+    var endDate = $('#endRecurStr').data("DateTimePicker").date();
+
+    $("#startDateStr").on("dp.change", function (e) {
+        $('#endRecurStr').data("DateTimePicker").minDate(e.date);
+        if(!endDate) {
+            $('#endRecurStr').datetimepicker('clear');
+        }
+    });
+
+    $("#endRecurStr").on("dp.change", function (e) {
+        $('#startDateStr').data("DateTimePicker").maxDate(e.date);
+    });
+
+
+
+    if (startDate) {
+        $('#endRecurStr').data("DateTimePicker").minDate(startDate);
+        if(!endDate) {
+            $('#endRecurStr').datetimepicker('clear');
+        }
+    }
+
+    if (endDate) {
+        $('#startDateStr').data("DateTimePicker").maxDate(endDate);
+    }
+
+</script>
+</body>
+</html>

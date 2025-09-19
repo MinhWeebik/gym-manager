@@ -5,9 +5,11 @@ import com.ringme.cms.dto.gym.RecalculateDto;
 import com.ringme.cms.model.gym.Member;
 import com.ringme.cms.model.gym.MemberSubscription;
 import com.ringme.cms.model.gym.Membership;
+import com.ringme.cms.model.gym.Trainer;
 import com.ringme.cms.repository.gym.MemberRepository;
 import com.ringme.cms.repository.gym.MemberSubscriptionRepository;
 import com.ringme.cms.repository.gym.MembershipRepository;
+import com.ringme.cms.repository.gym.TrainerRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.modelmapper.ModelMapper;
@@ -35,6 +37,8 @@ public class MemberSubscriptionService {
 
     private final PaypalSubscriptionService  paypalSubscriptionService;
 
+    private final TrainerRepository trainerRepository;
+
     public MemberSubscription save(MemberSubscriptionDto formDto) throws Exception {
         try {
             MemberSubscription memberSubscription;
@@ -53,7 +57,7 @@ public class MemberSubscriptionService {
                 else {
                     memberSubscription.setNumberOfVisit(null);
                 }
-                List<MemberSubscription> curMembership = memberSubscriptionRepository.findByMemberIdAndType(member.getId(), membership.getType());
+                List<MemberSubscription> curMembership = memberSubscriptionRepository.findByMemberIdAndTypeAndTrainer(member.getId(), membership.getType(), formDto.getTrainerId());
                 LocalDate newStartDate;
                 LocalDate newEndDate;
                 if(!curMembership.isEmpty())
@@ -78,6 +82,12 @@ public class MemberSubscriptionService {
                 {
                     memberSubscription.setStatus(2);
                 }
+                if(formDto.getTrainerId()!=null)
+                {
+                    Trainer trainer = trainerRepository.findById(formDto.getTrainerId()).orElseThrow();
+                    memberSubscription.setTrainer(trainer);
+                }
+                return memberSubscriptionRepository.save(memberSubscription);
             } else {
                 memberSubscription = memberSubscriptionRepository.findById(formDto.getId()).orElseThrow();
                 modelMapper.map(formDto, memberSubscription);
@@ -87,9 +97,11 @@ public class MemberSubscriptionService {
                 String[] parts = formDto.getStartEndString().split(" - ");
                 memberSubscription.setStartAt(LocalDate.parse(parts[0], formatter));
                 memberSubscription.setEndAt(LocalDate.parse(parts[1], formatter));
+                MemberSubscription returnData =  memberSubscriptionRepository.save(memberSubscription);
+                updateStartEndDate(returnData.getMember().getId(), returnData.getMembership().getType(), returnData.getTrainer().getId());
+                return returnData;
             }
 
-            return memberSubscriptionRepository.save(memberSubscription);
         } catch (Exception e) {
             log.error("Exception: {}", e.getMessage(), e);
             throw new RuntimeException(e);
@@ -101,7 +113,7 @@ public class MemberSubscriptionService {
             MemberSubscription memberSubscription = memberSubscriptionRepository.findById(id).orElseThrow();
             memberSubscription.setStatus(-1);
             memberSubscriptionRepository.save(memberSubscription);
-            updateStartEndDate(memberRepository.findIdByMemberSubscriptionId(memberSubscription.getId()),memberSubscription.getMembership().getType());
+            updateStartEndDate(memberRepository.findIdByMemberSubscriptionId(memberSubscription.getId()),memberSubscription.getMembership().getType(),memberSubscription.getTrainer() == null ? null : memberSubscription.getTrainer().getId());
             if(memberSubscription.getIsRecurring() == 1 && memberSubscription.getPaypalSubscriptionId().startsWith("I-"))
             {
                 paypalSubscriptionService.cancelSubscription(memberSubscription.getPaypalSubscriptionId(), "User requested to cancel subscription.");
@@ -112,9 +124,9 @@ public class MemberSubscriptionService {
         }
     }
 
-    public void updateStartEndDate(Long memberId, Integer type)
+    public void updateStartEndDate(Long memberId, Integer type,Long trainerId)
     {
-        List<MemberSubscription> memberSubscriptionList = memberSubscriptionRepository.findByMemberIdAndType(memberId, type);
+        List<MemberSubscription> memberSubscriptionList = memberSubscriptionRepository.findByMemberIdAndTypeAndTrainer(memberId, type, trainerId);
         if(memberSubscriptionList.size() > 1)
         {
             memberSubscriptionList.sort(Comparator.comparing(MemberSubscription::getStartAt));

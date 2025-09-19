@@ -1,0 +1,235 @@
+<th:block th:fragment="modal-search-content(endpointGetExcept, idOwnExcept, dateOwnExcept, signUpAmount)" xmlns:th="http://www.thymeleaf.org">
+    <div class="modal fade" id="modal-search-song">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Thêm thành viên</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="card card-default">
+                        <div class="card-body">
+                            <form th:action="${'/member/index'}" method="get">
+                                <div class="row">
+                                    <div class="col-3" th:insert="component :: input-text('Tên', 'nameMember', null, 0, 255, false, false)"></div>
+                                    <div class="col-3" th:insert="component :: input-text('Email', 'emailMember', null, 0, 255, false, false)"></div>
+                                    <div class="col-3" th:insert="component :: input-text('SĐT', 'phoneNumberMember', null, 0, 255, false, false)"></div>
+                                    <div class="col-3" th:with="options=${T(java.util.Arrays).asList(
+                                            '', 'Tất cả',
+                                            '1', 'Nam',
+                                            '0', 'Nữ'
+                                        )}">
+                                        <div th:replace="component :: select-default-v2('Giới tính', 'genderMember', null, false, false, ${options})"></div>
+                                    </div>
+                                    <div class="col-12 d-flex" style="align-items: center;">
+                                        <button onclick="searchSong();" type="button" class="btn btn-primary mt-3">
+                                            <i class="fas fa-search"></i><span class="px-2">Tìm kiếm</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="card card-default">
+                        <div class="card-body" id="placeRenderSongs">
+
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-end">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        $(() => {
+            searchSong(1);
+        })
+
+        function searchSong(initPageNo, isNotifySuccess) {
+            toastLoading();
+            let pageNo = initPageNo ? initPageNo : $('#buuPaginationSong').pagination('getCurrentPage');
+            let pageSize = $('#buuPageSizeSong').val();
+            let name = $('#nameMember').val();
+            let email = $('#emailMember').val();
+            let phoneNumber = $('#phoneNumberMember').val();
+            let gender = $('#genderMember').val();
+            let signUpAmount = '[[${signUpAmount}]]'
+
+            $.ajax({
+                url: '[[${endpointGetExcept}]]',
+                type: 'GET',
+                data: {
+                    id: '[[${idOwnExcept}]]',
+                    date: '[[${dateOwnExcept}]]'
+                },
+                success: function(data) {
+                    console.log(data);
+
+                    $.ajax({
+                        url: '[[@{/member/render-search}]]',
+                        type: 'GET',
+                        data: {
+                            pageNo,
+                            pageSize,
+                            name,
+                            email,
+                            phoneNumber,
+                            gender,
+                            signUpAmount,
+                            exceptIds: data
+                        },
+                        traditional: true,
+                        success: function(data) {
+                            $('#placeRenderSongs').html(data);
+                            if (isNotifySuccess) {
+                                toastSuccess("Success!");
+                            } else {
+                                Swal.close();
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            toastError("An error has occurred!", 3000);
+                        }
+                    });
+                },
+                error: function(xhr, status, error) {
+                    toastError("An error has occurred", 3000);
+                }
+            });
+        }
+    </script>
+</th:block>
+
+<th:block th:fragment="content-search-song" xmlns:th="http://www.thymeleaf.org">
+    <div class="table-responsive mb-2 mt-3">
+        <table class="table table-sm custom-table table-bordered table-hover text-center" style="table-layout: auto; width: 100%; font-weight: 600;">
+            <thead class="thead-light align-content-center">
+            <tr>
+                <th  style="width: 0%"></th>
+                <th>Ảnh</th>
+                <th>Tên</th>
+                <th>Ngày sinh</th>
+                <th>Giới tính</th>
+                <th>Email</th>
+                <th>SĐT</th>
+                <th>Số điểm</th>
+                <th>Trạng thái</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="model,item : ${models}" th:attr="data-id=${model.id}">
+                <td>
+                    <div class="d-flex justify-content-center w-100 h-100 mt-3">
+                        <button th:if="${signUpAmount <= model.coin}"
+                                th:attr="onclick=|addSong(event, ${model.id})|"
+                                type="button" class="btn btn-success">
+                            <i class="fas fa-plus"></i><span class="px-2">Thêm</span>
+                        </button>
+                        <button th:if="${signUpAmount > model.coin}"
+                                type="button" class="btn btn-danger">
+                            <i class="fas fa-ban"></i><span class="px-2">Thiếu điểm</span>
+                        </button>
+                    </div>
+                </td>
+
+                <td>
+                    <div class="dropdown">
+                        <img class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                             style="height: 60px;width:60px" th:src="${@environment.getProperty('domain.nginx')} + ${model.imageUrl}" th:if="${model.imageUrl!=null}">
+                        <img class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                             style="height: 60px;width:60px" th:src="@{/img/no_pfp_male.jpg}" th:if="${model.imageUrl==null and model.gender == 1}">
+                        <img class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                             style="height: 60px;width:60px" th:src="@{/img/no_pfp_female.jpg}" th:if="${model.imageUrl==null and model.gender == 0}">
+                        <div class="dropdown-menu p-1" aria-labelledby="dropdownMenu2">
+                            <img style="height: 200px;width:200px" th:src="${@environment.getProperty('domain.nginx')} + ${model.imageUrl}" th:if="${model.imageUrl!=null}">
+                            <img style="height: 200px;width:200px" th:src="@{/img/no_pfp_male.jpg}" th:if="${model.imageUrl==null and model.gender==1}">
+                            <img style="height: 200px;width:200px" th:src="@{/img/no_pfp_female.jpg}" th:if="${model.imageUrl==null and model.gender==0}">
+                        </div>
+                    </div>
+                </td>
+                <td style="align-content: center;"><a style="text-decoration: underline" th:text="${model.firstName + ' ' + model.lastName}" th:href="@{/member/detail(id=${model.id}, tab=4)}"></a></td>
+                <td th:text="${#dates.format(new java.util.Date(model.dateOfBirth), 'dd/MM/yyyy')}" style="align-content: center;"></td>
+                <td style="align-content: center;">
+                    <span th:if="${model.gender == 0}">Nữ</span>
+                    <span th:if="${model.gender == 1}">Nam</span>
+                </td>
+                <td style="align-content: center;">
+                    <span th:if="${model.email == null or #strings.isEmpty(model.email)}">Người dùng chưa đặt email</span>
+                    <span th:if="${model.email != null and !#strings.isEmpty(model.email)}" th:text="${model.email}"></span>
+                </td>
+                <td style="align-content: center;" th:text="${model.phoneNumber}"></td>
+                <td style="align-content: center;" th:text="${model.coin}"></td>
+                <td style="align-content: center;">
+                    <span th:if="${model.status == 0}" class="badge badge-danger" style="white-space: normal; cursor: pointer;">Không hoạt động</span>
+                    <span th:if="${model.status == 1}" class="badge badge-success" style="white-space: normal; cursor: pointer">Hoạt động</span>
+                </td>
+            </tr>
+            <tr th:if="${models.size()==0}">
+                <td colspan="100">Không có kết quả</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="d-flex justify-content-between">
+        <div class="d-flex font-weight-bold align-items-center">
+            <p class="m-0">Hiển thị </p>
+            <select id="buuPageSizeSong" class="buu_page_size mx-2 font-weight-bold">
+                <option value="10" selected th:selected="${pageSize == 10}">10</option>
+                <option value="20" th:selected="${pageSize == 20}">20</option>
+                <option value="30" th:selected="${pageSize == 30}">30</option>
+                <option value="40" th:selected="${pageSize == 40}">40</option>
+                <option value="50" th:selected="${pageSize == 50}">50</option>
+            </select>
+            <input type="hidden" name="pageSize" value="10" />
+            <p class="m-0">Phần tử</p>
+        </div>
+        <ul id="buuPaginationSong" class="pagination buu-pagination"></ul>
+    </div>
+    <script th:inline="javascript">
+        $(() => {
+            let selectPageSize = document.querySelector('#buuPageSizeSong');
+            let inputPageSize = document.querySelector('#buuPageSizeSong + input[name="pageSize"]');
+            if(inputPageSize) inputPageSize.value = [[${pageSize}]];
+
+            function formatPageNumberSong() {
+                $('#buuPaginationSong').find('a, span').each(function() {
+                    let pageNumber = parseInt($(this).text());
+
+                    if (!isNaN(pageNumber)) {
+                        $(this).text(pageNumber.toLocaleString().replaceAll('.', ','));
+                    }
+                });
+            }
+
+            selectPageSize.addEventListener("change", function (e) {
+                if(inputPageSize) inputPageSize.value = this.value;
+                $('#buuPaginationSong').pagination('selectPage', 1);
+            })
+
+            $('#buuPaginationSong').pagination({
+                items: [[${totalPage}]],
+                itemOnPage: [[${pageSize}]],
+                currentPage: [[${pageNo}]],
+                cssStyle: '',
+                prevText: '<',
+                nextText: '>',
+                onInit: function () {
+                    // lúc load trang hàm này sẽ được gọi
+                    formatPageNumberSong();
+                },
+                onPageClick: function (page, e) {
+                    formatPageNumberSong();
+
+                    // Lúc chuyển trang hàm này sẽ được gọi
+                    searchSong();
+                }
+            });
+        })
+    </script>
+</th:block>

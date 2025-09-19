@@ -62,7 +62,7 @@ public class ScheduleService {
                     if(memberSubscription != null)
                     {
                         Long memberId = memberRepository.findIdByMemberSubscriptionId(id);
-                        memberSubscriptionService.updateStartEndDate(memberId, memberSubscription.getMembership().getType());
+                        memberSubscriptionService.updateStartEndDate(memberRepository.findIdByMemberSubscriptionId(memberSubscription.getId()),memberSubscription.getMembership().getType(),memberSubscription.getTrainer() == null ? null : memberSubscription.getTrainer().getId());
                     }
                 }
             }

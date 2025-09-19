@@ -7,7 +7,6 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import javax.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.List;
 
 @Getter
 @Setter
@@ -16,8 +15,8 @@ import java.util.List;
 @AllArgsConstructor
 @Entity
 @EntityListeners(AuditingEntityListener.class)
-@Table(name = "appointment")
-public class Appointment {
+@Table(name = "blocked_time")
+public class BlockedTime {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -35,26 +34,10 @@ public class Appointment {
     @Column(name = "`repeat`")
     private RecurrenceType repeat;
 
-    @Column(name = "status")
-    private Integer status;
-
-    @Column(name = "note")
-    private String note;
-
-    @Column(name = "background_color")
-    private String backgroundColor;
-
     @Column(name = "end_recur")
     private LocalDate endRecur;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "member_id")
-    private Member member;
-
-    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "trainer_id")
     private Trainer trainer;
-
-    @OneToMany(mappedBy = "appointment", fetch = FetchType.LAZY)
-    private List<AppointmentInstance> appointmentInstances;
 }

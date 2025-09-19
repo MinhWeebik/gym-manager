@@ -1,7 +1,9 @@
 package com.ringme.cms.service.gym;
 
 import com.github.f4b6a3.uuid.UuidCreator;
+import com.ringme.cms.common.Helper;
 import com.ringme.cms.common.UploadFile;
+import com.ringme.cms.dto.AjaxSearchDto;
 import com.ringme.cms.dto.gym.MemberDto;
 import com.ringme.cms.model.gym.Member;
 import com.ringme.cms.model.gym.MemberSubscription;
@@ -18,9 +20,12 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -133,6 +138,19 @@ public class MemberService {
             log.error("Exception: {}", e.getMessage(), e);
             throw new RuntimeException(e);
         }
+    }
+
+    public Page<Member> search(String name, String email, String phoneNumber, Integer gender, List<Long> exceptIds, Integer pageNo, Integer pageSize) {
+        Pageable pageable = PageRequest.of(pageNo - 1, pageSize);
+        boolean isEmpty = false;
+        if (exceptIds == null || exceptIds.isEmpty()) {
+            isEmpty = true;
+        }
+        return memberRepository.search(name,gender,email,phoneNumber,isEmpty,exceptIds,pageable);
+    }
+
+    public List<AjaxSearchDto> ajaxSearchMember(String input, Long trainerId) {
+        return Helper.listAjaxMember(memberRepository.ajaxSearchMember(Helper.processStringSearch(input), trainerId));
     }
 
 }

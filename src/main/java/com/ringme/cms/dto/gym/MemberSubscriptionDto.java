@@ -24,4 +24,5 @@ public class MemberSubscriptionDto {
     private Long membershipId;
     private Long memberId;
     private String paymentGateway;
+    private Long trainerId;
 }

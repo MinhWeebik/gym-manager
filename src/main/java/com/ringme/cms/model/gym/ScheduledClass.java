@@ -1,5 +1,6 @@
 package com.ringme.cms.model.gym;
 
+import com.ringme.cms.enums.RecurrenceType;
 import lombok.*;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -27,23 +28,36 @@ public class ScheduledClass {
     @Column(name = "date")
     private LocalDate date;
 
-    @Column(name = "from")
+    @Column(name = "`from`")
     private LocalTime from;
 
-    @Column(name = "to")
+    @Column(name = "`to`")
     private LocalTime to;
 
-    @Column(name = "repeat")
-    private String repeat;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "`repeat`")
+    private RecurrenceType repeat;
 
     @Column(name = "note")
     private String note;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @Column(name = "background_color")
+    private String backgroundColor;
+
+    @Column(name = "end_recur")
+    private LocalDate endRecur;
+
+    @Column(name = "price")
+    private Integer price;
+
+    @Column(name = "status")
+    private Integer status;
+
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "class_id")
     private Classes classes;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "trainer_id")
     private Trainer trainer;
 

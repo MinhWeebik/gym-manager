@@ -36,7 +36,6 @@
                                 <div th:insert="component :: input-number-v2('Số buổi đã đi', 'numberOfVisit', *{numberOfVisit}, 0, null, false, false, false)"></div>
                                 <p th:if="${#fields.hasErrors('numberOfVisit')}" th:errors="*{numberOfVisit}" class="text-danger m-0"></p>
                             </div>
-
                         </div>
                     </div>
                 </div>
@@ -273,16 +272,22 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <div th:replace="component :: input-enable-v3('Định kỳ', 'isRecurring', *{isRecurring}, false, 'Có', 'Không')"></div>
-                                    <p th:if="${#fields.hasErrors('isRecurring')}" th:errors="*{isRecurring}" class="text-danger m-0"></p>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
                                     <div th:with="
                                     options=${T(java.util.Arrays).asList('paypal', 'Paypal', 'cash', 'Tiền mặt')}">
                                         <div th:replace="component :: select-default-v2('Phương thức', 'paymentGateway', *{paymentGateway}, true, false, ${options})"></div>
                                     </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6" id="trainer-membership-container">
+                                <div class="form-group">
+                                    <div th:replace="component :: select2-v3('GET', 'Chọn huấn luyện viên', 'trainerId', *{trainerId}, '/trainer/ajax-search', 'Nhập huấn luyện viên', null , true, false,${trainerId != null}, 0, null)"></div>
+                                    <p th:if="${#fields.hasErrors('trainerId')}" th:errors="*{trainerId}" class="text-danger m-0"></p>
+                                </div>
+                            </div>
+                            <div class="col-md-6" id="recurring-switch-container">
+                                <div class="form-group">
+                                    <div th:replace="component :: input-enable-v3('Định kỳ', 'isRecurring', *{isRecurring}, false, 'Có', 'Không')"></div>
+                                    <p th:if="${#fields.hasErrors('isRecurring')}" th:errors="*{isRecurring}" class="text-danger m-0"></p>
                                 </div>
                             </div>
                         </div>
@@ -298,6 +303,8 @@
                 let paymentGateway = 'paypal';
                 let type = 0;
                 $('#isRecurring').val('0');
+
+                $('#trainer-membership-container').hide()
 
                 $('#paymentGateway').on('change', function() {
                     var selected = $(this).val();
@@ -316,6 +323,8 @@
                 {
                     type = 1
                     updateData()
+                    $('#trainer-membership-container').show()
+                    $("#trainerId").attr("required", true);
                 }
                 $('#membershipId').on('change', function () {
                     let value = $("#membershipId option:selected").text();
@@ -323,21 +332,26 @@
                     {
                         type = 1;
                         updateData()
+                        $('#trainer-membership-container').show()
+                        $("#trainerId").attr("required", true);
                     }
                     else {
                         type = 0;
                         updateData()
+                        $('#trainer-membership-container').hide()
+                        $('#trainerId').val(null);
+                        $("#trainerId").removeAttr("required");
                     }
                 });
                 function updateData() {
                     if(type === 1 || paymentGateway === 'cash') {
-                        $('.bootstrap-switch-id-isRecurringCheck').hide();
+                        $('#recurring-switch-container').hide();
                         $("#isRecurringCheck").bootstrapSwitch('state', false);
                         $("label[for='isRecurringCheck']").hide();
                         $('#isRecurring').val('0');
                     }
                     else {
-                        $('.bootstrap-switch-id-isRecurringCheck').show();
+                        $('#recurring-switch-container').show();
                         $("label[for='isRecurringCheck']").show();
                     }
                 }
@@ -374,6 +388,41 @@
                 </div>
             </form>
         </div>
+    </div>
+</div>
+
+<div th:fragment="checkinDetail" class="modal fade" id="checkinDetail" tabindex="-1" role="dialog" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Lịch sử điểm danh</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+                <div class="modal-body">
+                    <div class="table-responsive mb-2 mt-3">
+                        <table class="table table-sm custom-table table-bordered table-hover text-center" style="table-layout: auto; width: 100%; font-weight: 600;">
+                            <thead class="thead-light align-content-center">
+                            <tr>
+                                <th>Thời gian</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="model,item : ${model}" th:attr="data-id=${model.id}">
+                                <td th:text="${#dates.format(new java.util.Date(model.createdAt), 'dd/MM/yyyy HH:mm:ss')}" style="align-content: center;"></td>
+                            </tr>
+                            <tr th:if="${model?.size() == 0}">
+                                <td colspan="100">Không kết quả</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                </div>
+        </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+            </div>
+    </div>
     </div>
 </div>
 </body>

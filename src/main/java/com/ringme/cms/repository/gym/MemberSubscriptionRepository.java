@@ -29,6 +29,13 @@ public interface MemberSubscriptionRepository extends JpaRepository<MemberSubscr
             nativeQuery = true)
     List<MemberSubscription> findByMemberIdAndType(@Param("id") Long id, @Param("type") Integer type);
 
+    @Query(value = "SELECT m.* FROM member_subscriptions m " +
+            "INNER JOIN membership ms ON m.membership_id = ms.id " +
+            "WHERE m.status > 0 AND ms.type = :type AND m.member_id = :id " +
+            "AND (:trainerId IS NULL OR m.trainer_id = :trainerId)",
+            nativeQuery = true)
+    List<MemberSubscription> findByMemberIdAndTypeAndTrainer(@Param("id") Long id, @Param("type") Integer type, @Param("trainerId") Long trainerId);
+
     @Query(value = "SELECT DISTINCT m.* FROM member_subscriptions m " +
             "INNER JOIN membership ms ON m.membership_id = ms.id " +
             "WHERE m.status = 1 AND ms.type = :type AND m.member_id = :id",
@@ -73,4 +80,18 @@ public interface MemberSubscriptionRepository extends JpaRepository<MemberSubscr
 
     @Query(value = "SELECT * FROM member_subscriptions WHERE :id = membership_id AND status = 1", nativeQuery = true)
     List<MemberSubscription> findByMembershipId(@Param("id") Long id);
+
+    @Query("""
+        SELECT ms FROM MemberSubscription ms
+        JOIN ms.membership m
+        WHERE ms.trainer.id = :trainerId
+        AND ms.member.id = :memberId
+        AND m.type = 1
+        AND ms.status = 1
+        ORDER BY ms.startAt ASC
+    """)
+    List<MemberSubscription> findForBooking(
+            @Param("trainerId") Long trainerId,
+            @Param("memberId") Long memberId
+    );
 }

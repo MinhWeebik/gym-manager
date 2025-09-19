@@ -70,6 +70,9 @@ public class Member {
     @Column(name = "last_checked_in")
     private LocalDateTime lastCheckedIn;
 
+    @Column(name = "coin")
+    private Integer coin;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
