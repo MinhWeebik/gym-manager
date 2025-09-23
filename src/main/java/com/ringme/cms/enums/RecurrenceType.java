@@ -9,5 +9,14 @@ public enum RecurrenceType {
     SIX_WEEKLY,
     EIGHT_WEEKLY,
     MONTHLY,
-    DAILY
+    DAILY;
+
+    public static RecurrenceType stringToRecurrentType(String input){
+        for(RecurrenceType rt : RecurrenceType.values()){
+            if(input.equalsIgnoreCase(rt.toString())){
+                return rt;
+            }
+        }
+        return NONE;
+    }
 }

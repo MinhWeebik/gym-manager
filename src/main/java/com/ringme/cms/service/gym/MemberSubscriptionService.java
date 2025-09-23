@@ -112,6 +112,7 @@ public class MemberSubscriptionService {
         try {
             MemberSubscription memberSubscription = memberSubscriptionRepository.findById(id).orElseThrow();
             memberSubscription.setStatus(-1);
+            memberSubscription.setUpdatedAt(LocalDateTime.now());
             memberSubscriptionRepository.save(memberSubscription);
             updateStartEndDate(memberRepository.findIdByMemberSubscriptionId(memberSubscription.getId()),memberSubscription.getMembership().getType(),memberSubscription.getTrainer() == null ? null : memberSubscription.getTrainer().getId());
             if(memberSubscription.getIsRecurring() == 1 && memberSubscription.getPaypalSubscriptionId().startsWith("I-"))
@@ -155,7 +156,7 @@ public class MemberSubscriptionService {
         MemberSubscription memberSubscription = memberSubscriptionRepository.findById(id).orElseThrow();
         memberSubscription.setStatus(1);
         Long memberId = memberRepository.findIdByMemberSubscriptionId(memberSubscription.getId());
-        List<MemberSubscription> curMembership = memberSubscriptionRepository.findByMemberIdAndType(memberId, memberSubscription.getMembership().getType());
+        List<MemberSubscription> curMembership = memberSubscriptionRepository.findByMemberIdAndTypeAndTrainer(memberId, memberSubscription.getMembership().getType(), memberSubscription.getTrainer() == null ?  null : memberSubscription.getTrainer().getId());
         LocalDate newStartDate;
         LocalDate newEndDate;
         if(!curMembership.isEmpty())

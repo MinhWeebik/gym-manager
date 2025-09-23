@@ -68,6 +68,12 @@ public class CheckinController {
                 CheckinDto  checkinDto = new CheckinDto();
                 checkinDto.setFirstName(member.getFirstName());
                 checkinDto.setLastName(member.getLastName());
+                if(member.getLastCheckedIn()!=null){
+                    checkinDto.setLastCheckedIn(member.getLastCheckedIn().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
+                }
+                else {
+                    checkinDto.setLastCheckedIn(null);
+                }
                 String imageUrl;
                 if(member.getImageUrl() == null || member.getImageUrl().isEmpty())
                 {
@@ -125,6 +131,12 @@ public class CheckinController {
                 CheckinDto checkinDto = new CheckinDto();
                 checkinDto.setFirstName(member.getFirstName());
                 checkinDto.setLastName(member.getLastName());
+                if(member.getLastCheckedIn()!=null){
+                    checkinDto.setLastCheckedIn(member.getLastCheckedIn().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
+                }
+                else {
+                    checkinDto.setLastCheckedIn(null);
+                }
                 String imageUrl;
                 if(member.getImageUrl() == null || member.getImageUrl().isEmpty())
                 {

@@ -21,4 +21,5 @@ public class AppointmentDto {
     private String endRecurStr;
     private String view;
     private String date;
+    private Long appointmentInstanceId;
 }

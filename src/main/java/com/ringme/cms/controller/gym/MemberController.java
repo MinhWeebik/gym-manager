@@ -154,7 +154,13 @@ public class MemberController
                 if(formDto.getAddonSubscription() != null && !formDto.getAddonSubscription().isEmpty())
                 {
                     formDto.getAddonSubscription()
-                            .sort(Comparator.comparing(MemberSubscription::getStartAt));
+                            .sort(Comparator
+                                    .comparing(
+                                            (MemberSubscription sub) -> (sub.getTrainer() != null) ? sub.getTrainer().getId() : null,
+                                            Comparator.nullsFirst(Comparator.naturalOrder())
+                                    )
+                                    .thenComparing(MemberSubscription::getStartAt)
+                            );
                 }
                 if(formDto.getOldSubscription() != null && !formDto.getOldSubscription().isEmpty())
                 {

@@ -181,6 +181,11 @@
         table tr.active {
             background: rgba(23, 162, 184, .25) !important;
         }
+
+        .big-izitoast {
+            transform: scale(1.2) !important;    /* 1.5x bigger */
+            transform-origin: bottom right !important;  /* keeps it aligned */
+        }
     </style>
 </head>
 <body class="hold-transition text-sm sidebar-mini layout-fixed" style="font-family: 'Nunito', sans-serif !important;">
@@ -299,13 +304,13 @@
 
                 // 3. A message has arrived! Display the alert.
                 const checkInData = JSON.parse(message.body);
-
                 if(checkInData.code === 200) {
                     var data = checkInData.data;
+                    const text = data.lastCheckedIn == null ? 'Chưa điểm danh lần nào' : 'Lần cuối điểm danh: ' + data.lastCheckedIn
                     iziToast.show({
                         class: 'big-izitoast',
                         title: `${data.firstName} ${data.lastName}`,
-                        message: `${data.membershipName} - ${data.startAt} - ${data.endAt}`,
+                        message: `${data.membershipName} - ${data.startAt} - ${data.endAt}<br>${text}`,
                         theme: 'light', // dark
                         color: 'green',
                         image: `${data.imageUrl}`,

@@ -6,6 +6,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.*;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 @Getter
@@ -35,6 +36,9 @@ public class AppointmentInstance {
 
     @Column(name = "is_repeat")
     private Integer isRepeat;
+
+    @Column(name = "original_time")
+    private LocalDateTime originalTime;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "appointment_id")

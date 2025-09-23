@@ -17,4 +17,5 @@ public class CheckinDto {
     private String membershipName;
     private String startAt;
     private String endAt;
+    private String lastCheckedIn;
 }

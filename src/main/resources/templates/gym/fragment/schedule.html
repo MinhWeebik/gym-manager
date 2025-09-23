@@ -20,7 +20,7 @@
                 <div class="modal-footer">
 <!--                    <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="createBlockedTimeUrl()">Chặn thời gian</button>-->
                     <button th:if="${trainerId == null}" type="button" class="btn btn-primary" data-dismiss="modal" onclick="createClassUrl()">Thêm lớp</button>
-                    <button th:if="${trainerId != null}" type="button" class="btn btn-primary" data-dismiss="modal" onclick="createBookingUrl()">Thêm buổi pt riêng</button>
+                    <button th:disabled="${!allowCreateAppointment}" th:if="${trainerId != null}" type="button" class="btn btn-primary" data-dismiss="modal" onclick="createBookingUrl()">Thêm buổi pt riêng</button>
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
                 </div>
             </div>
@@ -252,18 +252,19 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="blockEventUrl()" th:if="${type < 2}">Chặn</button>
-                    <button type="button" class="btn btn-danger" th:attr="onclick=|event.stopPropagation(); deleteRecord({
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="blockEventUrl()" th:if="${type == 1}">Chặn</button>
+                    <button th:if="${type == 1 || type == 2}" type="button" class="btn btn-danger" th:attr="onclick=|event.stopPropagation(); deleteRecord({
                       action: '@{/schedule/delete-class/{id}/{type}(id=${model.id}, type=${type})}',
                       method: 'POST',
                       title: 'Xác nhận xóa',
                       text: 'Bạn có chắc muốn xóa cái này không'
                   })|"><span th:if="${type == 1}">Xóa lịch</span>
                         <span th:if="${type == 2}">Xóa thời gian chặn</span>
-                        <span th:if="${type == 0}">Xóa buổi</span></button>
+                    </button>
+                    <button th:disabled="${!allowCancelAndUpdate}" th:if="${type == 0}" type="button" class="btn btn-danger" onclick="deleteAppointmentUrl()">Hủy buổi</button>
                     <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="openMemberListUrl()" th:if="${type == 1}">Danh sách thành viên</button>
 <!--                    <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="updateBlockedTimeUrl()" th:if="${type == 2}">Sửa thời gian chặn</button>-->
-                    <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="updateEventUrl()" th:if="${type == 1 || type == 0}">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="updateEventUrl()" th:if="${type == 1 || type == 0}" th:disabled="${type == 0 && allowCancelAndUpdate == false }">
                         <span th:if="${type == 1}">Sửa lịch</span>
                         <span th:if="${type == 0}">Sửa buổi</span>
                     </button>
@@ -271,8 +272,73 @@
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
                 </div>
             </div>
+            <form id="delete-appointment-form" method="POST" action="" class="d-none">
+                <input type="hidden" name="id" value="">
+            </form>
         </div>
         <script>
+
+            function deleteAppointmentUrl() {
+                const formDelete = document.querySelector("#delete-appointment-form");
+                const isRepeat = '[[${model.repeat}]]'
+
+                if (isRepeat == 'NONE') {
+                    Swal.fire({
+                        title: "Xác nhận hủy",
+                        text: "Bạn có muốn hủy buổi này không?",
+                        icon: "warning",
+                        showCancelButton: true,
+                        confirmButtonColor: "#3085d6",
+                        cancelButtonColor: "#d33",
+                        confirmButtonText: "Xác nhận",
+                        cancelButtonText: "Hủy"
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            formDelete.action = '[[@{/schedule/delete-appointment/{id}/one(id=${appointmentInstanceId})}]]';
+                            formDelete.submit();
+                        }
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Hủy buổi tập',
+                        icon: 'question',
+                        html: `
+                <div style="text-align: left; padding-left: 1rem;">
+                    <input type="radio" name="updateType" id="opt1" value="one" checked>
+                    <label for="opt1">Buổi này</label><br>
+
+                    <input type="radio" name="updateType" id="opt2" value="all">
+                    <label for="opt2">Buổi này và các buổi sau</label><br>
+
+                    <input type="radio" name="updateType" id="opt3" value="every">
+                    <label for="opt3">Tất cả các buổi</label><br>
+                </div>
+            `,
+                        confirmButtonText: 'Xác nhận',
+                        showCancelButton: true,
+                        cancelButtonText: 'Hủy',
+                        preConfirm: () => {
+                            return document.querySelector('input[name="updateType"]:checked').value;
+                        }
+                    }).then((result) => {
+                        if (result.isConfirmed && result.value) {
+                            const selectedOption = result.value;
+
+                            if (selectedOption === 'one') {
+                                formDelete.action = '[[@{/schedule/delete-appointment/{id}/one(id=${appointmentInstanceId})}]]';
+                                formDelete.submit();
+                            } else if (selectedOption === 'all') {
+                                formDelete.action = '[[@{/schedule/delete-appointment/{id}/all(id=${appointmentInstanceId})}]]';
+                                formDelete.submit();
+                            } else if (selectedOption === 'every') {
+                                formDelete.action = '[[@{/schedule/delete-appointment/{id}/every(id=${appointmentInstanceId})}]]';
+                                formDelete.submit();
+                            }
+                        }
+                    });
+                }
+            }
+
             function updateEventUrl()
             {
                 const type = '[[${type}]]'
@@ -288,7 +354,7 @@
                 if(type == 0)
                 {
                     url = '[[@{/schedule/form-appointment}]]' + '?view=' + initialView + '&date='
-                        + initialDate + '&id=' + '[[${model.id}]]' + '&trainerId=' + '[[${trainerId}]]';
+                        + initialDate + '&id=' + '[[${model.id}]]' + '&trainerId=' + '[[${trainerId}]]' + '&appointmentInstanceId=' + '[[${appointmentInstanceId}]]';
                 }
                 window.location.href = url;
             }

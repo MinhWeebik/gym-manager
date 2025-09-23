@@ -4,12 +4,10 @@ import com.ringme.cms.dto.ValueTextDto;
 import com.ringme.cms.dto.gym.*;
 import com.ringme.cms.enums.RecurrenceType;
 import com.ringme.cms.exception.ClassInSessionException;
+import com.ringme.cms.exception.CustomExceptionWithText;
 import com.ringme.cms.model.gym.*;
 import com.ringme.cms.repository.gym.*;
-import com.ringme.cms.service.gym.AppointmentService;
-import com.ringme.cms.service.gym.AttendanceService;
-import com.ringme.cms.service.gym.BlockedTimeService;
-import com.ringme.cms.service.gym.ScheduledClassService;
+import com.ringme.cms.service.gym.*;
 import com.ringme.cms.utils.AppUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -53,6 +51,8 @@ public class ScheduleController {
     private final MemberRepository memberRepository;
     private final AppointmentService appointmentService;
     private final AppointmentRepository appointmentRepository;
+    private final AppointmentInstanceService appointmentInstanceService;
+    private final AppointmentInstanceRepository appointmentInstanceRepository;
 
     @RequestMapping(value = "/index")
     private String index() {
@@ -89,122 +89,21 @@ public class ScheduleController {
             else {
                 scheduledClasses = scheduledClassService.getAllScheduledClasses(startTime,endTime, trainerId);
                 repeatedSchedule = scheduledClassService.getAllRepeatedSchedule(startTime,endTime, trainerId);
-                List<Appointment> appointments = appointmentService.getAllAppointment(startTime, endTime, trainerId);
-                List<Appointment> repeatedAppointments = appointmentService.getAllRepeatedAppointment(startTime, endTime, trainerId);
-                for(Appointment appointment : appointments){
-                    CalenderEventDto item = new CalenderEventDto();
-                    item.setEventName("PT kèm riêng: " + appointment.getMember().getFirstName() + " " + appointment.getMember().getLastName());
-                    item.setCategoryColor(appointment.getBackgroundColor());
-                    item.setCategoryColorBorder(appointment.getBackgroundColor());
-                    item.setEventId("appointment-" + appointment.getId().toString());
-                    item.setStartTime(appointment.getDate().atTime(appointment.getFrom()));
-                    item.setEndTime(appointment.getDate().atTime(appointment.getTo()));
-                    item.setType(0);
-                    calenderEventDtoList.add(item);
+                List<AppointmentInstance> appointmentInstances = appointmentInstanceService.getAllAppointmentService(startTime, endTime, trainerId);
+                for(AppointmentInstance appointmentInstance : appointmentInstances){
+                    Appointment item = appointmentInstance.getAppointment();
+                    CalenderEventDto calenderEventDto = new CalenderEventDto();
+                    calenderEventDto.setEventName("PT kèm riêng: " + item.getMember().getFirstName() + " " + item.getMember().getLastName());
+                    calenderEventDto.setCategoryColor(item.getBackgroundColor());
+                    calenderEventDto.setCategoryColorBorder(item.getBackgroundColor());
+                    calenderEventDto.setEventId("appointment-" + appointmentInstance.getId().toString());
+                    calenderEventDto.setStartTime(appointmentInstance.getDate().atTime(appointmentInstance.getFrom()));
+                    calenderEventDto.setEndTime(appointmentInstance.getDate().atTime(appointmentInstance.getTo()));
+                    calenderEventDto.setRecurring(appointmentInstance.getIsRepeat() == 1);
+                    calenderEventDto.setType(0);
+                    calenderEventDtoList.add(calenderEventDto);
                 }
-                for(Appointment item : repeatedAppointments)
-                {
-                    if(item.getRepeat() == RecurrenceType.WEEKLY)
-                    {
-                        DayOfWeek dayOfWeek = item.getDate().getDayOfWeek();
-                        List<LocalDate> dayOfWeekList = new ArrayList<>();
-                        LocalDate firstCloseDOW = startTime.with(TemporalAdjusters.nextOrSame(dayOfWeek));
-                        while (!firstCloseDOW.isAfter(endTime)) {
-                            dayOfWeekList.add(firstCloseDOW);
-                            firstCloseDOW = firstCloseDOW.plusWeeks(1);
-                        }
 
-                        dayOfWeekList.removeIf(date -> date.isBefore(item.getDate()));
-                        if(item.getEndRecur()!=null)
-                        {
-                            dayOfWeekList.removeIf(date -> date.isAfter(item.getEndRecur()));
-                        }
-                        for(LocalDate dayOfWeekItem : dayOfWeekList )
-                        {
-                            CalenderEventDto calenderEventDto = new CalenderEventDto();
-                            calenderEventDto.setEventName("PT kèm riêng: " + item.getMember().getFirstName() + " " + item.getMember().getLastName());
-                            calenderEventDto.setCategoryColor(item.getBackgroundColor());
-                            calenderEventDto.setCategoryColorBorder(item.getBackgroundColor());
-                            calenderEventDto.setEventId("appointment-" + item.getId().toString());
-                            calenderEventDto.setStartTime(dayOfWeekItem.atTime(item.getFrom()));
-                            calenderEventDto.setEndTime(dayOfWeekItem.atTime(item.getTo()));
-                            calenderEventDto.setRecurring(true);
-                            calenderEventDto.setType(0);
-                            calenderEventDtoList.add(calenderEventDto);
-                        }
-                    }
-                    else if(item.getRepeat() == RecurrenceType.FORTNIGHTLY)
-                    {
-                        calenderEventDtoList.addAll(ProcessWeeklyAppointmentWithInterval(2, item, startTime, endTime));
-
-                    }
-                    else if(item.getRepeat() == RecurrenceType.THREE_WEEKLY)
-                    {
-                        calenderEventDtoList.addAll(ProcessWeeklyAppointmentWithInterval(3, item, startTime, endTime));
-                    }
-                    else if(item.getRepeat() == RecurrenceType.FOUR_WEEKLY)
-                    {
-                        calenderEventDtoList.addAll(ProcessWeeklyAppointmentWithInterval(4, item, startTime, endTime));
-                    }
-                    else if(item.getRepeat() == RecurrenceType.SIX_WEEKLY)
-                    {
-                        calenderEventDtoList.addAll(ProcessWeeklyAppointmentWithInterval(6, item, startTime, endTime));
-                    }
-                    else if(item.getRepeat() == RecurrenceType.EIGHT_WEEKLY)
-                    {
-                        calenderEventDtoList.addAll(ProcessWeeklyAppointmentWithInterval(8, item, startTime, endTime));
-                    }
-                    else if(item.getRepeat() == RecurrenceType.MONTHLY)
-                    {
-                        int date = item.getDate().getDayOfMonth();
-                        LocalDate monthIterator = startTime.withDayOfMonth(1);
-                        while(!monthIterator.isAfter(endTime))
-                        {
-                            YearMonth currentMonth = YearMonth.from(monthIterator);
-                            if (currentMonth.isValidDay(date)) {
-                                LocalDate occurrenceDate = currentMonth.atDay(date);
-                                if (!occurrenceDate.isBefore(item.getDate()) &&
-                                        (item.getEndRecur() == null || !occurrenceDate.isAfter(item.getEndRecur())) &&
-                                        !occurrenceDate.isBefore(startTime) && !occurrenceDate.isAfter(endTime)) {
-                                    CalenderEventDto calenderEventDto = new CalenderEventDto();
-                                    calenderEventDto.setEventName("PT kèm riêng: " + item.getMember().getFirstName() + " " + item.getMember().getLastName());
-                                    calenderEventDto.setCategoryColor(item.getBackgroundColor());
-                                    calenderEventDto.setCategoryColorBorder(item.getBackgroundColor());
-                                    calenderEventDto.setEventId("appointment-" + item.getId().toString());
-                                    calenderEventDto.setStartTime(occurrenceDate.atTime(item.getFrom()));
-                                    calenderEventDto.setEndTime(occurrenceDate.atTime(item.getTo()));
-                                    calenderEventDto.setRecurring(true);
-                                    calenderEventDto.setType(0);
-                                    calenderEventDtoList.add(calenderEventDto);
-                                }
-
-                            }
-                            monthIterator = monthIterator.plusMonths(1);
-                        }
-                    }
-                    else if(item.getRepeat() == RecurrenceType.DAILY)
-                    {
-                        LocalDate currentDate = startTime;
-                        while(!currentDate.isAfter(endTime))
-                        {
-                            if (!currentDate.isBefore(item.getDate()) &&
-                                    (item.getEndRecur() == null || !currentDate.isAfter(item.getEndRecur())) &&
-                                    !currentDate.isBefore(startTime) && !currentDate.isAfter(endTime)) {
-                                CalenderEventDto calenderEventDto = new CalenderEventDto();
-                                calenderEventDto.setEventName("PT kèm riêng: " + item.getMember().getFirstName() + " " + item.getMember().getLastName());
-                                calenderEventDto.setCategoryColor(item.getBackgroundColor());
-                                calenderEventDto.setCategoryColorBorder(item.getBackgroundColor());
-                                calenderEventDto.setEventId("appointment-" + item.getId().toString());
-                                calenderEventDto.setStartTime(currentDate.atTime(item.getFrom()));
-                                calenderEventDto.setEndTime(currentDate.atTime(item.getTo()));
-                                calenderEventDto.setRecurring(true);
-                                calenderEventDto.setType(0);
-                                calenderEventDtoList.add(calenderEventDto);
-                            }
-                            currentDate = currentDate.plusDays(1);
-                        }
-                    }
-                }
             }
             for(ScheduledClass scheduledClass : scheduledClasses){
                 Integer numberOfAttendances = attendanceRepository.getNumberOfAttendance(scheduledClass.getId(), scheduledClass.getDate());
@@ -693,11 +592,12 @@ public class ScheduleController {
         return calenderEventDtoList;
     }
 
-    @PutMapping("/update/{id}/{type}")
+    @PutMapping("/update/{id}/{type}/{deleteType}")
     @ResponseBody
     public ResponseEntity<String> updateEvent(
             @PathVariable Long id,
             @PathVariable Integer type,
+            @PathVariable String deleteType,
             @RequestBody CalenderEventDto eventDto) {
 
         try {
@@ -711,7 +611,7 @@ public class ScheduleController {
 //            }
             else if(type == 0)
             {
-                appointmentService.updateAppointment(id, eventDto);
+                appointmentInstanceService.updateAppointmentInstance(id, eventDto, deleteType);
             }
             return ResponseEntity.ok().build();
         }
@@ -757,6 +657,13 @@ public class ScheduleController {
             else {
                 trainerIdLong = null;
             }
+            LocalDateTime threshold = LocalDateTime.now().plusHours(12);
+            if(threshold.isAfter(startDate.atTime(startTime))) {
+                model.put("allowCreateAppointment", false);
+            }
+            else {
+                model.put("allowCreateAppointment", true);
+            }
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
             String formattedStartDate = startDate.format(formatter);
             String formattedEndDate = endDate.format(formatter);
@@ -788,8 +695,20 @@ public class ScheduleController {
             }
             else if(type == 0)
             {
-                Appointment appointment = appointmentRepository.findById(id).orElseThrow();
+                AppointmentInstance appointmentInstance = appointmentInstanceRepository.findById(id).orElseThrow();
+                Appointment appointment = appointmentInstance.getAppointment();
+                appointment.setDate(appointmentInstance.getDate());
+                appointment.setFrom(appointmentInstance.getFrom());
+                appointment.setTo(appointmentInstance.getTo());
+                appointment.setStatus(appointmentInstance.getStatus());
                 model.put("model", appointment);
+                model.put("appointmentInstanceId", appointmentInstance.getId());
+                LocalDateTime threshold = LocalDateTime.now().plusHours(12);
+                if(threshold.isAfter(appointmentInstance.getDate().atTime(appointmentInstance.getFrom())))
+                {
+                   model.put("allowCancelAndUpdate", false);
+                }
+                else model.put("allowCancelAndUpdate", true);
             }
             else {
                 BlockedTime blockedTime = blockedTimeRepository.findById(id).orElseThrow();
@@ -876,27 +795,38 @@ public class ScheduleController {
                                  @RequestParam(name = "startDate", required = false) String startDateStr,
                                  @RequestParam(name = "startTime", required = false) String startTime,
                                  @RequestParam(name = "endTime", required = false) String endTime,
-                                 @RequestParam(name = "id", required = false) Long id, ModelMap model) {
+                                 @RequestParam(name = "id", required = false) Long id,
+                                 @RequestParam(name = "appointmentInstanceId", required = false) Long appointmentInstanceId,ModelMap model) {
         model.put("title", id != null ? "Sửa buổi" : "Thêm buổi");
         AppointmentDto formDto = (AppointmentDto) model.getOrDefault("form", new AppointmentDto());
         if (id != null) {
             Appointment appointment = appointmentRepository.findById(id).orElseThrow();
+            AppointmentInstance appointmentInstance = appointmentInstanceRepository.findById(appointmentInstanceId).orElseThrow();
             if (!model.containsAttribute("form")) {
                 formDto = modelMapper.map(appointment, AppointmentDto.class);
                 formDto.setMemberId(appointment.getMember().getId());
                 formDto.setTrainerId(appointment.getTrainer().getId());
                 DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
                 DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
-                formDto.setStartDateStr(appointment.getDate().format(dateFormatter));
-                formDto.setFromStr(appointment.getFrom().format(timeFormatter));
-                formDto.setToStr(appointment.getTo().format(timeFormatter));
+                formDto.setStartDateStr(appointmentInstance.getDate().format(dateFormatter));
+                formDto.setFromStr(appointmentInstance.getFrom().format(timeFormatter));
+                formDto.setToStr(appointmentInstance.getTo().format(timeFormatter));
                 formDto.setView(view);
                 formDto.setDate(date);
+                formDto.setAppointmentInstanceId(appointmentInstanceId);
                 if(appointment.getEndRecur()!=null)
                 {
                     formDto.setEndRecurStr(appointment.getEndRecur().format(dateFormatter));
                 }
             }
+            model.put("isRecurring", !appointment.getRepeat().equals(RecurrenceType.NONE));
+            if(!appointment.getRepeat().equals(RecurrenceType.NONE))
+            {
+                model.put("initialDateStr", appointmentInstance.getDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+                model.put("initialFromStr", appointmentInstance.getFrom().format(DateTimeFormatter.ofPattern("HH:mm")));
+                model.put("initialToStr", appointmentInstance.getTo().format(DateTimeFormatter.ofPattern("HH:mm")));
+            }
+            model.put("initialRecurringType", appointment.getRepeat().toString());
         }
         else {
             if (!model.containsAttribute("form"))
@@ -957,6 +887,7 @@ public class ScheduleController {
 
     @PostMapping("/save-booking")
     public String save(@RequestParam(name = "returnTrainerId", required = false) Long returnTrainerId,
+                       @RequestParam(name = "updateType", required = false) String updateType,
                        @Valid @ModelAttribute("form") AppointmentDto formDto,
                        BindingResult bindingResult,
                        RedirectAttributes redirectAttributes,
@@ -968,7 +899,7 @@ public class ScheduleController {
                                 + formDto.getDate() + "&startDate=" + formDto.getStartDateStr() + "&startTime="
                                 + formDto.getFromStr() + "&endTime=" + formDto.getToStr());
             }
-            appointmentService.save(formDto);
+            appointmentService.save(formDto, updateType);
             String trainerIdString = "";
             if(returnTrainerId!=null){
                 trainerIdString =  "&trainerId=" + returnTrainerId;
@@ -980,7 +911,15 @@ public class ScheduleController {
                 redirectAttributes.addFlashAttribute("success", "Cập nhật thành công!");
             }
             return "redirect:/schedule/index?view=" + formDto.getView() + "&date=" + formDto.getDate() + trainerIdString;
-        } catch (Exception e) {
+        }
+        catch (CustomExceptionWithText e) {
+            log.error("Exception: {}", e.getMessage(), e);
+            return AppUtils.goBackWithError(request, redirectAttributes, "form", bindingResult, formDto, e.getMessage())
+                    .orElse("redirect:/schedule/form?view=" + formDto.getView() + "&date="
+                            + formDto.getDate() + "&startDate=" + formDto.getStartDateStr() + "&startTime="
+                            + formDto.getFromStr() + "&endTime=" + formDto.getToStr());
+        }
+        catch (Exception e) {
             log.error("Exception: {}", e.getMessage(), e);
             return AppUtils.goBackWithError(request, redirectAttributes, "form", bindingResult, formDto, "Error in server!")
                     .orElse("redirect:/schedule/form?view=" + formDto.getView() + "&date="
@@ -1033,6 +972,22 @@ public class ScheduleController {
 
 
             }
+            redirectAttributes.addFlashAttribute("success", "Xóa thành công!");
+        } catch (Exception e) {
+            log.error("Exception: {}", e.getMessage(), e);
+            redirectAttributes.addFlashAttribute("error", "Error in server!");
+        }
+        return AppUtils.goBack(request).orElse("redirect:/schedule/index");
+    }
+
+    @PostMapping(value = {"delete-appointment/{id}/{type}"})
+    public String deleteAppointment(@PathVariable(required = true) Long id,
+                         @PathVariable String type,
+                         HttpServletRequest request,
+                         RedirectAttributes redirectAttributes) {
+        log.info("id: {}", id);
+        try {
+            appointmentService.delete(id, type);
             redirectAttributes.addFlashAttribute("success", "Xóa thành công!");
         } catch (Exception e) {
             log.error("Exception: {}", e.getMessage(), e);

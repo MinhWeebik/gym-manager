@@ -23,15 +23,17 @@
     <div class="container-fluid">
         <div class="card card-default">
             <div class="card-body">
-                <form th:action="@{/schedule/save-booking(returnTrainerId = ${trainerId})}" method="post" th:object="${form}" enctype="multipart/form-data">
+                <form id="appointmentForm" th:action="@{/schedule/save-booking(returnTrainerId = ${trainerId})}" method="post" th:object="${form}" enctype="multipart/form-data">
                     <div class="row">
                         <input hidden="hidden" name="view" th:value="*{view}"/>
                         <input hidden="hidden" name="date" th:value="*{date}"/>
                         <input hidden="hidden" name="id" th:value="*{id}"/>
                         <input hidden="hidden" name="trainerId" th:value="*{trainerId}"/>
+                        <input hidden="hidden" name="appointmentInstanceId" th:value="*{appointmentInstanceId}"/>
+                        <input type="hidden" id="updateTypeInput" name="updateType" value="one" />
                         <div class="col-md-6">
                             <div class="form-group">
-                                <div th:replace="component :: select2-v2('GET', 'Chọn thành viên', 'memberId', *{memberId}, '/member/ajax-search/' + ${trainerId}, 'Nhập thành viên', ${memberName} , true, false, 0, null)"></div>
+                                <div th:replace="component :: select2-v3('GET', 'Chọn thành viên', 'memberId', *{memberId}, '/member/ajax-search/' + ${trainerId}, 'Nhập thành viên', ${memberName} , true, false, ${form.id != null}, 0, null)"></div>
                                 <p th:if="${#fields.hasErrors('memberId')}" th:errors="*{memberId}" class="text-danger m-0"></p>
                             </div>
                         </div>
@@ -62,18 +64,25 @@
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="form-group" th:with="options=${T(java.util.Arrays).asList(
-                                                                'NONE', 'Không lặp',
-                                                                'WEEKLY', 'Hằng tuần',
-                                                                'FORTNIGHTLY', 'Mỗi 2 tuần',
-                                                                'THREE_WEEKLY', 'Mỗi 3 tuần',
-                                                                'FOUR_WEEKLY', 'Mỗi 4 tuần',
-                                                                'SIX_WEEKLY', 'Mỗi 6 tuần',
-                                                                'EIGHT_WEEKLY', 'Mỗi 8 tuần',
-                                                                'MONTHLY', 'Hằng tháng',
-                                                                'DAILY', 'Hằng ngày'
-                                                            )}">
-                                <div th:replace="component :: select-default-v2('Lặp lại', 'repeat', *{repeat}, true, false, ${options})"></div>
+                            <div class="form-group">
+                                <!-- 1. The Label -->
+                                <label for="repeat">
+                                    <span>Lặp lại</span>
+                                    <span style="color: red;">*</span>
+                                </label>
+
+                                <!-- 2. The Select Dropdown -->
+                                <select id="repeat" name="repeat" th:field="*{repeat}" required="required" class="form-control" style="height: 31px; padding-top: 3px;">
+                                    <option value="NONE">Không lặp</option>
+                                    <option value="WEEKLY">Hằng tuần</option>
+                                    <option value="FORTNIGHTLY">Mỗi 2 tuần</option>
+                                    <option value="THREE_WEEKLY">Mỗi 3 tuần</option>
+                                    <option value="FOUR_WEEKLY">Mỗi 4 tuần</option>
+                                    <option value="SIX_WEEKLY">Mỗi 6 tuần</option>
+                                    <option value="EIGHT_WEEKLY">Mỗi 8 tuần</option>
+                                    <option value="MONTHLY">Hằng tháng</option>
+                                    <option value="DAILY">Hằng ngày</option>
+                                </select>
                             </div>
                             <p th:if="${#fields.hasErrors('repeat')}" th:errors="*{repeat}" class="text-danger m-0"></p>
                         </div>
@@ -116,11 +125,17 @@
 
 <script layout:fragment="content_page_script">
 
+    const isRecurring = '[[${isRecurring}]]'
     const toTimePicker = $("#to").flatpickr({
         enableTime: true,    // This enables the time picker functionality.
         noCalendar: true,    // This hides the calendar part, making it a time-only picker.
         dateFormat: "H:i"
     });
+
+    let curDateValue = $('input[name="startDateStr"]').val();
+    let curFromValue = $("#from").val().split(":").slice(0,2).join(":");
+    let curToValue = $("#to").val().split(":").slice(0,2).join(":");
+    let curRecurrentType = $("#repeat").val();
 
     const fromTimePicker = $("#from").flatpickr({
         enableTime: true,    // This enables the time picker functionality.
@@ -129,6 +144,11 @@
         onChange: function(selectedDates, dateStr, instance) {
             if (selectedDates.length) {
                 const fromDate = selectedDates[0];
+
+                const hours = fromDate.getHours().toString().padStart(2, '0');
+                const minutes = fromDate.getMinutes().toString().padStart(2, '0');
+                curFromValue = `${hours}:${minutes}`;
+
                 const minToTime = new Date(fromDate.getTime());
                 minToTime.setMinutes(minToTime.getMinutes() + 30);
                 toTimePicker.set('minTime', minToTime);
@@ -136,13 +156,20 @@
                 if (toTime && toTime < selectedDates[0]) {
                     toTimePicker.clear();
                 }
+                checkTimeUpdate()
             }
         }
     });
 
     toTimePicker.config.onChange.push(function(selectedDates, dateStr, instance) {
         if (selectedDates.length) {
+            const toDate = selectedDates[0];
+
+            const hours = toDate.getHours().toString().padStart(2, '0');
+            const minutes = toDate.getMinutes().toString().padStart(2, '0');
+            curToValue = `${hours}:${minutes}`;
             fromTimePicker.set('maxTime', dateStr);
+            checkTimeUpdate()
         }
     });
 
@@ -261,6 +288,8 @@
         if(!endDate) {
             $('#endRecurStr').datetimepicker('clear');
         }
+        curDateValue = e.date.format("DD/MM/YYYY");
+        checkTimeUpdate()
     });
 
     $("#endRecurStr").on("dp.change", function (e) {
@@ -279,6 +308,135 @@
     if (endDate) {
         $('#startDateStr').data("DateTimePicker").maxDate(endDate);
     }
+
+    let initialStartDate = '[[${initialDateStr}]]';
+    let initialFromValue = '[[${initialFromStr}]]';
+    let initialToValue = '[[${initialToStr}]]';
+    let initialRecurrentType = '[[${initialRecurringType}]]'
+    let isTimeUpdated = false;
+    let isRecurrentUpdated = false;
+    let onlyTimeChanged = true;
+
+    $("#repeat").on("change", function() {
+        curRecurrentType = $(this).val();
+        checkRecurrentUpdate()
+    });
+
+    function checkRecurrentUpdate()
+    {
+        if(initialRecurrentType !== curRecurrentType)
+        {
+            isRecurrentUpdated = true;
+        }
+        else {
+            isRecurrentUpdated = false;
+        }
+    }
+
+    function checkTimeUpdate()
+    {
+        if(isRecurring == 'true')
+        {
+            // console.log(initialStartDate, curDateValue)
+            // console.log(initialFromValue, curFromValue)
+            // console.log(initialToValue, curToValue)
+            if(initialStartDate!==curDateValue || initialFromValue!==curFromValue || initialToValue!==curToValue ) {
+                isTimeUpdated = true;
+                if(initialStartDate===curDateValue)
+                {
+                    onlyTimeChanged = true;
+                }
+                else {
+                    onlyTimeChanged = false;
+                }
+            }
+            else {
+                isTimeUpdated = false;
+                onlyTimeChanged = false;
+            }
+        }
+    }
+
+    const curForm = $('#appointmentForm');
+    let id = $('input[name="id"]').val();
+    console.log(id)
+    curForm.on('submit', function(event) {
+        if (!( (!isTimeUpdated && !isRecurrentUpdated)
+            || (!onlyTimeChanged && isRecurrentUpdated)
+            || (isRecurrentUpdated && curRecurrentType == 'NONE') && !id)) {
+            event.preventDefault();
+            if(initialRecurrentType == 'NONE')
+            {
+                $('#updateTypeInput').val('every');
+                curForm[0].submit();
+            }
+            else {
+                let html;
+                if(onlyTimeChanged && !isRecurrentUpdated){
+                    html = `
+                <div style="text-align: left; padding-left: 1rem;">
+                    <input type="radio" name="updateType" id="opt1" value="one" checked>
+                    <label for="opt1">Buổi này</label><br>
+
+                    <input type="radio" name="updateType" id="opt2" value="all">
+                    <label for="opt2">Buổi này và các buổi sau</label><br>
+
+                    <input type="radio" name="updateType" id="opt3" value="every">
+                    <label for="opt3">Tất cả các buổi</label><br>
+                </div>
+            `
+                }
+                else if(!onlyTimeChanged && !isRecurrentUpdated){
+                    html = `
+                <div style="text-align: left; padding-left: 1rem;">
+                    <input type="radio" name="updateType" id="opt1" value="one" checked>
+                    <label for="opt1">Buổi này</label><br>
+
+                    <input type="radio" name="updateType" id="opt2" value="all">
+                    <label for="opt2">Buổi này và các buổi sau</label><br>
+                </div>
+            `}
+                else {
+                    html = `
+                <div style="text-align: left; padding-left: 1rem;">
+                    <input type="radio" name="updateType" id="opt2" value="all" checked>
+                    <label for="opt2">Buổi này và các buổi sau</label><br>
+
+                    <input type="radio" name="updateType" id="opt3" value="every">
+                    <label for="opt3">Tất cả các buổi</label><br>
+                </div>
+            `
+                }
+                Swal.fire({
+                    title: 'Sửa buổi tập',
+                    icon: 'question',
+                    html: html,
+                    confirmButtonText: 'Xác nhận',
+                    showCancelButton: true,
+                    cancelButtonText: 'Hủy',
+                    preConfirm: () => {
+                        return document.querySelector('input[name="updateType"]:checked').value;
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed && result.value) {
+                        const selectedOption = result.value;
+
+                        if (selectedOption === 'one') {
+                            $('#updateTypeInput').val('one');
+                            curForm[0].submit();
+                        } else if (selectedOption === 'all') {
+                            $('#updateTypeInput').val('all');
+                            curForm[0].submit();
+                        } else if (selectedOption === 'every') {
+                            $('#updateTypeInput').val('every');
+                            curForm[0].submit();
+                        }
+                    }
+                });
+            }
+
+        }
+    });
 
 </script>
 </body>

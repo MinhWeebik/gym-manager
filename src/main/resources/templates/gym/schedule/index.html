@@ -173,54 +173,189 @@
         $('#calendar').fullCalendar('refetchEvents');
     });
 
-    function updateEvent(event, revertFunc) {
-        Swal.fire({
-            title: 'Xác nhận thay đổi',
-            text: "Bạn có chắc chắn muốn di chuyển lịch tập này không?",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Đồng ý!',
-            cancelButtonText: 'Hủy bỏ'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                if(event.type == 2) {
-                    event.id = event.id.split('-').pop();
-                }
+    function updateEvent(event, revertFunc, delta) {
+         if(event.type == 1 || event.type == 2 || (event.type == 0 && event.recurring == false) ) {
+             Swal.fire({
+                 title: 'Xác nhận thay đổi',
+                 text: "Bạn có chắc chắn muốn di chuyển lịch tập này không?",
+                 icon: 'warning',
+                 showCancelButton: true,
+                 confirmButtonColor: '#3085d6',
+                 cancelButtonColor: '#d33',
+                 confirmButtonText: 'Đồng ý!',
+                 cancelButtonText: 'Hủy bỏ'
+             }).then((result) => {
+                 if (result.isConfirmed) {
+                     if(event.type == 2) {
+                         event.id = event.id.split('-').pop();
+                     }
 
-                if(event.type == 0) {
-                    event.id = event.id.split('-').pop();
-                }
+                     if(event.type == 0) {
+                         event.id = event.id.split('-').pop();
+                     }
 
-                var eventData = {
-                    title: event.title,
-                    start: event.start.format(),
-                    end: (event.end) ? event.end.format() : null
-                };
+                     var eventData = {
+                         title: event.title,
+                         start: event.start.format(),
+                         end: (event.end) ? event.end.format() : null
+                     };
 
-                $.ajax({
-                    url: '[[@{/schedule/update}]]' + '/' + event.id + '/' + event.type,
-                    type: 'PUT',
-                    contentType: 'application/json',
-                    data: JSON.stringify(eventData),
-                    success: function(response) {
-                        console.log('Event updated successfully');
-                        toastSuccess("Lưu thành công", 1000);
-                        $('#calendar').fullCalendar('refetchEvents');
-                    },
-                    error: function(xhr) {
-                        console.error('Error updating event:', xhr.responseText);
-                        toastError(xhr.responseText, 3000)
-                        revertFunc(); // Server failed, so revert
-                    }
-                });
+                     $.ajax({
+                         url: '[[@{/schedule/update}]]' + '/' + event.id + '/' + event.type + '/one',
+                         type: 'PUT',
+                         contentType: 'application/json',
+                         data: JSON.stringify(eventData),
+                         success: function(response) {
+                             console.log('Event updated successfully');
+                             toastSuccess("Lưu thành công", 1000);
+                             $('#calendar').fullCalendar('refetchEvents');
+                         },
+                         error: function(xhr) {
+                             console.error('Error updating event:', xhr.responseText);
+                             toastError(xhr.responseText, 3000)
+                             revertFunc(); // Server failed, so revert
+                         }
+                     });
 
-            } else {
-                revertFunc();
-                console.log('User cancelled the event update.');
-            }
-        });
+                 } else {
+                     revertFunc();
+                     console.log('User cancelled the event update.');
+                 }
+             });
+         }
+         else if(event.type == 0 && event.recurring == true){
+             const newStart = event.start;
+             const oldStart = newStart.clone().subtract(delta);
+             const areDatesTheSame = newStart.isSame(oldStart, 'day');
+             let html;
+             if(areDatesTheSame && !newStart.isSame(oldStart))
+             {
+                 html = `
+                    <div style="text-align: left; padding-left: 1rem;">
+                        <input type="radio" name="updateType" id="opt1" value="one" checked>
+                        <label for="opt1">Buổi này</label><br>
+
+                        <input type="radio" name="updateType" id="opt2" value="all">
+                        <label for="opt2">Buổi này và các buổi sau</label><br>
+
+                        <input type="radio" name="updateType" id="opt3" value="every">
+                        <label for="opt3">Tất cả các buổi</label><br>
+
+                    </div>
+                `;
+             }
+             else {
+                 html = `
+                    <div style="text-align: left; padding-left: 1rem;">
+                        <input type="radio" name="updateType" id="opt1" value="one" checked>
+                        <label for="opt1">Buổi này</label><br>
+
+                        <input type="radio" name="updateType" id="opt2" value="all">
+                        <label for="opt2">Buổi này và các buổi sau</label><br>
+
+                    </div>
+                `;
+             }
+             Swal.fire({
+                 title: 'Chỉnh sửa thời gian',
+                 icon: 'question',
+
+                 html: html,
+
+                 confirmButtonText: 'Xác nhận',
+                 showCancelButton: true,
+                 cancelButtonText: 'Hủy',
+
+                 preConfirm: () => {
+                     return document.querySelector('input[name="updateType"]:checked').value;
+                 }
+
+             }).then((result) => {
+                 if (result.isConfirmed && result.value) {
+                     const selectedOption = result.value;
+
+                     // --- ADD YOUR LOGIC HERE ---
+                     if (selectedOption === 'one') {
+                         event.id = event.id.split('-').pop();
+
+                         var eventData = {
+                             title: event.title,
+                             start: event.start.format(),
+                             end: (event.end) ? event.end.format() : null
+                         };
+
+                         $.ajax({
+                             url: '[[@{/schedule/update}]]' + '/' + event.id + '/' + event.type + '/one',
+                             type: 'PUT',
+                             contentType: 'application/json',
+                             data: JSON.stringify(eventData),
+                             success: function(response) {
+                                 console.log('Event updated successfully');
+                                 toastSuccess("Lưu thành công", 1000);
+                                 $('#calendar').fullCalendar('refetchEvents');
+                             },
+                             error: function(xhr) {
+                                 console.error('Error updating event:', xhr.responseText);
+                                 toastError(xhr.responseText, 3000)
+                                 revertFunc(); // Server failed, so revert
+                             }
+                         });
+                     } else if (selectedOption === 'all') {
+                         event.id = event.id.split('-').pop();
+
+                         var eventData = {
+                             title: event.title,
+                             start: event.start.format(),
+                             end: (event.end) ? event.end.format() : null
+                         };
+
+                         $.ajax({
+                             url: '[[@{/schedule/update}]]' + '/' + event.id + '/' + event.type + '/all',
+                             type: 'PUT',
+                             contentType: 'application/json',
+                             data: JSON.stringify(eventData),
+                             success: function(response) {
+                                 console.log('Event updated successfully');
+                                 toastSuccess("Lưu thành công", 1000);
+                                 $('#calendar').fullCalendar('refetchEvents');
+                             },
+                             error: function(xhr) {
+                                 console.error('Error updating event:', xhr.responseText);
+                                 toastError(xhr.responseText, 3000)
+                                 revertFunc(); // Server failed, so revert
+                             }
+                         });
+                     } else if (selectedOption === 'every') {
+                         event.id = event.id.split('-').pop();
+
+                         var eventData = {
+                             title: event.title,
+                             start: event.start.format(),
+                             end: (event.end) ? event.end.format() : null
+                         };
+
+                         $.ajax({
+                             url: '[[@{/schedule/update}]]' + '/' + event.id + '/' + event.type + '/every',
+                             type: 'PUT',
+                             contentType: 'application/json',
+                             data: JSON.stringify(eventData),
+                             success: function(response) {
+                                 console.log('Event updated successfully');
+                                 toastSuccess("Lưu thành công", 1000);
+                                 $('#calendar').fullCalendar('refetchEvents');
+                             },
+                             error: function(xhr) {
+                                 console.error('Error updating event:', xhr.responseText);
+                                 toastError(xhr.responseText, 3000)
+                                 revertFunc(); // Server failed, so revert
+                             }
+                         });
+                     }
+                 } else if (result.dismiss === Swal.DismissReason.cancel) {
+                     revertFunc();
+                 }
+             });
+         }
     }
 
     $(document).on('hidden.bs.modal', '#updateScheduleOption', function () {
@@ -295,21 +430,10 @@
                 var start = selectInfo.start;
                 var end = selectInfo.end;
 
-                var inclusiveEnd = end.clone();
-                let cutoffTime = new Date();
-                // console.log(cutoffTime);
-                cutoffTime.setHours(cutoffTime.getHours() + 12);
-                inclusiveEnd.subtract(1, 'millisecond');
+                var inclusiveEnd = moment(end).subtract(1, 'millisecond');
+
                 if (start.isSame(inclusiveEnd, 'day')) {
-                    if(trainerId == null)
-                    {
-                        return true;
-                    }
-                    if (start > cutoffTime) {
-                        return true; // Selection is valid
-                    } else {
-                        return false; // Selection is invalid
-                    }
+                    return true
                 } else {
                     return false;
                 }
@@ -331,10 +455,10 @@
                 }
             },
             eventDrop: function(event, delta, revertFunc) {
-                updateEvent(event, revertFunc);
+                updateEvent(event, revertFunc, delta);
             },
             eventResize: function(event, delta, revertFunc) {
-                updateEvent(event, revertFunc);
+                updateEvent(event, revertFunc, delta);
             },
             eventClick: function(event, jsEvent, view) {
                 if(event.type == 2 || event.type == 0)
