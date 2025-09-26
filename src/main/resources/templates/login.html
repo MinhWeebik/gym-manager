@@ -20,7 +20,7 @@
     <link rel="stylesheet" th:href="@{/css/subcss.css}">
     <style>
         body {
-            background-image: url('img/music_bg.jpg');
+            background-image: url('img/gym_background.jpg');
             background-repeat: no-repeat;
             background-size: cover;
         }
@@ -39,11 +39,11 @@
                 </div>
                 <div class="card shadow-lg">
                     <div class="card-body p-5">
-                        <h1 class="fs-4 card-title fw-bold mb-4 d-flex justify-content-sm-center" th:text="#{login}"></h1>
+                        <h1 class="fs-4 card-title fw-bold mb-4 d-flex justify-content-sm-center" >Đăng nhập</h1>
                         <form th:action="@{/login}" method="POST" class="needs-validation" novalidate="" autocomplete="off">
 
                             <div class="mb-3">
-                                <label class="mb-2 text-muted" for="email" th:text="#{username}"> <span style="color:red"> *</span></label>
+                                <label class="mb-2 text-muted" for="email" >Tên đăng nhập <span style="color:red"> *</span></label>
                                 <input id="email" type="text" class="form-control" name="username" value="" required autofocus>
                                 <div class="invalid-feedback" th:text="#{uII}">
 
@@ -51,7 +51,7 @@
                             </div>
                             <div class="mb-3">
                                 <div class="mb-2 w-100">
-                                    <label class="text-muted" for="password" th:text="#{pass}"> <span style="color:red"> *</span></label>
+                                    <label class="text-muted" for="password">Mật khẩu <span style="color:red"> *</span></label>
                                 </div>
                                 <input id="password" type="password" class="form-control" name="password" required>
                                 <div class="invalid-feedback" th:text="#{pIR}">
@@ -67,7 +67,7 @@
                             <div class="mb-3">
                                 <div class="form-check py-2">
                                     <input type="checkbox" name="remember-me" id="remember"  class="form-check-input" value="true">
-                                    <label for="remember" class="form-check-label" th:text="#{reLog}"></label>
+                                    <label for="remember" class="form-check-label" >Nhớ tài khoản</label>
                                 </div>
                                 <div class="alert alert-success d-flex align-items-center p-2 my-2" role="alert"  th:if="${success}">
                                     <div th:text="${success}" th:if="${success}">
@@ -79,7 +79,8 @@
                                         An example alert with an icon
                                     </div>
                                 </div>
-                                <button type="submit" class="btn btn-primary w-100 p-2" th:text="#{loginBut}">
+                                <button type="submit" class="btn btn-primary w-100 p-2">
+                                    Đăng nhập
                                 </button>
                             </div>
                         </form>

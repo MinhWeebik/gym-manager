@@ -25,7 +25,7 @@
         <div class="row">
             <div class="col-md-3" style="width: 100%"></div>
             <div class="col-md-9 extra-info-text"><span th:if="${startEndString != null}" th:text="${startEndString}"></span>
-                <span th:if="${startEndString == null}">Người dùng chưa đăng ký gói thành viên nào</span>
+                <span th:if="${startEndString == null}">Người dùng chưa đăng ký gói thành viên nào</span><span class="member-coin-text" th:text="${coin + ' xu'}"></span>
                 <i class="fa-solid" th:classappend="${model.status == 1 ? 'fa-check' : 'fa-times'}" style="color: black; margin-left: 15px"></i>
             </div>
         </div>

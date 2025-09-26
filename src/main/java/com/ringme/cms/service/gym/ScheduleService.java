@@ -39,6 +39,15 @@ public class ScheduleService {
                 }
             }
             memberSubscriptionRepository.autoUpdateStatus();
+            List<Long> ids = memberSubscriptionRepository.findExpiredTrainingPackage();
+            for (Long id : ids) {
+                MemberSubscription memberSubscription = memberSubscriptionRepository.findById(id).orElse(null);
+                if(memberSubscription!=null){
+                    memberSubscription.setStatus(0);
+                    memberSubscriptionRepository.save(memberSubscription);
+                }
+
+            }
             log.info("Successfully auto update status at {}", LocalDateTime.now());
         }
         catch (Exception e)

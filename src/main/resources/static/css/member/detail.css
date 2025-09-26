@@ -132,3 +132,9 @@
 .links a { color: #0070ba; text-decoration: none; text-align: center; }
 .links a:hover { text-decoration: underline; }
 .links { margin-top: 15px; display: flex; flex-direction: column; gap: 10px; }
+
+.member-coin-text {
+    border-left: darkgrey 1px solid;
+    margin-left: 10px;
+    padding-left: 10px;
+}

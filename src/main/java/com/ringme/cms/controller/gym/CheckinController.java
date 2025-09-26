@@ -198,7 +198,7 @@ public class CheckinController {
     public String update(@RequestParam(value = "id") Long memberId, ModelMap model) {
         log.info("member id: {}", memberId);
         try {
-            List<RawCheckInLog> logHistory = rawCheckInLogRepository.findByMemberId(memberId);
+            List<RawCheckInLog> logHistory = rawCheckInLogRepository.getLogByMemberId(memberId);
             model.put("model", logHistory);
             return "gym/fragment/member :: checkinDetail";
         } catch (Exception e) {

@@ -155,6 +155,10 @@ public class MemberSubscriptionService {
     {
         MemberSubscription memberSubscription = memberSubscriptionRepository.findById(id).orElseThrow();
         memberSubscription.setStatus(1);
+        if(memberSubscription.getMembership().getType() == 1)
+        {
+            memberSubscription.setNumberOfVisit(0);
+        }
         Long memberId = memberRepository.findIdByMemberSubscriptionId(memberSubscription.getId());
         List<MemberSubscription> curMembership = memberSubscriptionRepository.findByMemberIdAndTypeAndTrainer(memberId, memberSubscription.getMembership().getType(), memberSubscription.getTrainer() == null ?  null : memberSubscription.getTrainer().getId());
         LocalDate newStartDate;

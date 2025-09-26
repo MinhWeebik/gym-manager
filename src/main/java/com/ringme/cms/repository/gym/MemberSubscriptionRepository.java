@@ -56,10 +56,43 @@ public interface MemberSubscriptionRepository extends JpaRepository<MemberSubscr
     MemberSubscription findByPaypalSubscriptionId(String paypalSubscriptionId);
 
     @Modifying
-    @Query(value = "UPDATE member_subscriptions " +
-            "SET status = 0 " +
-            "WHERE end_at < CURDATE() AND status = 1 AND isRecurring = 0", nativeQuery = true)
+    @Query(
+            value = "UPDATE member_subscriptions ms " +
+                    "INNER JOIN membership m ON ms.membership_id = m.id " +
+                    "SET " +
+                    "    ms.status = 0 " +
+                    "WHERE " +
+                    "    ms.end_at < CURDATE() " +
+                    "    AND ms.status = 1 " +
+                    "    AND ms.isRecurring = 0 " +
+                    "    AND m.type = 0",
+            nativeQuery = true
+    )
     void autoUpdateStatus();
+
+    @Query( value = "SELECT " +
+            "    ms.* " + // Select all columns from the ms table
+            "FROM " +
+            "    member_subscriptions ms " +
+            "INNER JOIN ( " +
+            "    SELECT " +
+            "        ms_inner.trainer_id, " +
+            "        ms_inner.member_id " +
+            "    FROM " +
+            "        member_subscriptions ms_inner " +
+            "    INNER JOIN " +
+            "        membership m ON m.id = ms_inner.membership_id " +
+            "    WHERE " +
+            "        m.type = 1 " +
+            "        AND ms_inner.status = 1 " +
+            "    GROUP BY " +
+            "        ms_inner.trainer_id, " +
+            "        ms_inner.member_id " +
+            "    HAVING " +
+            "        MAX(ms_inner.end_at) < CURDATE() " +
+            ") AS expired_groups ON ms.trainer_id = expired_groups.trainer_id " +
+            "                    AND ms.member_id = expired_groups.member_id", nativeQuery = true)
+    List<Long> findExpiredTrainingPackage();
 
     @Query(value = "SELECT id FROM member_subscriptions " +
             "WHERE status = 2 " +

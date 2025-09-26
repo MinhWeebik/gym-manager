@@ -183,6 +183,7 @@ public class MemberController
             model.put("paymentStatus", paymentStatus);
             model.put("paymentType", paymentType);
             model.put("paymentTotalPage", paymentObject.getTotalPages());
+            model.put("coin", member.getCoin());
             return "gym/member/detail";
         } catch (Exception e) {
             log.error("Exception: {}", e.getMessage(), e);
