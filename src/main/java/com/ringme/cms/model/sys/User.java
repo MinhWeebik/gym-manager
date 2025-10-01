@@ -34,6 +34,6 @@ public class User extends EntityBase implements Serializable {
     private String password;
     @Column(name = "active")
     private Integer active;
-    @OneToOne(mappedBy = "user")
-    private Trainer trainer;
+//    @OneToOne(mappedBy = "user")
+//    private Trainer trainer;
 }

@@ -4,8 +4,8 @@ import lombok.*;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.*;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Getter
 @Setter
@@ -14,17 +14,17 @@ import java.util.List;
 @AllArgsConstructor
 @Entity
 @EntityListeners(AuditingEntityListener.class)
-@Table(name = "classes")
-public class Classes {
+@Table(name = "coin_discount_tier")
+public class CoinDiscountTier {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "name")
-    private String name;
+    @Column(name = "min_coins")
+    private Integer minCoins;
 
-    @Column(name = "description")
-    private String description;
+    @Column(name = "bonus_pct", precision = 5, scale = 2)
+    private BigDecimal bonusPct;
 
     @Column(name = "status")
     private Integer status;
@@ -34,7 +34,4 @@ public class Classes {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
-
-    @OneToMany(mappedBy = "classes", fetch = FetchType.LAZY)
-    private List<ScheduledClass> scheduledClasses;
 }

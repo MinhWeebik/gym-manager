@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en" layout:decorate="~{cms_layout_1.html}"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/autonumeric@4.6.0/dist/autoNumeric.min.js"></script>
+</head>
+<body>
+<div class="content" layout:fragment="page_content">
+    <div class="container-fluid">
+        <div class="card card-default">
+            <div class="card-body">
+                <form th:action="@{/coin/save}" method="post" id="coin-save-form" th:object="${form}" enctype="multipart/form-data">
+                    <div class="row">
+                        <input hidden th:field="*{id}"/>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <div th:insert="component :: input-number-v2('Số xu tối thiểu', 'minCoins', *{minCoins}, 0, null, true, false, false)"></div>
+                                <p th:if="${#fields.hasErrors('minCoins')}" th:errors="*{minCoins}" class="text-danger m-0"></p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="bonusPctInput">Phần trăm tặng <span style="color: red;">*</span></label>
+                                <input id="bonusPctInput" name="bonusPctInput" class="form-control" required style="height: 31px"></input>
+                                <p th:if="${#fields.hasErrors('bonusPct')}" th:errors="*{bonusPct}" class="text-danger m-0"></p>
+                            </div>
+                            <input hidden="hidden" id="bonusPct" name="bonusPct" th:value="*{bonusPct}"/>
+                        </div>
+                        <div class="col-12 text-center mt-2">
+                            <a th:href="@{/coin/index}" type="button" class="btn btn-danger mx-2">
+                                <i class="fa-solid fa-arrow-left"></i><span class="px-2">Quay lại</span>
+                            </a>
+                            <button type="submit" class="btn btn-primary mx-2">
+                                <i class="fa-regular fa-floppy-disk"></i><span class="px-2">Lưu</span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script layout:fragment="content_page_script">
+    document.addEventListener('DOMContentLoaded', (event) => {
+
+        let initialValue = '[[${form.bonusPct}]]'
+
+        const percentageOptions = {
+            currencySymbol: '%',           // Treat '%' as the symbol
+            currencySymbolPlacement: 's',  // 's' for suffix (places it after the number)
+            minimumValue: '0',             // Optional: if you don't allow negative percentages
+            maximumValue: '999.99',        // Enforces the total precision of 5 digits (3 before, 2 after)
+            decimalPlaces: 2,              // Always show two decimal places
+            decimalCharacter: '.',         // Standard decimal point
+            digitGroupSeparator: '',       // We don't want commas for a number like 999.99
+
+            emptyInputBehavior: 'zero',    // Optional: Shows '0.00%' when the input is empty
+        };
+        const discountInput = new AutoNumeric('#bonusPctInput',initialValue, percentageOptions);
+
+        document.getElementById('coin-save-form').addEventListener('submit', (event) => {
+            const rawValue = discountInput.getNumber();
+
+            let hiddenInput = document.getElementById('bonusPct');
+            hiddenInput.value = rawValue;
+        });
+    });
+
+
+</script>
+</body>
+</html>

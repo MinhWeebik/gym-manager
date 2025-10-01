@@ -97,7 +97,7 @@
         <div class="d-flex justify-content-between">
             <div class="d-flex font-weight-bold align-items-center">
                 <p class="m-0" th:text="#{display}"></p>
-                <select th:id="buuPageSize" class="buu_page_size mx-2 font-weight-bold">
+                <select th:id="${buuPageSize}" class="buu_page_size mx-2 font-weight-bold">
                     <option value="10" selected th:selected="${pageSize == 10}">10</option>
                     <option value="20" th:selected="${pageSize == 20}">20</option>
                     <option value="30" th:selected="${pageSize == 30}">30</option>
@@ -107,54 +107,58 @@
                 <input type="hidden" name="pageSize" value="10" />
                 <p class="m-0" th:text="#{entries}"></p>
             </div>
-            <ul th:id="buuPagination" class="pagination buu-pagination"></ul>
+            <ul th:id="${buuPagination}" class="pagination buu-pagination"></ul>
         </div>
         <script th:inline="javascript">
-            let selectPageSize = document.querySelector('#' + [[${buuPageSize}]]);
-            let inputPageSize = document.querySelector('#' + [[${buuPageSize}]] + ' + input[name="pageSize"]');
-            if(inputPageSize) inputPageSize.value = [[${pageSize}]];
+            function paging()
+            {
+                let selectPageSize = document.querySelector('#' + [[${buuPageSize}]]);
+                let inputPageSize = document.querySelector('#' + [[${buuPageSize}]] + ' + input[name="pageSize"]');
+                if(inputPageSize) inputPageSize.value = [[${pageSize}]];
 
-            function formatPageNumber() {
-                $('#' + [[${buuPagination}]]).find('a, span').each(function() {
-                    let pageNumber = parseInt($(this).text());
+                function formatPageNumber() {
+                    $('#' + [[${buuPagination}]]).find('a, span').each(function() {
+                        let pageNumber = parseInt($(this).text());
 
-                    if (!isNaN(pageNumber)) {
-                        $(this).text(pageNumber.toLocaleString().replaceAll('.', ','));
+                        if (!isNaN(pageNumber)) {
+                            $(this).text(pageNumber.toLocaleString().replaceAll('.', ','));
+                        }
+                    });
+                }
+
+                selectPageSize.addEventListener("change", function (e) {
+                    if(inputPageSize) inputPageSize.value = this.value;
+                    $('#' + [[${buuPagination}]]).pagination('selectPage', 1);
+                })
+
+                $('#' + [[${buuPagination}]]).pagination({
+                    items: [[${totalPage}]],
+                    itemOnPage: [[${pageSize}]],
+                    currentPage: [[${pageNo}]],
+                    cssStyle: '',
+                    prevText: '<',
+                    nextText: '>',
+                    onInit: function () {
+                        // lúc load trang hàm này sẽ được gọi
+                        formatPageNumber();
+                    },
+                    onPageClick: function (page, e) {
+                        formatPageNumber();
+
+                        // Lúc chuyển trang hàm này sẽ được gọi
+                        let parsedUrl = new URL(window.location.href);
+                        let params = parsedUrl.searchParams;
+
+                        params.set([[${pageNoText}]], page);
+                        params.set([[${pageSizeText}]], selectPageSize.value);
+
+                        parsedUrl.search = params.toString();
+                        console.log(parsedUrl.toString());
+                        window.location.href = parsedUrl.toString();
                     }
                 });
             }
-
-            selectPageSize.addEventListener("change", function (e) {
-                if(inputPageSize) inputPageSize.value = this.value;
-                $('#' + [[${buuPagination}]]).pagination('selectPage', 1);
-            })
-
-            $('#' + [[${buuPagination}]]).pagination({
-                items: [[${totalPage}]],
-                itemOnPage: [[${pageSize}]],
-                currentPage: [[${pageNo}]],
-                cssStyle: '',
-                prevText: '<',
-                nextText: '>',
-                onInit: function () {
-                    // lúc load trang hàm này sẽ được gọi
-                    formatPageNumber();
-                },
-                onPageClick: function (page, e) {
-                    formatPageNumber();
-
-                    // Lúc chuyển trang hàm này sẽ được gọi
-                    let parsedUrl = new URL(window.location.href);
-                    let params = parsedUrl.searchParams;
-
-                    params.set([[${pageNoText}]], page);
-                    params.set([[${pageSizeText}]], selectPageSize.value);
-
-                    parsedUrl.search = params.toString();
-                    console.log(parsedUrl.toString());
-                    window.location.href = parsedUrl.toString();
-                }
-            });
+            paging()
         </script>
     </th:block>
 

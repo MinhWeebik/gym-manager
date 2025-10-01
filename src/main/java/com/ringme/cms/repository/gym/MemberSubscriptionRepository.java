@@ -127,4 +127,7 @@ public interface MemberSubscriptionRepository extends JpaRepository<MemberSubscr
             @Param("trainerId") Long trainerId,
             @Param("memberId") Long memberId
     );
+
+    @Query(value = "SELECT * FROM member_subscriptions WHERE status = 1 AND trainer_id = :id", nativeQuery = true)
+    List<MemberSubscription> findByTrainerId(@Param("id") Long id);
 }

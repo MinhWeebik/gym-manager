@@ -53,7 +53,7 @@ public class Trainer {
     private String bio;
 
     @Column(name = "hire_date")
-    private LocalDate hireDate;
+    private LocalDateTime hireDate;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -61,9 +61,15 @@ public class Trainer {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @OneToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "user_id", referencedColumnName = "id")
-    private User user;
+    @Column(name = "city")
+    private String city;
+
+    @Column(name = "district")
+    private String district;
+
+//    @OneToOne(fetch = FetchType.EAGER)
+//    @JoinColumn(name = "user_id", referencedColumnName = "id")
+//    private User user;
 
     @OneToMany(mappedBy = "trainer", fetch = FetchType.LAZY)
     private List<ScheduledClass> scheduledClasses;

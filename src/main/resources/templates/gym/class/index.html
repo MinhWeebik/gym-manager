@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en" layout:decorate="~{cms_layout_1.html}"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+</head>
+<body>
+<!-- Main content -->
+<div class="content" layout:fragment="page_content">
+    <div class="container-fluid">
+        <div class="card card-default">
+            <div class="card-body">
+                <form th:action="@{/class/index}" method="get">
+                    <div class="row">
+                        <div class="col-6" th:insert="component :: input-text('Tên', 'name', ${name}, 0, 255, false, false)"></div>
+                        <div class="col-6 mb-3" th:with="options=${T(java.util.Arrays).asList(
+                            '', 'Tất cả',
+                            '1', 'Hoạt động',
+                            '0', 'Không hoạt động'
+                        )}">
+                            <div th:replace="component :: select-default-v2('Trạng thái', 'status', ${status}, false, false, ${options})"></div>
+                        </div>
+                        <div class="col-12 text-center mt-3">
+                            <button type="submit" style="cursor: pointer; padding: 4px 10px;" class="btn btn-primary my-0 mx-1">
+                                <i class="fas fa-search"></i><span class="px-2">Tìm kiếm</span>
+                            </button>
+                            <a th:href="@{/class/form}" style="cursor: pointer;" class="btn btn-primary my-0 mx-1">
+                                <i class="fas fa-plus"></i><span class="px-2">Tạo mới</span>
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card card-default">
+            <div class="card-body">
+                <div class="table-responsive mb-2 mt-3">
+                    <table id="table-list" class="table table-sm custom-table table-bordered table-hover text-center" style="table-layout: auto; width: 100%; font-weight: 600;">
+                        <thead class="thead-light align-content-center">
+                        <tr>
+                            <th>Tên lớp</th>
+                            <th>Trạng thái</th>
+                            <th>Ngày tạo</th>
+                            <th>Chức năng</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="model,item : ${models}" th:attr="data-id=${model.id}">
+                            <td style="align-content: center;" th:text="${model.name}"></td>
+                            <td style="align-content: center;">
+                                <span th:if="${model.status == 0}" class="badge badge-danger" style="white-space: normal; cursor: pointer;">Không hoạt động</span>
+                                <span th:if="${model.status == 1}" class="badge badge-success" style="white-space: normal; cursor: pointer">Hoạt động</span>
+                            </td>
+                            <td th:text="${#dates.format(new java.util.Date(model.createdAt), 'dd/MM/yyyy HH:mm:ss')}" style="align-content: center;"></td>
+                            <td style="align-content: center;">
+                                <div class="d-flex flex-row justify-content-center">
+                                    <a th:href="@{'/class/form?id=' + ${model.id}}" class="btn" title="Sửa">
+                                        <i class="far fa-edit" style="color: #00709e;"></i>
+                                    </a>
+                                    <a th:attr="onclick=|event.stopPropagation(); deleteRecord({action: '@{'/class/delete/'+${model.id}}', method: 'POST',title: 'Xác nhận xóa',text: 'Bạn có chắc muốn xóa lớp này không'})|" style="cursor: pointer; align-content: center;" title="Xóa" class="btn btn-sm">
+                                        <i class="fas fa-trash-alt" style="color: #ff0000;"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr th:if="${models?.size() == 0}">
+                            <td colspan="100" th:text="#{noResult}"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <hungtvt-pagination th:replace="buu-component :: pagination(${pageNo}, ${totalPage}, ${pageSize}, 'buuPageSize', 'buuPagination')"></hungtvt-pagination>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- PAGE JAVASCRIPT CODE -->
+<script layout:fragment="content_page_script">
+</script>
+</body>
+</html>

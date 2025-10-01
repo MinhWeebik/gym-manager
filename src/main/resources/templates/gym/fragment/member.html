@@ -429,6 +429,97 @@
     </div>
     </div>
 </div>
+
+<div th:fragment="addCoinPayment" class="modal fade" id="addCoinPayment" tabindex="-1" role="dialog" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <form th:action="@{/payment/save-coin}" method="post" th:object="${model}" enctype="multipart/form-data">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Mua xu</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <input hidden="hidden" name="memberId" th:value="*{memberId}"/>
+                        <input hidden="hidden" name="tab" th:value="*{tab}" id="coin-payment-hidden-tab"/>
+                        <input hidden="hidden" name="description" id="coin-description-hidden">
+                        <input hidden="hidden" name="type" th:value="*{type}">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="coinAmount">Số xu <span style="color: red;">*</span></label>
+                                <input type="number" required class="form-control" style="height: 31px" id="coinAmount" name="coinAmount" min="1">
+                            </div>
+                            <div th:with="
+                                    options=${T(java.util.Arrays).asList('paypal', 'Paypal', 'cash', 'Tiền mặt')}">
+                                <div th:replace="component :: select-default-v2('Phương thức', 'paymentGatewaySelect', *{paymentGateway}, true, false, ${options})"></div>
+                            </div>
+                            <input hidden="hidden" name="paymentGateway" id="paymentGateway"></input>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="amount">Giá</label>
+                                <input readonly class="form-control" style="height: 31px" id="amount" name="amount">
+                            </div>
+                            <div class="form-group">
+                                <label for="bonusCoin">Xu nhận thêm</label>
+                                <input readonly class="form-control" style="height: 31px" id="bonusCoin" name="bonusCoin">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-success mr-2" id="create-payment">Thanh toán</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                </div>
+            </div>
+        </form>
+    </div>
+    <script th:inline="javascript">
+        $(function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            var tab = urlParams.get("tab");
+            if(tab == null) tab = 1
+            $("#coin-payment-hidden-tab").val(tab)
+            $("#paymentGateway").val($("#paymentGatewaySelect").val());
+            $("#paymentGatewaySelect").on("change", function() {
+                $("#paymentGateway").val($(this).val());
+            });
+        });
+
+        $('#coinAmount').on('input', function() {
+            if($(this).val())
+            {
+                let inputVal = $(this).val();
+                $.ajax({
+                    url: 'http://localhost:8086/nexia-cms/coin/check-coin-price',
+                    method: 'GET',
+                    data: {
+                        amount: inputVal
+                    },
+                    dataType: 'json',
+                    success: function(response) {
+                        $('#amount').val(response.price);
+                        $('#bonusCoin').val(response.bonusCoin);
+                        $('#coin-description-hidden').val(
+                            "Thành viên mua " + (parseInt(inputVal) + parseInt(response.bonusCoin)) + " xu"
+                        );
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("API error:", error);
+                    }
+                });
+            }
+            else{
+                $('#amount').val('');
+                $('#bonusCoin').val('');
+                $('#coin-description-hidden').val('');
+            }
+        });
+
+    </script>
+</div>
 </body>
 </html>
 

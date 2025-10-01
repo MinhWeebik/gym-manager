@@ -1,6 +1,8 @@
 package com.ringme.cms.repository.gym;
 
 import com.ringme.cms.model.gym.Attendance;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -32,4 +34,21 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
     Optional<Attendance> findByScheduledClassMemberIdDate(@Param("scheduledClassId") Long scheduledClassId,
                                       @Param("memberId") Long memberId,
                                       @Param("date")  LocalDate date);
+
+    @Query(value = "SELECT * FROM attendance a INNER JOIN scheduled_class s ON s.id = a.scheduled_class_id WHERE class_id = :id AND a.status = 1", nativeQuery = true)
+    List<Attendance> findByClassId(@Param("id") Long id);
+
+    @Query(value = "SELECT a.* FROM attendance a INNER JOIN scheduled_class sc ON sc.id = a.scheduled_class_id WHERE a.member_id = :id " +
+            "AND ((:status IS NULL AND a.status != 0) OR a.status = :status) " +
+            "ORDER BY a.booking_time DESC, sc.from DESC",
+            countQuery = "SELECT count(*) FROM attendance a INNER JOIN scheduled_class sc ON sc.id = a.scheduled_class_id WHERE a.member_id = :id " +
+                    "AND ((:status IS NULL AND a.status != 0) OR a.status = :status) " +
+                    "ORDER BY a.booking_time DESC, sc.from DESC", nativeQuery = true)
+    Page<Attendance> getForUserDetail(@Param("status") Integer status,
+                                      @Param("id") Long id, Pageable pageable);
+
+    @Query(value = "SELECT count(*) FROM attendance a INNER JOIN scheduled_class sc ON sc.id = a.scheduled_class_id WHERE a.member_id = :id " +
+            "AND ((:status IS NULL AND a.status != 0) OR a.status = :status) ", nativeQuery = true)
+    Integer getTotalRecord(@Param("status") Integer status,
+                           @Param("id") Long id);
 }

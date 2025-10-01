@@ -5,7 +5,6 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Getter
 @Setter
@@ -14,27 +13,21 @@ import java.util.List;
 @AllArgsConstructor
 @Entity
 @EntityListeners(AuditingEntityListener.class)
-@Table(name = "classes")
-public class Classes {
+@Table(name = "general_settings")
+public class GeneralSettings {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "name")
-    private String name;
+    @Column(name = "setting_key")
+    private String settingKey;
+
+    @Column(name = "setting_value")
+    private String settingValue;
 
     @Column(name = "description")
     private String description;
 
-    @Column(name = "status")
-    private Integer status;
-
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
-
-    @OneToMany(mappedBy = "classes", fetch = FetchType.LAZY)
-    private List<ScheduledClass> scheduledClasses;
 }

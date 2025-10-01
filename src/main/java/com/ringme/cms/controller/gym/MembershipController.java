@@ -132,6 +132,6 @@ public class MembershipController {
             log.error("Exception: {}", e.getMessage(), e);
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return AppUtils.goBack(request).orElse("redirect:/music/category/index");
+        return AppUtils.goBack(request).orElse("redirect:/membership/index");
     }
 }

@@ -2,6 +2,8 @@ package com.ringme.cms.repository.gym;
 
 import com.ringme.cms.model.gym.AppointmentInstance;
 import com.ringme.cms.model.gym.ScheduledClass;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -36,4 +38,19 @@ public interface AppointmentInstanceRepository extends JpaRepository<Appointment
     List<AppointmentInstance> findByAppointmentIdAndThreshold(@Param("id") Long id,
                                                               @Param("date") LocalDate date,
                                                               @Param("time") LocalTime time);
+
+    @Query(value = "SELECT a.* FROM appointment_instance a INNER JOIN appointment ap ON ap.id = a.appointment_id " +
+            "WHERE ap.member_id = :id AND ((:status IS NULL AND a.status != 0) OR a.status = :status) " +
+            "ORDER BY a.date DESC, a.from DESC",
+            countQuery = "SELECT COUNT(*) FROM appointment_instance a INNER JOIN appointment ap ON ap.id = a.appointment_id " +
+                    "WHERE ap.member_id = :id AND ((:status IS NULL AND a.status != 0) OR a.status = :status) " +
+                    "ORDER BY a.date DESC, a.from DESC", nativeQuery = true)
+    Page<AppointmentInstance> getForUserDetail(@Param("status") Integer status,
+                                               @Param("id") Long id,
+                                               Pageable pageable);
+
+    @Query(value = "SELECT COUNT(*) FROM appointment_instance a INNER JOIN appointment ap ON ap.id = a.appointment_id " +
+            "WHERE ap.member_id = :id AND ((:status IS NULL AND a.status != 0) OR a.status = :status) ", nativeQuery = true)
+    Integer getTotalRecord(@Param("status") Integer status,
+                           @Param("id") Long id);
 }

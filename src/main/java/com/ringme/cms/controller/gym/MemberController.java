@@ -2,13 +2,10 @@ package com.ringme.cms.controller.gym;
 
 import com.ringme.cms.dto.AjaxSearchDto;
 import com.ringme.cms.dto.gym.MemberDto;
+import com.ringme.cms.dto.gym.MemberScheduleDto;
 import com.ringme.cms.dto.gym.MemberSubscriptionDto;
-import com.ringme.cms.model.gym.Member;
-import com.ringme.cms.model.gym.MemberSubscription;
-import com.ringme.cms.model.gym.Payment;
-import com.ringme.cms.repository.gym.MemberRepository;
-import com.ringme.cms.repository.gym.MemberSubscriptionRepository;
-import com.ringme.cms.repository.gym.PaymentRepository;
+import com.ringme.cms.model.gym.*;
+import com.ringme.cms.repository.gym.*;
 import com.ringme.cms.service.gym.MemberService;
 import com.ringme.cms.service.gym.PaymentService;
 import com.ringme.cms.utils.AppUtils;
@@ -17,9 +14,12 @@ import lombok.extern.log4j.Log4j2;
 import org.modelmapper.ModelMapper;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.ModelMap;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
@@ -33,6 +33,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Controller
 @Log4j2
@@ -47,6 +48,9 @@ public class MemberController
     private final MemberSubscriptionRepository memberSubscriptionRepository;
     private final PaymentRepository paymentRepository;
     private final PaymentService paymentService;
+    private final AttendanceRepository attendanceRepository;
+    private final AppointmentInstanceRepository appointmentInstanceRepository;
+    private final ScheduledClassRepository scheduledClassRepository;
 
     @RequestMapping(value = {"/index"})
     public String index(@RequestParam(name = "pageNo", required = false, defaultValue = "1") Integer pageNo,
@@ -98,6 +102,7 @@ public class MemberController
         }
     }
 
+    @Transactional
     @GetMapping("/detail")
     public String detail(@RequestParam("id") Long id,
                          @RequestParam(value = "tab", required = false) Integer tab,
@@ -106,7 +111,12 @@ public class MemberController
                          @RequestParam(value = "paymentDescription", required = false) String paymentDescription,
                          @RequestParam(value = "paymentGatewaySearch", required = false) String paymentGateway,
                          @RequestParam(value = "paymentStatus", required = false) Integer paymentStatus,
-                         @RequestParam(value = "paymentType", required = false) Integer paymentType, ModelMap model) throws Exception {
+                         @RequestParam(value = "paymentType", required = false) Integer paymentType,
+                         @RequestParam(value = "schedulePageNo", required = false, defaultValue = "1") Integer schedulePageNo,
+                         @RequestParam(value = "schedulePageSize", required = false, defaultValue = "10") Integer schedulePageSize,
+                         @RequestParam(value = "scheduleType", required = false, defaultValue = "0") Integer scheduleType,
+                         @RequestParam(value = "scheduleStatus", required = false) Integer scheduleStatus,
+                         ModelMap model) throws Exception {
         log.info("id: {}", id);
         try {
             if(tab == null || tab <= 0) tab = 1;
@@ -171,7 +181,46 @@ public class MemberController
             }
             if(paymentPageNo == null || paymentPageNo <= 0) paymentPageNo = 1;
             if(paymentPageSize == null || paymentPageSize <= 0) paymentPageSize = 10;
+            if(scheduleType == null || scheduleType < 0) scheduleType = 0;
             Page<Payment> paymentObject = paymentService.getAll(id, paymentDescription, paymentGateway, paymentStatus, paymentType, paymentPageNo, paymentPageSize);
+            Pageable pageable = PageRequest.of(schedulePageNo-1, schedulePageSize);
+            List<MemberScheduleDto> scheduleList = new ArrayList<>();
+            int totalScheduleRecord;
+            if(scheduleType == 0){
+                Page<Attendance> attendancePage = attendanceRepository.getForUserDetail(scheduleStatus, id, pageable);
+                List<Attendance> attendances = attendancePage.getContent();
+                for(Attendance attendance : attendances)
+                {
+                    ScheduledClass scheduledClass = attendance.getScheduledClass();
+                    MemberScheduleDto memberScheduleDto = new MemberScheduleDto();
+                    memberScheduleDto.setDate(attendance.getBookingTime());
+                    memberScheduleDto.setFrom(scheduledClass.getFrom());
+                    memberScheduleDto.setTo(scheduledClass.getTo());
+                    memberScheduleDto.setType(0);
+                    memberScheduleDto.setStatus(attendance.getStatus());
+                    memberScheduleDto.setName(scheduledClass.getClasses().getName());
+                    scheduleList.add(memberScheduleDto);
+                }
+                totalScheduleRecord = attendanceRepository.getTotalRecord(scheduleStatus, id);
+            }
+            else {
+                Page<AppointmentInstance> appointmentInstancePage = appointmentInstanceRepository.getForUserDetail(scheduleStatus, id, pageable);
+                List<AppointmentInstance> appointmentInstances = appointmentInstancePage.getContent();
+                for(AppointmentInstance appointmentInstance : appointmentInstances)
+                {
+                    Appointment appointment = appointmentInstance.getAppointment();
+                    MemberScheduleDto memberScheduleDto = new MemberScheduleDto();
+                    memberScheduleDto.setDate(appointmentInstance.getDate());
+                    memberScheduleDto.setFrom(appointmentInstance.getFrom());
+                    memberScheduleDto.setTo(appointmentInstance.getTo());
+                    memberScheduleDto.setType(1);
+                    memberScheduleDto.setStatus(appointmentInstance.getStatus());
+                    memberScheduleDto.setName("PT kèm riêng với " + appointment.getTrainer().getFirstName() + " " + appointment.getTrainer().getLastName());
+                    memberScheduleDto.setTrainerId(appointment.getTrainer().getId());
+                    scheduleList.add(memberScheduleDto);
+                }
+                totalScheduleRecord = appointmentInstanceRepository.getTotalRecord(scheduleStatus, id);
+            }
             model.put("image", member.getImageUrl());
             model.put("model", formDto);
             model.put("tab", tab);
@@ -184,6 +233,12 @@ public class MemberController
             model.put("paymentType", paymentType);
             model.put("paymentTotalPage", paymentObject.getTotalPages());
             model.put("coin", member.getCoin());
+            model.put("schedulePageNo", schedulePageNo);
+            model.put("schedulePageSize", schedulePageSize);
+            model.put("scheduleTotalPage", (long) Math.ceil((double) totalScheduleRecord / schedulePageSize));
+            model.put("scheduleType", scheduleType);
+            model.put("scheduleStatus", scheduleStatus);
+            model.put("schedule", scheduleList);
             return "gym/member/detail";
         } catch (Exception e) {
             log.error("Exception: {}", e.getMessage(), e);

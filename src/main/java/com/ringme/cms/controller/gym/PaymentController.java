@@ -3,16 +3,9 @@ package com.ringme.cms.controller.gym;
 import com.paypal.orders.Order;
 import com.ringme.cms.dto.gym.MemberSubscriptionDto;
 import com.ringme.cms.dto.gym.PaymentDto;
-import com.ringme.cms.model.gym.Member;
-import com.ringme.cms.model.gym.MemberSubscription;
-import com.ringme.cms.model.gym.Payment;
-import com.ringme.cms.repository.gym.MemberRepository;
-import com.ringme.cms.repository.gym.MemberSubscriptionRepository;
-import com.ringme.cms.repository.gym.PaymentRepository;
-import com.ringme.cms.service.gym.MemberSubscriptionService;
-import com.ringme.cms.service.gym.PaymentService;
-import com.ringme.cms.service.gym.PaypalService;
-import com.ringme.cms.service.gym.QrCodeService;
+import com.ringme.cms.model.gym.*;
+import com.ringme.cms.repository.gym.*;
+import com.ringme.cms.service.gym.*;
 import com.ringme.cms.utils.AppUtils;
 import javassist.NotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +26,10 @@ import javax.validation.Valid;
 import java.io.IOException;
 import java.time.format.DateTimeFormatter;
 import java.util.Base64;
+import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Controller
 @Log4j2
@@ -56,6 +52,8 @@ public class PaymentController {
     private final PaymentRepository paymentRepository;
 
     private final MemberSubscriptionRepository memberSubscriptionRepository;
+
+    private final CoinService coinService;
     @GetMapping("/create")
     public String update(@RequestParam(value = "id") Long memberId, ModelMap model) {
         log.info("member id: {}", memberId);
@@ -71,6 +69,80 @@ public class PaymentController {
         }
     }
 
+    @GetMapping("/buy-coin")
+    public String buyCoin(@RequestParam(value = "id") Long memberId, ModelMap model) {
+        log.info("member id: {}", memberId);
+        try {
+            PaymentDto formDto = new PaymentDto();
+            formDto.setMemberId(memberId);
+            formDto.setType(1);
+            model.put("model", formDto);
+
+            return "gym/fragment/member :: addCoinPayment";
+        } catch (Exception e) {
+            log.error("Exception: {}", e.getMessage(), e);
+            return "404";
+        }
+    }
+
+    @PostMapping("/save-coin")
+    public String saveCoin(@Valid @ModelAttribute("model") PaymentDto formDto,
+                           BindingResult bindingResult,
+                           RedirectAttributes redirectAttributes,
+                           HttpServletRequest request) {
+        try {
+            if (bindingResult.hasErrors()) {
+                return AppUtils.goBackWithError(request, redirectAttributes, "form", bindingResult, formDto, null)
+                        .orElse("redirect:/member/detail?id=" + formDto.getMemberId() + "&tab=" + formDto.getTab());
+            }
+            if(formDto.getPaymentGateway().equals("cash"))
+            {
+                Pattern pattern = Pattern.compile("(\\d+)\\s*(?:xu)");
+                Matcher matcher = pattern.matcher(formDto.getDescription());
+                if (matcher.find()) {
+                    int coinAmount = Integer.parseInt(matcher.group(1));
+                    coinService.updateUserCoin(formDto.getMemberId(), coinAmount);
+                    paymentService.save(formDto);
+                    redirectAttributes.addFlashAttribute("success", "Thanh toán thành công!");
+                    return "redirect:/member/detail?id=" + formDto.getMemberId() + "&tab=" + formDto.getTab();
+                }
+                else {
+                    throw new Exception();
+                }
+            }
+            else {
+                com.ringme.cms.model.gym.Payment curPayment = paymentService.save(formDto);
+                Order order = paypalService.createOrder(
+                        Double.parseDouble(formDto.getAmount().toString()),
+                        "USD",
+                        formDto.getDescription(),
+                        "http://" + ipv4  + ":8086/nexia-cms/payment/cancel/" + curPayment.getId(),
+                        "http://" + ipv4  + ":8086/nexia-cms/payment/success"
+                );
+
+                String approvalLink = paypalService.getApprovalLink(order)
+                        .orElseThrow(() -> new RuntimeException("PayPal approval link not found in V2 order."));
+                String orderId = order.id();
+
+                curPayment.setGatewayTransactionId(orderId);
+                curPayment.setPaymentUrl(approvalLink);
+                paymentRepository.save(curPayment);
+                byte[] qrCodeBytes = qrCodeService.generateQRCodeImage(approvalLink, 350, 350);
+                String qrCodeBase64 = Base64.getEncoder().encodeToString(qrCodeBytes);
+
+                redirectAttributes.addFlashAttribute("qrCodeImage", qrCodeBase64);
+                redirectAttributes.addFlashAttribute("payPalLink", approvalLink);
+                redirectAttributes.addFlashAttribute("paymentId", orderId);
+                redirectAttributes.addFlashAttribute("shouldReload", true);
+                return "redirect:/member/detail?id=" + formDto.getMemberId() + "&tab=" + formDto.getTab();
+            }
+        } catch (Exception e) {
+            log.error("Exception: {}", e.getMessage(), e);
+            return AppUtils.goBackWithError(request, redirectAttributes, "form", bindingResult, formDto, "Error in server!")
+                    .orElse("redirect:/member/detail?id=" + formDto.getMemberId() + "&tab=" +  formDto.getTab());
+        }
+    }
+
     @PostMapping("/save-cash")
     public String saveCash(@Valid @ModelAttribute("model") PaymentDto formDto,
                        BindingResult bindingResult,
@@ -79,20 +151,15 @@ public class PaymentController {
         try {
             if (bindingResult.hasErrors()) {
                 return AppUtils.goBackWithError(request, redirectAttributes, "form", bindingResult, formDto, null)
-                        .orElse("redirect:/member/detail?id=" + formDto.getMemberId() + "&tab=2");
+                        .orElse("redirect:/member/detail?id=" + formDto.getMemberId() + "&tab=" +  formDto.getTab());
             }
             paymentService.save(formDto);
-            if (formDto.getId() == null) {
-                redirectAttributes.addFlashAttribute("success", "Thanh toán thành công!");
-                return "redirect:/member/detail?id=" + formDto.getMemberId() + "&tab=2";
-            } else {
-                redirectAttributes.addFlashAttribute("success", "Cập nhật thành công!");
-            }
-            return AppUtils.goBack(request).orElse("redirect:/member/detail?id=" + formDto.getMemberId() + "&tab=2");
+            redirectAttributes.addFlashAttribute("success", "Thanh toán thành công!");
+            return "redirect:/member/detail?id=" + formDto.getMemberId() + "&tab=" + formDto.getTab();
         } catch (Exception e) {
             log.error("Exception: {}", e.getMessage(), e);
             return AppUtils.goBackWithError(request, redirectAttributes, "form", bindingResult, formDto, "Error in server!")
-                    .orElse("redirect:/member/detail?id=" + formDto.getMemberId() + "&tab=2");
+                    .orElse("redirect:/member/detail?id=" + formDto.getMemberId() + "&tab=" + formDto.getTab());
         }
     }
 
@@ -155,6 +222,12 @@ public class PaymentController {
                 log.info("Payment successful for V2 OrderId: {}", capturedOrder.id());
                 com.ringme.cms.model.gym.Payment paymentModel = paymentRepository.findByGatewayTransactionId(orderId);
                 if (paymentModel != null) {
+                    Pattern pattern = Pattern.compile("(\\d+)\\s*(?:xu)");
+                    Matcher matcher = pattern.matcher(paymentModel.getDescription());
+                    if (matcher.find()) {
+                        int coinAmount = Integer.parseInt(matcher.group(1));
+                        coinService.updateUserCoin(paymentModel.getMember().getId(), coinAmount);
+                    }
                     paymentModel.setStatus(1);
                     paymentRepository.save(paymentModel);
                 }
@@ -179,6 +252,11 @@ public class PaymentController {
                 return "gym/payment/cancel";
             }
         } catch (IOException e) {
+            log.error("Error executing payment for PaymentId: " + orderId, e);
+            return "gym/payment/cancel";
+        }
+        catch (Exception e)
+        {
             log.error("Error executing payment for PaymentId: " + orderId, e);
             return "gym/payment/cancel";
         }

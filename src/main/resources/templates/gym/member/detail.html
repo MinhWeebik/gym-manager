@@ -50,7 +50,7 @@
                         <div class="modal-dialog modal-lg">
                             <div class="modal-content">
                                 <div class="modal-header">
-                                    <div class="w-100"><h4 class="modal-title text-center">CROP IMAGE</h4></div>
+                                    <div class="w-100"><h4 class="modal-title text-center">Cắt ảnh</h4></div>
                                 </div>
                                 <div class="modal-body">
                                     <div class="d-flex flex-row justify-content-between">
@@ -60,7 +60,7 @@
                                     </div>
                                 </div>
                                 <div class="modal-footer justify-content-center">
-                                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                                    <button type="button" class="btn btn-default" data-dismiss="modal">Đóng</button>
                                     <button type="button" class="buu_apply_crop_image btn btn-default">OK</button>
                                 </div>
                             </div>
@@ -437,7 +437,7 @@
                         </div>
                     </div>
                     <div class="tab-pane fade" id="account" role="tabpanel" th:classappend="${tab == 3 ? 'show active' : ''}">
-                        <div class="container-fluid pt-2" >
+                        <div class="container-fluid pt-2">
                             <div class="d-flex justify-content-center align-items-center">
                                 <button type="button" class="btn btn-secondary open-modal-class" th:data-url="${@environment.getProperty('domain.app') + '/nexia-cms/payment/create?id=' + model.id}"><i class="fas fa-money-bill"></i> Thanh toán</button>
                             </div>
@@ -558,7 +558,93 @@
                         </div>
                     </div>
                     <div class="tab-pane fade" id="booking" role="tabpanel" th:classappend="${tab == 4 ? 'show active' : ''}">
-                        <p>Billing content goes here...</p>
+                        <div class="container-fluid pt-2">
+                            <div class="d-flex justify-content-center align-items-center mb-3">
+                                <button type="button" class="btn btn-secondary open-modal-class" th:data-url="${@environment.getProperty('domain.app') + '/nexia-cms/payment/buy-coin?id=' + model.id}"><i class="fas fa-money-bill"></i> Mua xu</button>
+                            </div>
+                            <div class="container-fluid">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <div>
+                                            <div class="current-member-title d-flex align-items-center">
+                                                <span>Lịch</span> <i class="fa fa-calendar ml-2"></i>
+                                            </div>
+                                            <form th:action="@{/member/detail}" method="get">
+                                                <input hidden="hidden" th:value="${tab}" name="tab"></input>
+                                                <input hidden="hidden" th:value="${model.id}" name="id"></input>
+                                                <div class="row mt-3">
+                                                    <div class="col-md-6">
+                                                        <div class="form-group" th:with="options=${T(java.util.Arrays).asList(
+                                                                '0', 'Lớp',
+                                                                '1', 'Lịch tập riêng'
+                                                            )}">
+                                                            <div th:replace="component :: select-default-v2('Loại lịch', 'scheduleType', ${scheduleType}, false, false, ${options})"></div>
+                                                        </div>
+                                                        <div class="d-flex justify-content-start align-items-center">
+                                                            <button type="submit" class="btn btn-primary">Tìm kiếm</button>
+                                                            <button type="button" class="btn btn-danger ml-2" id="resetSchedule">Đặt lại</button>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="form-group" th:with="options=${T(java.util.Arrays).asList(
+                                                                '', 'Tất cả',
+                                                                '1', 'Đã đăng ký',
+                                                                '2', 'Đã điểm danh',
+                                                                '-1', 'Không đến'
+                                                            )}">
+                                                            <div th:replace="component :: select-default-v2('Trạng thái', 'scheduleStatus', ${scheduleStatus}, false, false, ${options})"></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                        <div class="table-responsive mb-2 mt-3">
+                                            <table class="table table-sm custom-table table-bordered table-hover text-center" style="table-layout: auto; width: 100%; font-weight: 600;">
+                                                <thead class="thead-light align-content-center">
+                                                <tr>
+                                                    <th>Ngày</th>
+                                                    <th>Thời gian</th>
+                                                    <th>Tên</th>
+                                                    <th>Trạng thái</th>
+                                                    <th>Chức năng</th>
+                                                </tr>
+                                                </thead>
+                                                <tbody>
+                                                <tr th:each="schedule,item : ${schedule}">
+                                                    <td th:text="${#dates.format(new java.util.Date(schedule.date), 'dd/MM/yyyy')}" style="align-content: center;"></td>
+                                                    <td>
+                                                        <span th:text="${#temporals.format(schedule.from, 'HH:mm')}"></span> -
+                                                        <span th:text="${#temporals.format(schedule.to, 'HH:mm')}"></span>
+                                                    </td>
+                                                    <td th:text="${schedule.name}" style="align-content: center;"></td>
+                                                    <td style="align-content: center;">
+                                                        <span th:if="${schedule.status == 2}" class="badge badge-warning" style="white-space: normal; cursor: pointer">Đã điểm danh</span>
+                                                        <span th:if="${schedule.status == 1}" class="badge badge-success" style="white-space: normal; cursor: pointer">Đã đăng ký</span>
+                                                        <span th:if="${schedule.status == -1}" class="badge badge-danger" style="white-space: normal; cursor: pointer;">Không đến</span>
+                                                    </td>
+                                                    <td style="align-content: center;">
+                                                        <div class="d-flex flex-row justify-content-center">
+                                                            <a th:href="@{/schedule/index(view=${'agendaDay'}, date=${schedule.date}, trainerId=${schedule.trainerId})}"
+                                                               style="cursor: pointer; align-content: center;"
+                                                               title="Xem trên lịch"
+                                                               class="btn btn-sm">
+                                                                <i class="fas fa-calendar" style="color: #00709e;"></i>
+                                                            </a>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr th:if="${schedule?.size() == 0}">
+                                                    <td colspan="100">Không kết quả</td>
+                                                </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <hungtvt-pagination th:replace="buu-component :: pagination10(${schedulePageNo}, ${scheduleTotalPage}, ${schedulePageSize}, 'scheduleBuuPageSize', 'scheduleBuuPagination', 'schedulePageNo', 'schedulePageSize')"></hungtvt-pagination>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 </div>
@@ -601,6 +687,10 @@
         $("#paymentGatewaySearch").prop("selectedIndex", 0);
         $("#paymentStatus").prop("selectedIndex", 0);
         $("#paymentType").prop("selectedIndex", 0);
+    });
+
+    $("#resetSchedule").on("click", function() {
+        $("#scheduleStatus").prop("selectedIndex", 0);
     });
 
     function regenerateQr(paymentId, memberId)
@@ -651,6 +741,7 @@
             $('#addMemberSubscription').modal('show');
             $('#recalculateDate').modal('show');
             $('#checkinDetail').modal('show');
+            $('#addCoinPayment').modal('show');
         });
     });
 
@@ -670,6 +761,7 @@
 
         // Update the URL in the browser without reloading the page
         window.history.pushState({ path: url.href }, '', url.href);
+        $("input[name='tab']").val(tabIndex + 1);
     });
 
     $('.modal').on('show.bs.modal', function() {

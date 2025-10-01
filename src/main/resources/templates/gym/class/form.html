@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en" layout:decorate="~{cms_layout_1.html}"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+</head>
+<body>
+<div class="content" layout:fragment="page_content">
+    <div class="container-fluid">
+        <div class="card card-default">
+            <div class="card-body">
+                <form th:action="@{/class/save}" method="post" th:object="${form}" enctype="multipart/form-data">
+                    <div class="row">
+                        <input hidden th:field="*{id}"/>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <div th:insert="component :: input-text('Tên lớp', 'name', *{name}, 0, 255, true, false)"></div>
+                                <p th:if="${#fields.hasErrors('name')}" th:errors="*{name}" class="text-danger m-0"></p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="description">Miêu tả <span style="color: red;">*</span></label>
+                                <textarea id="description" name="description" th:text="*{description}" class="form-control" style="height: 98px" required></textarea>
+                                <p th:if="${#fields.hasErrors('description')}" th:errors="*{description}" class="text-danger m-0"></p>
+                            </div>
+                        </div>
+                        <div class="col-12 text-center mt-2">
+                            <a th:href="@{/class/index}" type="button" class="btn btn-danger mx-2">
+                                <i class="fa-solid fa-arrow-left"></i><span class="px-2">Quay lại</span>
+                            </a>
+                            <button type="submit" class="btn btn-primary mx-2">
+                                <i class="fa-regular fa-floppy-disk"></i><span class="px-2">Lưu</span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script layout:fragment="content_page_script">
+
+</script>
+</body>
+</html>
