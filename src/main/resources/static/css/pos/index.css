@@ -1,0 +1,180 @@
+.nav-item-container {
+    font-size: 1rem;
+    justify-content: center;
+}
+
+.nav-item-icon {
+    border: darkgrey solid 1px;
+    border-top-left-radius: 3px;
+    border-bottom-left-radius: 3px;
+    height: 36px;
+    width: 36px;
+    text-align: center;
+    background-color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nav-item-text {
+    border: darkgrey solid 1px;
+    border-top-right-radius: 3px;
+    border-bottom-right-radius: 3px;
+    border-left: none;
+    height: 36px;
+    padding-left: 20px;
+    padding-right: 20px;
+    text-align: center;
+    background-color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 20px;
+}
+
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 1rem;
+    padding: 1rem;
+}
+
+.grid-category {
+    aspect-ratio: 1/1;
+    background-color: #3498db;
+    color: white;
+    font-size: 1.1rem;
+    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    position: relative;
+    padding-left: 10px;
+    padding-right: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    text-align: center;
+    user-select: none;
+    -webkit-user-select: none; /* Safari */
+    -ms-user-select: none;     /* IE/Edge */
+}
+
+.grid-category:hover {
+    transform: translateY(-5px); /* Lift the item up slightly */
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* Make the shadow larger and darker */
+}
+
+.grid-cate-icon {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+}
+
+.sale-item-container {
+
+}
+
+/* --- Keep these styles, they are good --- */
+.table-container {
+    font-family: sans-serif;
+}
+.borderless-table {
+    width: 100%;
+    border-collapse: collapse; /* Collapse is correct for this look */
+}
+/* Column alignment and general cell padding are also fine */
+.borderless-table th:nth-child(1), .borderless-table td:nth-child(1) { text-align: left; width: 50%; }
+.borderless-table th:nth-child(2), .borderless-table td:nth-child(2) { text-align: center; width: 15%; }
+.borderless-table th:nth-child(3), .borderless-table td:nth-child(3) { text-align: right; width: 25%; }
+.borderless-table th:nth-child(4), .borderless-table td:nth-child(4) { width: 10%; }
+.borderless-table th, .borderless-table td { border: none; padding: 0.75rem; vertical-align: middle; }
+
+
+/* 1. Give the header a definitive bottom border. */
+.borderless-table thead tr {
+    border-bottom: 1px solid darkgrey;
+}
+
+/* 2. Give ALL rows in the body a bottom border. */
+/* This ensures the last item always has a border above the totals. */
+.borderless-table tbody tr {
+    border-bottom: 1px solid darkgrey;
+}
+
+/* 3. Give ALL rows in the footer a bottom border. */
+.borderless-table tfoot tr {
+    border-bottom: 1px solid darkgrey;
+}
+
+/* 4. THE ONLY OVERRIDE: Remove the border from the very last row of the tfoot. */
+/* This is more specific and safer than a general tr:last-child rule. */
+.borderless-table tfoot tr:last-child {
+    border-bottom: none;
+}
+
+
+/* --- Keep your footer text styling --- */
+.borderless-table tfoot td {
+    padding-top: 1rem;
+    font-weight: bold;
+    color: #000;
+}
+
+.remove-item-button {
+    background-color: white;
+    width: 23px;
+    height: 23px;
+    border-color: red;
+    color: red;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.checkout-button-container {
+    display: flex;
+    margin-top: 20px;
+}
+
+.checkout-button {
+    flex: 1;
+    white-space: normal;
+    padding-top: 20px !important;
+    padding-bottom: 20px !important;
+    font-weight: bold;
+}
+
+.checkout-header {
+    background-color: #f4f4f4;
+}
+
+.checkout-header-text {
+    text-align: center;
+    font-size: 1.2rem;
+}
+
+.quantity-input {
+    /* Constrain the width to be just big enough for a few digits */
+    max-width: 70px;
+
+    /* Center the input horizontally within the table cell */
+    margin: 0 auto;
+
+    /* Center the text inside the input field */
+    text-align: center;
+}
+
+/* Optional: Hide the stepper arrows for a cleaner look */
+/* This is a common requirement for custom cart designs */
+.quantity-input::-webkit-outer-spin-button,
+.quantity-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* For Firefox */
+.quantity-input[type=number] {
+    -moz-appearance: textfield;
+}

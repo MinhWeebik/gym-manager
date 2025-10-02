@@ -51,4 +51,10 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
             "AND ((:status IS NULL AND a.status != 0) OR a.status = :status) ", nativeQuery = true)
     Integer getTotalRecord(@Param("status") Integer status,
                            @Param("id") Long id);
+
+    @Query(value = "SELECT * " +
+            "FROM attendance a " +
+            "WHERE a.status = 1 " +
+            "  AND a.booking_time = CURDATE()", nativeQuery = true)
+    List<Attendance> getTodayClass();
 }

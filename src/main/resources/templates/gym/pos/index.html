@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en" layout:decorate="~{cms_layout_1.html}"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <link rel="stylesheet" th:href="@{/css/pos/index.css}">
+</head>
+<body>
+<!-- Main content -->
+<div class="content" layout:fragment="page_content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-7">
+                <div class="d-flex align-items-center">
+                    <div class="d-flex nav-item-container ">
+                        <div class="nav-item-icon"> <i class="fas fa-th"></i></div>
+                       <div class="nav-item-text" id="nav-item-text">Menu</div>
+                    </div>
+                    <div class="input-group w-75">
+                        <input th:id="name" th:name="name" type="text" class="form-control" placeholder="Tìm sản phẩm bởi tên..." />
+                        <div class="input-group-append">
+                            <button type="button" class="btn btn-primary" onclick="searchProduct()">
+                                <i class="fa fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="sale-item-container">
+                    <div class="grid-container" id="grid-item-container">
+                        <div class="grid-category" th:each="model,item : ${models}" th:attr="data-id=${model.id}, data-name=${model.name}"
+                             th:style="'background-color:' + ${model.backgroundColor} + '; color:' + ${model.textColor}"
+                             onclick="showProduct(this)">
+                            <div th:text="${model.name}"></div>
+                            <div class="grid-cate-icon"><i class="fas fa-folder-open"></i></div>
+                        </div>
+                    </div>
+                    <div class="grid-container" id="grid-other-container" style="padding-top: 0">
+                        <div class="grid-category" style="color: black; background-color: white">Thanh toán chung</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-5" >
+                <div class="card card-default">
+                    <div class="card-header checkout-header">
+                        <div class="checkout-header-text">Thanh toán</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table class="borderless-table">
+                                <thead>
+                                <tr>
+                                    <th>Sản phẩm</th>
+                                    <th>Số lượng</th>
+                                    <th>Giá</th>
+                                    <th></th>
+                                </tr>
+                                </thead>
+                                <tbody id="checkout-product-table">
+                                <tr id="not-remove"></tr>
+<!--                                <tr>-->
+<!--                                    <td>Redbull</td>-->
+<!--                                    <td>-->
+<!--                                        <input type="number" class="form-control form-control-sm quantity-input"-->
+<!--                                                value="1"-->
+<!--                                                min="1"-->
+<!--                                                max="99"-->
+<!--                                                aria-label="Quantity">-->
+<!--                                    </td>-->
+<!--                                    <td>$5.00</td>-->
+<!--                                    <td><button class="btn btn-sm btn-danger remove-item-button"><i class="fas fa-times"></i>-->
+<!--                                    </button></td>-->
+<!--                                </tr>-->
+<!--                                <tr>-->
+<!--                                    <td>Sting dafefsrewrewf dsf wefsdf sd</td>-->
+<!--                                    <td><input type="number" class="form-control form-control-sm quantity-input"-->
+<!--                                               value="1"-->
+<!--                                               min="1"-->
+<!--                                               max="99"-->
+<!--                                               aria-label="Quantity"></td>-->
+<!--                                    <td>$5.00</td>-->
+<!--                                    <td><button class="btn btn-sm btn-danger remove-item-button"><i class="fas fa-times"></i>-->
+<!--                                    </button></td>-->
+<!--                                </tr>-->
+                                </tbody>
+                                <tfoot>
+                                <tr class="grand-total">
+                                    <td>Tổng phụ</td>
+                                    <td></td>
+                                    <td id="sub-total-text">$0.00</td>
+                                    <td></td>
+                                </tr>
+                                <tr class="grand-total">
+                                    <td>Thuế</td>
+                                    <td></td>
+                                    <td id="tax-text">$0.00</td>
+                                    <td></td>
+                                </tr>
+                                <tr class="grand-total">
+                                    <td>Tổng</td>
+                                    <td></td>
+                                    <td id="total-text">$0.00</td>
+                                    <td></td>
+                                </tr>
+                                </tfoot>
+
+                            </table>
+                        </div>
+                        <div class="checkout-button-container">
+                            <button class="btn btn-success checkout-button m-1">THANH TOÁN BẰNG TIỀN MẶT</button>
+                            <button class="btn btn-primary checkout-button m-1">THANH TOÁN BẰNG PAYPAL</button>
+                            <button class="btn btn-danger checkout-button m-1">HỦY THANH TOÁN</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- PAGE JAVASCRIPT CODE -->
+<script layout:fragment="content_page_script">
+    const gridContainer = $('#grid-item-container');
+    const otherGridContainer = $('#grid-other-container');
+    const navItemText = $('#nav-item-text');
+    const searchInput = $('#name');
+    let cartProduct = [];
+    const checkoutProductTable = $('#checkout-product-table');
+    let subTotal = 0;
+    let total = 0;
+    let tax = 0;
+    const subTotalText = $('#sub-total-text')
+    const taxText = $('#tax-text');
+    const totalText = $('#total-text');
+
+    $("#name").on("keydown", function(e) {
+        if (e.key === "Enter") {
+            e.preventDefault(); // stop default form submit
+            searchProduct()
+        }
+    });
+
+    function showProduct(el)
+    {
+        let id = el.getAttribute("data-id");
+        let name = el.getAttribute("data-name");
+        $.ajax({
+            url: "http://localhost:8086/nexia-cms/product/get-from-category",
+            dataType: "json",
+            data: { id: id },
+            type: "GET",
+            success: function(response) {
+                const data = response.data;
+                gridContainer.empty();
+                otherGridContainer.empty();
+                const newHtmlArray = [];
+                $.each(data, function(index, item) {
+                    const itemHtml = `
+        <div class="grid-category"
+             data-id="${item.id}"
+             data-price="${item.price}"
+             data-name="${item.name}"
+             style="background-color: ${item.backgroundColor}; color: ${item.textColor};"
+             onclick="addToCart(this)">
+
+            <div>${item.name}</div>
+        </div>
+    `;
+                    newHtmlArray.push(itemHtml);
+                });
+                gridContainer.html(newHtmlArray.join(''))
+                const backHtml = `<div class="grid-category" style="color: white; background-color: red" onclick="backToCategory()">Quay lại</div>`
+                otherGridContainer.html(backHtml);
+                navItemText.html(name)
+            },
+            error: function(xhr, status, error) {
+                console.error("Error:", error);
+            }
+        });
+    }
+
+    function backToCategory()
+    {
+        $.ajax({
+            url: "http://localhost:8086/nexia-cms/product-category/get-all",
+            dataType: "json",
+            type: "GET",
+            success: function(response) {
+                const data = response.data;
+                gridContainer.empty();
+                otherGridContainer.empty();
+                const newHtmlArray = [];
+                $.each(data, function(index, item) {
+                    const itemHtml = `
+        <div class="grid-category"
+                 data-id="${item.id}"
+                 data-name="${item.name}"
+                 style="background-color: ${item.backgroundColor}; color: ${item.textColor};"
+                 onclick="showProduct(this)">
+
+                <div>${item.name}</div>
+                <div class="grid-cate-icon"><i class="fas fa-folder-open"></i></div>
+            </div>
+    `;
+                    newHtmlArray.push(itemHtml);
+                });
+                gridContainer.html(newHtmlArray.join(''))
+                const backHtml = `<div class="grid-category" style="color: black; background-color: white">Thanh toán chung</div>`
+                otherGridContainer.html(backHtml);
+                navItemText.html('Menu')
+                searchInput.val("")
+            },
+            error: function(xhr, status, error) {
+                console.error("Error:", error);
+            }
+        });
+    }
+
+    function searchProduct()
+    {
+        $.ajax({
+            url: "http://localhost:8086/nexia-cms/product/find-by-name",
+            dataType: "json",
+            data: { name: searchInput.val() },
+            type: "GET",
+            success: function(response) {
+                const data = response.data;
+                gridContainer.empty();
+                otherGridContainer.empty();
+                const newHtmlArray = [];
+                $.each(data, function(index, item) {
+                    const itemHtml = `
+        <div class="grid-category"
+             data-id="${item.id}"
+             data-price="${item.price}"
+             data-name="${item.name}"
+             style="background-color: ${item.backgroundColor}; color: ${item.textColor};"
+             onclick="addToCart(this)">
+
+            <div>${item.name}</div>
+        </div>
+    `;
+                    newHtmlArray.push(itemHtml);
+                });
+                gridContainer.html(newHtmlArray.join(''))
+                const backHtml = `<div class="grid-category" style="color: white; background-color: red" onclick="backToCategory()">Quay lại</div>`
+                otherGridContainer.html(backHtml);
+                navItemText.html('Tìm kiếm')
+            },
+            error: function(xhr, status, error) {
+                console.error("Error:", error);
+            }
+        });
+    }
+
+    function addToCart(el)
+    {
+        const newHtmlArray = [];
+        let id = el.getAttribute("data-id");
+        let name = el.getAttribute("data-name");
+        let price = el.getAttribute("data-price");
+        let found = cartProduct.find(item => item.id ===id);
+        if(found && found.amount <= 99)
+        {
+            found.amount = parseInt(found.amount) + 1;
+        }
+        else {
+            cartProduct.push({id: id, name: name, price: price, amount: 1});
+        }
+        $("#checkout-product-table tr").not("#not-remove").remove()
+        $.each(cartProduct, function(index, item) {
+            let totalPrice = item.price * item.amount;
+            const itemHtml = `
+                                            <tr data-id="${item.id}">
+                                    <td>${item.name}</td>
+                                    <td>
+                                        <input type="number" class="form-control form-control-sm quantity-input"
+                                                value="${item.amount}"
+                                                min="1"
+                                                max="99"
+                                                aria-label="Quantity">
+                                    </td>
+                                    <td>$${totalPrice}</td>
+                                    <td><button class="btn btn-sm btn-danger remove-item-button"><i class="fas fa-times"></i>
+                                    </button></td>
+                                </tr>
+            `
+            newHtmlArray.push(itemHtml);
+        })
+        checkoutProductTable.append(newHtmlArray.join(''))
+        calculateTotalPrice()
+    }
+
+    function calculateTotalPrice() {
+        let subTotal = 0;
+        let tax = 0;
+        let total = 0;
+
+        $.each(cartProduct, function(index, item) {
+            let price = item.price * item.amount;
+            subTotal += price;
+        });
+
+        $.ajax({
+            url: "http://localhost:8086/nexia-cms/product/calculate-tax",
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(cartProduct),
+            success: function(response) {
+                tax = response.data; // get tax from backend
+                total = subTotal + tax;
+
+                // Update DOM **inside success**
+                subTotalText.html('$' + subTotal.toFixed(2));
+                taxText.html('$' + tax.toFixed(2));
+                totalText.html('$' + total.toFixed(2));
+
+                console.log(subTotal, tax, total);
+            },
+            error: function(error) {
+                console.error("Error:", error);
+            }
+        });
+    }
+
+</script>
+</body>
+</html>

@@ -1137,7 +1137,7 @@ public class ScheduleController {
             String formatted = dateTime.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
             model.put("title", scheduledClass.getClasses().getName()
                     + " vào " + formatted + " "
-                    + scheduledClass.getFrom().format(DateTimeFormatter.ofPattern("HH/mm")) + " - "
+                    + scheduledClass.getFrom().format(DateTimeFormatter.ofPattern("HH:mm")) + " - "
                     + scheduledClass.getTo().format(DateTimeFormatter.ofPattern("HH:mm")));
             boolean allowAdd = false;
             if(now.isBefore(dateTime.toLocalDate().atTime(scheduledClass.getFrom())))

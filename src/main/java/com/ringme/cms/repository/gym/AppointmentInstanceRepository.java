@@ -53,4 +53,9 @@ public interface AppointmentInstanceRepository extends JpaRepository<Appointment
             "WHERE ap.member_id = :id AND ((:status IS NULL AND a.status != 0) OR a.status = :status) ", nativeQuery = true)
     Integer getTotalRecord(@Param("status") Integer status,
                            @Param("id") Long id);
+
+    @Query(value = "select * from appointment_instance ai " +
+            "where ai.status = 1 " +
+            "  AND ai.date = curdate()", nativeQuery = true)
+    List<AppointmentInstance> getTodayAppointment();
 }
