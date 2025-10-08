@@ -11,17 +11,16 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @Getter
 @Setter
-public class MembershipDto {
-    Long id;
+public class ProductFormDto {
+    private Long id;
+    private Long categoryId;
     @NotBlank
-    String name;
+    private String name;
+    private String description;
     @NotNull
-    BigDecimal price;
-    @NotNull
-    Integer duration;
+    private BigDecimal price;
     @NotBlank
-    String description;
-    Integer totalVisit;
-    @NotNull
-    Integer type;
+    private String backgroundColor;
+    @NotBlank
+    private String textColor;
 }

@@ -9,19 +9,16 @@ import java.math.BigDecimal;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Getter
 @Setter
-public class MembershipDto {
-    Long id;
+@Getter
+public class CategoryDto {
+    private Long id;
     @NotBlank
-    String name;
+    private String name;
     @NotNull
-    BigDecimal price;
-    @NotNull
-    Integer duration;
+    private BigDecimal taxRate;
     @NotBlank
-    String description;
-    Integer totalVisit;
-    @NotNull
-    Integer type;
+    private String backgroundColor;
+    @NotBlank
+    private String textColor;
 }

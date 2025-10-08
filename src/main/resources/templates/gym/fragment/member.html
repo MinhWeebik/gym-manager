@@ -206,7 +206,7 @@
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
-                                <div th:insert="component :: input-number-v2('Số tiền', 'amount', *{amount}, 1, null, false, false, false)"></div>
+                                <div th:insert="component :: input-number-decimal('Số tiền', 'amount', *{amount}, 1, null, false, false, false)"></div>
                                 <p th:if="${#fields.hasErrors('amount')}" th:errors="*{amount}" class="text-danger m-0"></p>
                             </div>
                             <div th:with="

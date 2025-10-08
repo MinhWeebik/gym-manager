@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en" layout:decorate="~{cms_layout_1.html}"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+</head>
+<body>
+<div class="content" layout:fragment="page_content">
+    <div class="container-fluid">
+        <div class="card card-default">
+            <div class="card-body">
+                <div class="mb-3">
+                    <a th:href="@{/category/index}" type="button" class="btn btn-danger mx-2">
+                        <i class="fa-solid fa-arrow-left"></i><span class="px-2">Quay lại</span>
+                    </a>
+                    <button onclick="$('#modal-search-song').modal('show');" type="button" class="btn btn-primary my-0">
+                        <i class="fas fa-plus"></i><span class="px-2"> Thêm sản phẩm</span>
+                    </button>
+                </div>
+
+                <div class="table-responsive mb-2 mt-3">
+                    <table class="table table-sm custom-table table-bordered table-hover text-center" style="table-layout: auto; width: 100%; font-weight: 600;" id="content-table">
+                        <thead class="thead-light align-content-center">
+                        <tr>
+                            <th>Tên sản phẩm</th>
+                            <th>Trạng thái</th>
+                            <th>Giá</th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        <tbody id="bodyTableContext">
+                        <tr th:each="model,item : ${models}" th:attr="data-id=${model.id}">
+                            <td style="align-content: center;" th:text="${model.name}"></td>
+                            <td style="align-content: center;">
+                                <span th:if="${model.status == 0}" class="badge badge-danger" style="white-space: normal; cursor: pointer;">Không hoạt động</span>
+                                <span th:if="${model.status == 1}" class="badge badge-success" style="white-space: normal; cursor: pointer">Hoạt động</span>
+                            </td>
+                            <td style="align-content: center;" th:text="'$' + ${model.price}"></td>
+                            <td style="align-content: center;">
+                                <div class="d-flex flex-row justify-content-center">
+                                    <a th:attr="onclick=|removeSong(event, ${model?.id})|" style="cursor: pointer; display: flex; align-items: center; justify-content: center;" title="Xóa" class="btn btn-sm">
+                                        <i class="fas fa-trash-alt" style="color: #ff0000;"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr id="no-result" style="display: none">
+                            <td colspan="100">Không có kết quả</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <modal-search-song th:replace="gym/category/modal_search :: modal-search-content(@{/category/get-content-ids})"></modal-search-song>
+</div>
+<!-- PAGE JAVASCRIPT CODE -->
+<script layout:fragment="content_page_script">
+    countRow();
+
+    function addSong(e, id) {
+        $.ajax({
+            url: '[[@{/category/add-content}]]',
+            type: 'POST',
+            data: {
+                categoryId: '[[${id}]]',
+                productId: id
+            },
+            xhrFields: {
+                withCredentials: true
+            },
+            success: function(data) {
+                console.log(data);
+                let trNew = $('<tr></tr>');
+                let tr = $(e.target).closest('tr');
+
+                tr.find('td').slice(1).each(function() {
+                    trNew.append($(this).clone());
+                });
+
+                trNew.append(`
+                    <td style="align-content: center;">
+                        <div class="d-flex flex-row justify-content-center">
+                            <a onclick="removeSong(event, ${id})" style="cursor: pointer; align-content: center;" title="Delete" class="btn btn-sm">
+                                <i class="fas fa-trash-alt" style="color: #ff0000;"></i>
+                            </a>
+                        </div>
+                    </td>
+                `);
+
+                $('#bodyTableContext').prepend(trNew);
+                tr.remove();
+                writeIndex();
+                countRow();
+                searchSong(null, true);
+                countRow();
+            },
+            error: function(xhr, status, error) {
+                toastError("Error adding content!", 3000);
+            }
+        });
+    }
+
+    function removeSong(e, id) {
+        toastLoading();
+
+        $.ajax({
+            url: '[[@{/category/remove-content}]]',
+            type: 'POST',
+            data: {
+                categoryId: '[[${id}]]',
+                productId: id
+            },
+            xhrFields: {
+                withCredentials: true
+            },
+            success: function(data) {
+                console.log(data);
+                $(e.target).closest('tr').remove();
+                writeIndex();
+                toastSuccess("Thành công!", 3000);
+                searchSong(null, true);
+                countRow();
+            },
+            error: function(xhr, status, error) {
+                toastError("Error removing content!", 3000);
+            }
+        });
+    }
+
+    var cacheTimeout;
+    function writeIndex() {
+        clearTimeout(cacheTimeout);
+        cacheTimeout = setTimeout(() => {
+            $('#bodyTableContext').find('tr').each(function(index, item) {
+                console.log(index)
+                $(item).find('.index').text(index + 1);
+            });
+        }, 300);
+    }
+
+    function countRow()
+    {
+        let rowCount = $('#content-table tbody tr').length;
+        console.log("row count: " + rowCount)
+        if(rowCount === 1)
+        {
+            $('#no-result').show()
+        }
+        else
+        {
+            $('#no-result').hide()
+        }
+    }
+</script>
+</body>
+</html>

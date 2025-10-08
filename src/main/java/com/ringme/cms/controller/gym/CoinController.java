@@ -52,7 +52,7 @@ public class CoinController {
         if(pageSize == null || pageSize <= 0) pageSize = 15;
         Page<CoinDiscountTier> pageObject = coinService.getPage(pageNo, pageSize);
         GeneralSettings generalSettings = generalSettingsRepository.findBySettingKey("coin_price");
-        int coinPrice = Integer.parseInt(generalSettings.getSettingValue());
+        BigDecimal coinPrice = new BigDecimal(generalSettings.getSettingValue());
         model.put("title", "Xu");
         model.put("pageNo", pageNo);
         model.put("pageSize", pageSize);
@@ -70,10 +70,10 @@ public class CoinController {
         {
             Map<String, Object> map = new HashMap<>();
             GeneralSettings gs = generalSettingsRepository.findBySettingKey("coin_price");
-            Integer price = Integer.parseInt(gs.getSettingValue());
-            Integer totalPrice = price * amount;
+            BigDecimal price = new BigDecimal(gs.getSettingValue());
+            BigDecimal total = price.multiply(BigDecimal.valueOf(amount));
             Integer bonusCoin = 0;
-            map.put("price", totalPrice);
+            map.put("price", total);
             List<CoinDiscountTier> CDTList = coinDiscountTierRepository.getAll();
             for (CoinDiscountTier CDT : CDTList)
             {
@@ -115,11 +115,11 @@ public class CoinController {
     }
 
     @PostMapping("/save-coin")
-    public String save(@Valid @RequestParam("coinPrice") Integer coinPrice,
+    public String save(@Valid @RequestParam("coinPrice") BigDecimal coinPrice,
                        RedirectAttributes redirectAttributes,
                        HttpServletRequest request) {
         try {
-            if(coinPrice == null || coinPrice <= 0)
+            if(coinPrice == null || coinPrice.compareTo(BigDecimal.ZERO) <= 0)
             {
                 redirectAttributes.addFlashAttribute("error", "Số tiền không hợp lệ");
                 return AppUtils.goBack(request).orElse("redirect:/coin/index");

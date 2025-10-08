@@ -15,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -36,7 +37,7 @@ public class CoinService {
         return coinDiscountTierRepository.getAll(pageable);
     }
 
-    public void saveCoin(Integer coinPrice) throws Exception
+    public void saveCoin(BigDecimal coinPrice) throws Exception
     {
         GeneralSettings generalSettings = generalSettingsRepository.findBySettingKey("coin_price");
         generalSettings.setSettingValue(coinPrice.toString());

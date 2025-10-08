@@ -359,9 +359,14 @@
 
     const curForm = $('#appointmentForm');
     let id = $('input[name="id"]').val();
-    console.log(id)
+
     curForm.on('submit', function(event) {
-        if (!( (!isTimeUpdated && !isRecurrentUpdated)
+        console.log(isRecurrentUpdated, curRecurrentType, id, isTimeUpdated, onlyTimeChanged)
+        if(!id)
+        {
+            curForm[0].submit();
+        }
+        else if (!( (!isTimeUpdated && !isRecurrentUpdated)
             || (!onlyTimeChanged && isRecurrentUpdated)
             || (isRecurrentUpdated && curRecurrentType == 'NONE') && !id)) {
             event.preventDefault();

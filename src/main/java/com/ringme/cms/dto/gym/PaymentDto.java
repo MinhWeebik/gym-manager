@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import java.math.BigDecimal;
 
 @Data
 @AllArgsConstructor
@@ -18,7 +19,7 @@ public class PaymentDto {
     @NotBlank
     private String description;
     @NotNull
-    private Long amount;
+    private BigDecimal amount;
     @NotBlank
     private String paymentGateway;
     @NotNull
@@ -27,4 +28,5 @@ public class PaymentDto {
     private String paymentUrl;
     private Integer tab;
     private Boolean shouldReload;
+    private Long productOrderId;
 }

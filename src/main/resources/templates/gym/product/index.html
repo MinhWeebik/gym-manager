@@ -5,31 +5,29 @@
       xmlns:th="http://www.thymeleaf.org">
 
 <head>
-    <script src="https://cdn.jsdelivr.net/npm/autonumeric@4.6.0/dist/autoNumeric.min.js"></script>
 </head>
 <body>
 <!-- Main content -->
 <div class="content" layout:fragment="page_content">
-    <div class="container-fluid justify-content-center">
+    <div class="container-fluid">
         <div class="card card-default">
             <div class="card-body">
-                <form th:action="@{/coin/save-coin}" method="post" id="coin-form">
+                <form th:action="@{/product/index}" method="get">
                     <div class="row">
-                        <div class="col-4">
-                            <div class="d-flex align-items-center">
-                                <label th:for="coinPriceInput" class="mb-0 mr-2 text-nowrap">
-                                    Giá 1 xu
-                                </label>
-                                <input type="text" id="coinPriceInput" name="coinPriceInput" style="height: 31px"
-                                           class="form-control" required>
-                                <input type="text" hidden="hidden" th:value="${coinPrice}" name="coinPrice" id="coinPrice">
-                            </div>
+                        <div class="col-4" th:insert="component :: input-text('Tên', 'name', ${name}, 0, 255, false, false)"></div>
+                        <div class="col-4 mb-3" th:with="options=${T(java.util.Arrays).asList(
+                            '', 'Tất cả',
+                            '1', 'Hoạt động',
+                            '0', 'Không hoạt động'
+                        )}">
+                            <div th:replace="component :: select-default-v2('Trạng thái', 'status', ${status}, false, false, ${options})"></div>
                         </div>
-                        <div class="col-8 text-left">
-                            <button type="submit" style="cursor: pointer; height: auto;" class="btn btn-primary my-0 mx-1">
-                                <i class="fa-regular fa-floppy-disk"></i><span class="px-2">Lưu</span>
+                        <div class="col-4 mb-3" th:insert="component :: select2-v2('GET', 'Danh mục', 'category', ${category}, '/category/ajax-search', 'Nhập danh mục', ${categoryName} , false, false, 0, null)"></div>
+                        <div class="col-12 text-center mt-3">
+                            <button type="submit" style="cursor: pointer; padding: 4px 10px;" class="btn btn-primary my-0 mx-1">
+                                <i class="fas fa-search"></i><span class="px-2">Tìm kiếm</span>
                             </button>
-                            <a th:href="@{/coin/form}" style="cursor: pointer; height: auto;" class="btn btn-primary my-0 mx-1">
+                            <a th:href="@{/product/form}" style="cursor: pointer;" class="btn btn-primary my-0 mx-1">
                                 <i class="fas fa-plus"></i><span class="px-2">Tạo mới</span>
                             </a>
                         </div>
@@ -44,28 +42,28 @@
                     <table id="table-list" class="table table-sm custom-table table-bordered table-hover text-center" style="table-layout: auto; width: 100%; font-weight: 600;">
                         <thead class="thead-light align-content-center">
                         <tr>
-                            <th>Số xu tối thiểu</th>
-                            <th>Phần trăm tặng</th>
+                            <th>Tên sản phẩm</th>
                             <th>Trạng thái</th>
+                            <th>Giá</th>
                             <th>Ngày tạo</th>
                             <th>Chức năng</th>
                         </tr>
                         </thead>
                         <tbody>
                         <tr th:each="model,item : ${models}" th:attr="data-id=${model.id}">
-                            <td style="align-content: center;" th:text="${model.minCoins}"></td>
-                            <td style="align-content: center;" th:text="${model.bonusPct + '%'}"></td>
+                            <td style="align-content: center;" th:text="${model.name}"></td>
                             <td style="align-content: center;">
                                 <span th:if="${model.status == 0}" class="badge badge-danger" style="white-space: normal; cursor: pointer;">Không hoạt động</span>
                                 <span th:if="${model.status == 1}" class="badge badge-success" style="white-space: normal; cursor: pointer">Hoạt động</span>
                             </td>
+                            <td style="align-content: center;" th:text="'$' + ${model.price}"></td>
                             <td th:text="${#dates.format(new java.util.Date(model.createdAt), 'dd/MM/yyyy HH:mm:ss')}" style="align-content: center;"></td>
                             <td style="align-content: center;">
                                 <div class="d-flex flex-row justify-content-center">
-                                    <a th:href="@{'/coin/form?id=' + ${model.id}}" class="btn" title="Sửa">
+                                    <a th:href="@{'/product/form?id=' + ${model.id}}" class="btn" title="Sửa">
                                         <i class="far fa-edit" style="color: #00709e;"></i>
                                     </a>
-                                    <a th:attr="onclick=|event.stopPropagation(); deleteRecord({action: '@{'/coin/delete/'+${model.id}}', method: 'POST',title: 'Xác nhận xóa',text: 'Bạn có chắc muốn xóa cái này không'})|" style="cursor: pointer; align-content: center;" title="Xóa" class="btn btn-sm">
+                                    <a th:attr="onclick=|event.stopPropagation(); deleteRecord({action: '@{'/product/delete/'+${model.id}}', method: 'POST',title: 'Xác nhận xóa',text: 'Bạn có chắc muốn xóa sản phẩm này không'})|" style="cursor: pointer; align-content: center;" title="Xóa" class="btn btn-sm">
                                         <i class="fas fa-trash-alt" style="color: #ff0000;"></i>
                                     </a>
                                 </div>
@@ -85,37 +83,6 @@
 </div>
 <!-- PAGE JAVASCRIPT CODE -->
 <script layout:fragment="content_page_script">
-    document.addEventListener('DOMContentLoaded', (event) => {
-
-        let initialValue = '[[${coinPrice}]]'
-
-        const dollarOptions = {
-            // --- Symbol and Placement ---
-            currencySymbol: '$',
-            currencySymbolPlacement: 'p', // 'p' for PREFIX
-
-            // --- Value Range and Precision ---
-            minimumValue: '0',
-            maximumValue: '9999999.99', // 1. IMPORTANT: Add .99 to allow decimals in the max value
-
-            decimalPlaces: 2, // 2. CRITICAL: Set to 2 for cents
-
-            // --- Other Formatting ---
-            decimalCharacter: '.',
-            digitGroupSeparator: ',',
-
-            // --- Behavior on Empty ---
-            emptyInputBehavior: 'zero', // This will now correctly show '$0.00'
-        };
-        const discountInput = new AutoNumeric('#coinPriceInput',initialValue, dollarOptions);
-
-        document.getElementById('coin-form').addEventListener('submit', (event) => {
-            const rawValue = discountInput.getNumber();
-
-            let hiddenInput = document.getElementById('coinPrice');
-            hiddenInput.value = rawValue;
-        });
-    });
 </script>
 </body>
 </html>

@@ -252,7 +252,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="blockEventUrl()" th:if="${type == 1}">Chặn</button>
+<!--                    <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="blockEventUrl()" th:if="${type == 1}">Chặn</button>-->
                     <button th:if="${type == 1 || type == 2}" type="button" class="btn btn-danger" th:attr="onclick=|event.stopPropagation(); deleteRecord({
                       action: '@{/schedule/delete-class/{id}/{type}(id=${model.id}, type=${type})}',
                       method: 'POST',

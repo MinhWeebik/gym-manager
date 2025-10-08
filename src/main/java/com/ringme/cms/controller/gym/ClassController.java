@@ -38,12 +38,12 @@ public class ClassController {
 
     @RequestMapping(value = {"/index"})
     public String index(@RequestParam(name = "pageNo", required = false, defaultValue = "1") Integer pageNo,
-                        @RequestParam(name = "pageSize", required = false, defaultValue = "15") Integer pageSize,
+                        @RequestParam(name = "pageSize", required = false, defaultValue = "10") Integer pageSize,
                         @RequestParam(name = "name", required = false) String name,
                         @RequestParam(name = "status", required = false) Integer status,
                         ModelMap model) {
         if(pageNo == null || pageNo <= 0) pageNo = 1;
-        if(pageSize == null || pageSize <= 0) pageSize = 15;
+        if(pageSize == null || pageSize <= 0) pageSize = 10;
         Page<Classes> pageObject = classService.getPage(name, status, pageNo, pageSize);
         model.put("title", "Lớp");
         model.put("pageNo", pageNo);

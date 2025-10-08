@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en" layout:decorate="~{cms_layout_1.html}"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+</head>
+<body>
+<div class="content" layout:fragment="page_content">
+    <div class="container-fluid">
+        <div class="card card-default">
+            <div class="card-body">
+                <form th:action="@{/product/save}" method="post" th:object="${form}" enctype="multipart/form-data">
+                    <div class="row">
+                        <input hidden th:field="*{id}"/>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <div th:replace="component :: select2-v2('GET', 'Chọn danh mục', 'categoryId', *{categoryId}, '/category/ajax-search', 'Nhập danh mục', ${categoryName} , false, false, 0, null)"></div>
+                                <p th:if="${#fields.hasErrors('categoryId')}" th:errors="*{categoryId}" class="text-danger m-0"></p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <div th:insert="component :: input-text('Tên sẩn phẩm', 'name', *{name}, 0, 255, true, false)"></div>
+                                <p th:if="${#fields.hasErrors('name')}" th:errors="*{name}" class="text-danger m-0"></p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="backgroundColor">Chọn màu nền <span style="color: red;">*</span></label>
+                                <input required type="text" style="height: 31px" id="backgroundColor" name="backgroundColor" th:value="*{backgroundColor}" class="form-control">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="backgroundColor">Chọn màu chữ <span style="color: red;">*</span></label>
+                                <input required type="text" style="height: 31px" id="textColor" name="textColor" th:value="*{textColor}" class="form-control">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="description">Miêu tả</label>
+                                <textarea id="description" name="description" th:text="*{description}" class="form-control" style="height: 98px"></textarea>
+                                <p th:if="${#fields.hasErrors('description')}" th:errors="*{description}" class="text-danger m-0"></p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <div th:insert="component :: input-number-decimal('Giá', 'price', *{price}, 1, null, true, false, false)"></div>
+                                <p th:if="${#fields.hasErrors('price')}" th:errors="*{price}" class="text-danger m-0"></p>
+                            </div>
+                        </div>
+                        <div class="col-12 text-center mt-2">
+                            <a th:href="@{/product/index}" type="button" class="btn btn-danger mx-2">
+                                <i class="fa-solid fa-arrow-left"></i><span class="px-2">Quay lại</span>
+                            </a>
+                            <button type="submit" class="btn btn-primary mx-2">
+                                <i class="fa-regular fa-floppy-disk"></i><span class="px-2">Lưu</span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script layout:fragment="content_page_script">
+    const colorInput = document.getElementById('backgroundColor');
+    const initialColor = colorInput.value || '#42445a';
+    const textColorInput = document.getElementById('textColor');
+    const initialTextColor = textColorInput.value || 'white';
+
+    // 1. Create the Pickr instance
+    const pickr = Pickr.create({
+        el: '#backgroundColor', // The input field you want to bind to
+        theme: 'classic',          // or 'monolith', or 'nano'
+        useAsButton: true,          // The input field itself will act as the button
+        default: initialColor,       // Default color
+
+        // Optional: Pre-defined color swatches
+        swatches: [
+            '#F44336', '#E91E63', '#9C27B0', '#673AB7',
+            '#3F51B5', '#2196F3', '#03A9F4', '#00BCD4',
+            '#009688', '#4CAF50', '#8BC34A', '#CDDC39',
+        ],
+
+        // Configure the components of the color picker
+        components: {
+            preview: true,
+            opacity: true,
+            hue: true,
+            interaction: {
+                hex: true,
+                rgba: true,
+                hsla: false,
+                input: true,  // Show the input field in the picker
+                clear: true,
+                save: true
+            }
+        },
+
+        // Change the string representation of the color
+        defaultRepresentation: 'HEXA'
+    });
+
+    // 2. Set up the event listeners to update your input
+    pickr.on('save', (color, instance) => {
+        // When the user clicks "Save", update the input's value
+        const savedColor = color.toHEXA().toString();
+        instance.options.el.value = savedColor;
+        console.log('Saved color:', savedColor);
+        pickr.hide(); // Hide the picker after saving
+    });
+
+    pickr.on('change', (color, source, instance) => {
+        // On 'change', update the input's value in real-time
+        const changedColor = color.toHEXA().toString();
+        instance.options.el.value = changedColor;
+    });
+
+    pickr.on('clear', (instance) => {
+        // When the user clicks "Clear"
+        instance.options.el.value = ''; // Clear the input's value
+    });
+
+    const textPickr = Pickr.create({
+        el: '#textColor', // The input field you want to bind to
+        theme: 'classic',          // or 'monolith', or 'nano'
+        useAsButton: true,          // The input field itself will act as the button
+        default: initialTextColor,       // Default color
+
+        // Optional: Pre-defined color swatches
+        swatches: [
+            '#F44336', '#E91E63', '#9C27B0', '#673AB7',
+            '#3F51B5', '#2196F3', '#03A9F4', '#00BCD4',
+            '#009688', '#4CAF50', '#8BC34A', '#CDDC39',
+        ],
+
+        // Configure the components of the color picker
+        components: {
+            preview: true,
+            opacity: true,
+            hue: true,
+            interaction: {
+                hex: true,
+                rgba: true,
+                hsla: false,
+                input: true,  // Show the input field in the picker
+                clear: true,
+                save: true
+            }
+        },
+
+        // Change the string representation of the color
+        defaultRepresentation: 'HEXA'
+    });
+
+    // 2. Set up the event listeners to update your input
+    textPickr.on('save', (color, instance) => {
+        // When the user clicks "Save", update the input's value
+        const savedColor = color.toHEXA().toString();
+        instance.options.el.value = savedColor;
+        console.log('Saved color:', savedColor);
+        textPickr.hide(); // Hide the picker after saving
+    });
+
+    textPickr.on('change', (color, source, instance) => {
+        // On 'change', update the input's value in real-time
+        const changedColor = color.toHEXA().toString();
+        instance.options.el.value = changedColor;
+    });
+
+    textPickr.on('clear', (instance) => {
+        // When the user clicks "Clear"
+        instance.options.el.value = ''; // Clear the input's value
+    });
+</script>
+</body>
+</html>

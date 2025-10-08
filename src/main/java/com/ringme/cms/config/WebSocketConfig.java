@@ -21,6 +21,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/check-in-websocket").withSockJS();
+        registry.addEndpoint("/paypal-websocket").withSockJS();
     }
 
 }

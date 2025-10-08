@@ -47,6 +47,12 @@
                class="form-control" th:required="${required}" style="height: 31px" th:min="${minlength}" th:max="${maxlength}">
     </div>
 
+    <div th:fragment="input-number-decimal(label, name, value, minlength, maxlength, required, disabled, readonly)">
+        <label th:for="${name}"><span>[[${label}]] <span th:if="${required}" style="color: red;">*</span></span></label>
+        <input type="number" step="0.01" th:id="${name}" th:name="${name}" th:value="${value}" th:disabled="${disabled}" th:readonly="${readonly}"
+               class="form-control" th:required="${required}" style="height: 31px" th:min="${minlength}" th:max="${maxlength}">
+    </div>
+
 
     <div th:fragment="input-text-date(label, name, value, minlength, maxlength, required, disabled)">
         <label th:for="${name}"><span>[[${label}]] <span th:if="${required}" style="color: red;">*</span></span></label>

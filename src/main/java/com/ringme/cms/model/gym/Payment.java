@@ -7,6 +7,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import javax.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @SqlResultSetMapping(
         name = "MonthlyPaymentMapping",
@@ -45,8 +46,8 @@ public class Payment {
     @Column(name = "description")
     private String description;
 
-    @Column(name = "amount")
-    private Long amount;
+    @Column(name = "amount",precision = 10, scale = 2)
+    private BigDecimal amount;
 
     @Column(name = "status") //-1 failed, 0 inactive, 1 success, 2 pending
     private Integer status;
@@ -75,4 +76,10 @@ public class Payment {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")
     private Member member;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_order_id")
+    private ProductOrder productOrder;
+
+
 }

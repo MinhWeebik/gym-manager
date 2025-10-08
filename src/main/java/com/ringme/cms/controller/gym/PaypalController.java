@@ -62,7 +62,7 @@ public class PaypalController
                         PaymentDto paymentDto = new PaymentDto();
                         paymentDto.setMemberId(memberRepository.findIdByMemberSubscriptionId(memberSubscription.getId()));
                         paymentDto.setDescription(String.format("Thanh toán định kỳ cho gói " + memberSubscription.getMembership().getName()));
-                        paymentDto.setAmount(memberSubscription.getMembership().getPrice().longValue());
+                        paymentDto.setAmount(memberSubscription.getMembership().getPrice());
                         paymentDto.setPaymentGateway("paypal");
                         paymentDto.setType(1);
                         Payment curPayment = paymentService.save(paymentDto);

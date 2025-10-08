@@ -82,6 +82,7 @@ public class ScheduleService {
                     }
                 }
             }
+            memberSubscriptionRepository.autoUpdatePendingPaymentOrder();
             memberSubscriptionRepository.autoUpdatePendingPayment();
             log.info("Successfully auto update pending payment and subscriptions at {}", LocalDateTime.now());
         }

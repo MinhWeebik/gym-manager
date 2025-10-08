@@ -148,6 +148,10 @@
 
 .checkout-header {
     background-color: #f4f4f4;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
 }
 
 .checkout-header-text {
@@ -178,3 +182,7 @@
 .quantity-input[type=number] {
     -moz-appearance: textfield;
 }
+
+.links a { color: #0070ba; text-decoration: none; text-align: center; }
+.links a:hover { text-decoration: underline; }
+.links { margin-top: 15px; display: flex; flex-direction: column; gap: 10px; }

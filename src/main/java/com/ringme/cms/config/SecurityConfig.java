@@ -85,6 +85,7 @@ public class SecurityConfig {
                         "/**/*.sockjs",              // SockJS fallback
                         "/sockjs-node/**",           // SockJS node
                         "/check-in-websocket/**",
+                        "/paypal-websocket/**",
                         "/check-in/**").permitAll()
                 .antMatchers("/**").authenticated().and()
 

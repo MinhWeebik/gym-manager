@@ -14,7 +14,9 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.ui.ModelMap;
 import org.springframework.validation.BindingResult;
@@ -25,9 +27,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.io.IOException;
 import java.time.format.DateTimeFormatter;
-import java.util.Base64;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -54,6 +54,10 @@ public class PaymentController {
     private final MemberSubscriptionRepository memberSubscriptionRepository;
 
     private final CoinService coinService;
+
+    private final SimpMessagingTemplate messagingTemplate;
+
+    private final ProductOrderRepository productOrderRepository;
     @GetMapping("/create")
     public String update(@RequestParam(value = "id") Long memberId, ModelMap model) {
         log.info("member id: {}", memberId);
@@ -155,7 +159,7 @@ public class PaymentController {
             }
             paymentService.save(formDto);
             redirectAttributes.addFlashAttribute("success", "Thanh toán thành công!");
-            return "redirect:/member/detail?id=" + formDto.getMemberId() + "&tab=" + formDto.getTab();
+            return AppUtils.goBack(request).orElse("redirect:/member/detail?id=" + formDto.getMemberId() + "&tab=" + formDto.getTab());
         } catch (Exception e) {
             log.error("Exception: {}", e.getMessage(), e);
             return AppUtils.goBackWithError(request, redirectAttributes, "form", bindingResult, formDto, "Error in server!")
@@ -200,7 +204,7 @@ public class PaymentController {
             {
                 redirectAttributes.addFlashAttribute("shouldReload", formDto.getShouldReload());
             }
-            return "redirect:/member/detail?id=" + formDto.getMemberId() + "&tab=" + formDto.getTab();
+            return AppUtils.goBack(request).orElse("redirect:/member/detail?id=" + formDto.getMemberId() + "&tab=" + formDto.getTab());
         } catch (Exception e) {
             log.error("Exception: {}", e.getMessage(), e);
             return AppUtils.goBackWithError(request, redirectAttributes, "form", bindingResult, formDto, "Error in server!")
@@ -209,6 +213,7 @@ public class PaymentController {
     }
 
     @GetMapping("/success")
+    @Transactional
     public String paymentSuccess(
             @RequestParam("token") String orderId,
             @RequestParam("PayerID") String payerId
@@ -227,6 +232,17 @@ public class PaymentController {
                     if (matcher.find()) {
                         int coinAmount = Integer.parseInt(matcher.group(1));
                         coinService.updateUserCoin(paymentModel.getMember().getId(), coinAmount);
+                    }
+                    ProductOrder productOrder = paymentModel.getProductOrder();
+                    if(productOrder != null)
+                    {
+                        productOrder.setStatus(1);
+                        productOrderRepository.save(productOrder);
+                        Map<String, Object> map =  new HashMap<>();
+                        map.put("code", 200);
+                        map.put("message", "success");
+                        map.put("data", productOrder.getId());
+                        messagingTemplate.convertAndSend("/topic/paypal", map);
                     }
                     paymentModel.setStatus(1);
                     paymentRepository.save(paymentModel);
@@ -263,6 +279,7 @@ public class PaymentController {
     }
 
     @GetMapping("/cancel/{id}")
+    @Transactional
     public String paymentCancel(
             @PathVariable Long id
     ) {
@@ -276,6 +293,17 @@ public class PaymentController {
                 if (memberSubscription != null) {
                     memberSubscription.setStatus(-1);
                     memberSubscriptionRepository.save(memberSubscription);
+                }
+                ProductOrder productOrder = paymentModel.getProductOrder();
+                if(productOrder != null)
+                {
+                    productOrder.setStatus(-1);
+                    productOrderRepository.save(productOrder);
+                    Map<String, Object> map =  new HashMap<>();
+                    map.put("code", 500);
+                    map.put("message", "failure");
+                    map.put("data", "Thanh toán thất bại!");
+                    messagingTemplate.convertAndSend("/topic/paypal", map);
                 }
             }
             return "gym/payment/cancel";
@@ -373,6 +401,52 @@ public class PaymentController {
             redirectAttributes.addFlashAttribute("error", "Error in server!");
         }
         return AppUtils.goBack(request).orElse("redirect:/member/index");
+    }
+
+    @PostMapping("/save-pos-checkout")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> savePosCheckout(@Valid @RequestBody PaymentDto formDto) {
+        try
+        {
+            Map<String, Object> map = new HashMap<>();
+            map.put("code", 200);
+            if(formDto.getPaymentGateway().equals("cash"))
+            {
+                map.put("data", new ArrayList<>());
+                paymentService.save(formDto);
+            }
+            else if(formDto.getPaymentGateway().equals("paypal")){
+                Payment curPayment = paymentService.save(formDto);
+                Order order = paypalService.createOrder(
+                        Double.parseDouble(formDto.getAmount().toString()),
+                        "USD",
+                        formDto.getDescription(),
+                        "http://" + ipv4  + ":8086/nexia-cms/payment/cancel/" + curPayment.getId(),
+                        "http://" + ipv4  + ":8086/nexia-cms/payment/success"
+                );
+
+                String approvalLink = paypalService.getApprovalLink(order)
+                        .orElseThrow(() -> new RuntimeException("PayPal approval link not found in V2 order."));
+                String orderId = order.id();
+
+                curPayment.setGatewayTransactionId(orderId);
+                curPayment.setPaymentUrl(approvalLink);
+                paymentRepository.save(curPayment);
+                byte[] qrCodeBytes = qrCodeService.generateQRCodeImage(approvalLink, 350, 350);
+                String qrCodeBase64 = Base64.getEncoder().encodeToString(qrCodeBytes);
+                Map<String, Object> data = new HashMap<>();
+                data.put("qrCodeImage", qrCodeBase64);
+                data.put("paypalLink", approvalLink);
+                map.put("data", data);
+            }
+            map.put("message", "success");
+            return new ResponseEntity<>(map, HttpStatus.CREATED);
+        }
+        catch (Exception e)
+        {
+            log.error("Error: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
 }

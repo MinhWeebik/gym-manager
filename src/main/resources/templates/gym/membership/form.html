@@ -21,7 +21,7 @@
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
-                                <div th:insert="component :: input-number-v2('Giá', 'price', *{price}, 1, null, true, false, false)"></div>
+                                <div th:insert="component :: input-number-decimal('Giá', 'price', *{price}, 1, null, true, false, false)"></div>
                                 <p th:if="${#fields.hasErrors('price')}" th:errors="*{price}" class="text-danger m-0"></p>
                             </div>
                         </div>

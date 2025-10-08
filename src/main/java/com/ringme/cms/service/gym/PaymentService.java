@@ -8,6 +8,7 @@ import com.ringme.cms.model.gym.MemberSubscription;
 import com.ringme.cms.model.gym.Payment;
 import com.ringme.cms.repository.gym.MemberRepository;
 import com.ringme.cms.repository.gym.PaymentRepository;
+import com.ringme.cms.repository.gym.ProductOrderRepository;
 import javassist.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -37,6 +38,8 @@ public class PaymentService {
 
     private final MemberRepository memberRepository;
 
+    private final ProductOrderRepository productOrderRepository;
+
     public Payment save(PaymentDto formDto) throws Exception {
         try {
             Payment payment;
@@ -53,7 +56,14 @@ public class PaymentService {
                 payment.setGatewayTransactionId(formDto.getGatewayTransactionId());
                 payment.setPaymentUrl(formDto.getPaymentUrl());
             }
-            payment.setMember(memberRepository.findById(formDto.getMemberId()).orElseThrow());
+            if(formDto.getMemberId() != null)
+            {
+                payment.setMember(memberRepository.findById(formDto.getMemberId()).orElseThrow());
+            }
+            if(formDto.getProductOrderId() != null)
+            {
+                payment.setProductOrder(productOrderRepository.findById(formDto.getProductOrderId()).orElseThrow());
+            }
 
             return paymentRepository.save(payment);
         } catch (Exception e) {

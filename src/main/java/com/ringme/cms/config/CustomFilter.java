@@ -26,7 +26,8 @@ public class CustomFilter extends OncePerRequestFilter {
         String contextPath = request.getContextPath();
         String requestURI = request.getRequestURI();
         log.debug("Custom filter " + request.getRequestURI());
-        if (antPathMatcher.match(contextPath + "/check-in-websocket/**", requestURI)) {
+        if (antPathMatcher.match(contextPath + "/check-in-websocket/**", requestURI) ||
+                antPathMatcher.match(contextPath + "/paypal-websocket/**", requestURI)) {
             filterChain.doFilter(request, response);
             return;
         }

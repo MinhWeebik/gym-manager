@@ -111,6 +111,13 @@ public interface MemberSubscriptionRepository extends JpaRepository<MemberSubscr
             "  AND DATE_ADD(transaction_date, INTERVAL 30 MINUTE) <= NOW();", nativeQuery = true)
     void autoUpdatePendingPayment();
 
+    @Modifying
+    @Query(value = "UPDATE product_order po INNER JOIN payment p ON p.product_order_id = po.id " +
+            "SET po.status = -1 " +
+            "WHERE p.status = 2 " +
+            "  AND DATE_ADD(p.transaction_date, INTERVAL 30 MINUTE) <= NOW();", nativeQuery = true)
+    void autoUpdatePendingPaymentOrder();
+
     @Query(value = "SELECT * FROM member_subscriptions WHERE :id = membership_id AND status = 1", nativeQuery = true)
     List<MemberSubscription> findByMembershipId(@Param("id") Long id);
 

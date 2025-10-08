@@ -5,7 +5,9 @@ import lombok.*;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.*;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -26,8 +28,8 @@ public class Product {
     @Column(name = "description")
     private String description;
 
-    @Column(name = "price")
-    private Integer price;
+    @Column(name = "price", precision = 10, scale = 2)
+    private BigDecimal price;
 
     @Column(name = "status")
     private Integer status;
@@ -48,6 +50,10 @@ public class Product {
     @JoinColumn(name = "category_id")
     @JsonIgnore
     private ProductCategory productCategory;
+
+    @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<ProductOrderItem> productOrderItems;
 
 
 }

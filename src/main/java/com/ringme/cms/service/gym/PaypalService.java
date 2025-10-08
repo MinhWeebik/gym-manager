@@ -36,7 +36,7 @@ public class PaypalService {
                 .amountWithBreakdown(new AmountWithBreakdown()
                         .currencyCode(currency)
                         // Use Locale.US to ensure dot decimal separator, and format to 2 decimal places
-                        .value(String.format(Locale.US, "%.0f", total)));
+                        .value(String.format(Locale.US, "%.2f", total)));
 
         orderRequest.purchaseUnits(List.of(purchaseUnit));
 

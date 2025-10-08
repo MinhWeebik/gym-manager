@@ -2,6 +2,8 @@ package com.ringme.cms.dto.gym;
 
 import lombok.*;
 
+import java.math.BigDecimal;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -10,6 +12,6 @@ import lombok.*;
 public class ProductDto {
     private Long id;
     private String name;
-    private Integer price;
+    private BigDecimal price;
     private Integer amount;
 }

@@ -1,0 +1,189 @@
+<th:block th:fragment="modal-search-content(endpointGetExcept)" xmlns:th="http://www.thymeleaf.org">
+    <div class="modal fade" id="modal-search-song">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Tìm sản phẩm</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="card card-default">
+                        <div class="card-body">
+                                <div class="row">
+                                    <div class="col-6" th:insert="component :: input-text('Tên sản phẩm', 'name', null, 0, 255, false, false)"></div>
+                                    <div class="col-6 mb-3" th:with="options=${T(java.util.Arrays).asList(
+                            '', 'Tất cả',
+                            '1', 'Hoạt động',
+                            '0', 'Không hoạt động'
+                        )}">
+                                        <div th:replace="component :: select-default-v2('Trạng thái', 'status', null, false, false, ${options})"></div>
+                                    </div>
+
+                                    <div class="col-3 d-flex" style="align-items: start;">
+                                        <button onclick="searchSong();" type="button" class="btn btn-primary my-0 mx-1">
+                                            <i class="fas fa-search"></i><span class="px-2">Tìm kiếm</span>
+                                        </button>
+                                    </div>
+                                </div>
+                        </div>
+                    </div>
+
+                    <div class="card card-default">
+                        <div class="card-body" id="placeRenderSongs">
+
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-end">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $(() => {
+            searchSong(1);
+        })
+
+        function searchSong(initPageNo, isNotifySuccess) {
+            toastLoading();
+            let pageNo = initPageNo ? initPageNo : $('#buuPaginationSong').pagination('getCurrentPage');
+            let pageSize = $('#buuPageSizeSong').val();
+            let name = $('#name').val();
+            let status = $('#status').val();
+
+            $.ajax({
+                url: '[[${endpointGetExcept}]]',
+                type: 'GET',
+                success: function(data) {
+                    console.log(data);
+
+                    $.ajax({
+                        url: '[[@{/product/render-search}]]',
+                        type: 'GET',
+                        data: {
+                            pageNo,
+                            pageSize,
+                            name,
+                            status,
+                            exceptIds: data
+                        },
+                        traditional: true,
+                        success: function(data) {
+                            $('#placeRenderSongs').html(data);
+                            if (isNotifySuccess) {
+                                toastSuccess("Success!");
+                            } else {
+                                Swal.close();
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            toastError("An error has occurred!", 3000);
+                        }
+                    });
+                },
+                error: function(xhr, status, error) {
+                    toastError("An error has occurred", 3000);
+                }
+            });
+        }
+    </script>
+</th:block>
+
+
+
+
+
+
+<th:block th:fragment="content-search-song" xmlns:th="http://www.thymeleaf.org">
+    <div class="table-responsive mb-2 mt-3">
+        <table class="table table-sm custom-table table-bordered table-hover text-center" style="table-layout: auto; width: 100%; font-weight: 600;">
+            <thead class="thead-light align-content-center">
+            <tr>
+                <th style="width: 10%"></th>
+                <th>Tên sản phẩm</th>
+                <th>Trạng thái</th>
+                <th>Giá</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="model,item : ${models}" th:attr="data-id=${model.id}">
+                <td style="align-content: center;">
+                    <button th:attr="onclick=|addSong(event, ${model.id})|" type="button" class="btn btn-success my-0">
+                        <i class="fas fa-plus"></i><span class="px-2">Thêm</span>
+                    </button>
+                </td>
+                <td style="align-content: center;" th:text="${model.name}"></td>
+                <td style="align-content: center;">
+                    <span th:if="${model.status == 0}" class="badge badge-danger" style="white-space: normal; cursor: pointer;">Không hoạt động</span>
+                    <span th:if="${model.status == 1}" class="badge badge-success" style="white-space: normal; cursor: pointer">Hoạt động</span>
+                </td>
+                <td style="align-content: center;" th:text="'$' + ${model.price}"></td>
+            </tr>
+            <tr th:if="${models.size()==0}">
+                <td colspan="100">Không có kết quả</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="d-flex justify-content-between">
+        <div class="d-flex font-weight-bold align-items-center">
+            <p class="m-0">Hiển thị </p>
+            <select id="buuPageSizeSong" class="buu_page_size mx-2 font-weight-bold">
+                <option value="10" selected th:selected="${pageSize == 10}">10</option>
+                <option value="20" th:selected="${pageSize == 20}">20</option>
+                <option value="30" th:selected="${pageSize == 30}">30</option>
+                <option value="40" th:selected="${pageSize == 40}">40</option>
+                <option value="50" th:selected="${pageSize == 50}">50</option>
+            </select>
+            <input type="hidden" name="pageSize" value="10" />
+            <p class="m-0">Phần tử</p>
+        </div>
+        <ul id="buuPaginationSong" class="pagination buu-pagination"></ul>
+    </div>
+    <script th:inline="javascript">
+        $(() => {
+            let selectPageSize = document.querySelector('#buuPageSizeSong');
+            let inputPageSize = document.querySelector('#buuPageSizeSong + input[name="pageSize"]');
+            if(inputPageSize) inputPageSize.value = [[${pageSize}]];
+
+            function formatPageNumberSong() {
+                $('#buuPaginationSong').find('a, span').each(function() {
+                    let pageNumber = parseInt($(this).text());
+
+                    if (!isNaN(pageNumber)) {
+                        $(this).text(pageNumber.toLocaleString().replaceAll('.', ','));
+                    }
+                });
+            }
+
+            selectPageSize.addEventListener("change", function (e) {
+                if(inputPageSize) inputPageSize.value = this.value;
+                $('#buuPaginationSong').pagination('selectPage', 1);
+            })
+
+            $('#buuPaginationSong').pagination({
+                items: [[${totalPage}]],
+                itemOnPage: [[${pageSize}]],
+                currentPage: [[${pageNo}]],
+                cssStyle: '',
+                prevText: '<',
+                nextText: '>',
+                onInit: function () {
+                    // lúc load trang hàm này sẽ được gọi
+                    formatPageNumberSong();
+                },
+                onPageClick: function (page, e) {
+                    formatPageNumberSong();
+
+                    // Lúc chuyển trang hàm này sẽ được gọi
+                    searchSong();
+                }
+            });
+        })
+    </script>
+</th:block>

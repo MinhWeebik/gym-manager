@@ -159,7 +159,7 @@ public class MemberSubscriptionController {
                         PaymentDto paymentDto = new PaymentDto();
                         paymentDto.setMemberId(memberSubscription.getMember().getId());
                         paymentDto.setDescription(memberSubscription.getMembership().getName());
-                        paymentDto.setAmount(memberSubscription.getMembership().getPrice().longValue());
+                        paymentDto.setAmount(memberSubscription.getMembership().getPrice());
                         paymentDto.setPaymentGateway("paypal");
                         paymentDto.setType(1);
                         paymentDto.setShouldReload(true);
@@ -202,7 +202,7 @@ public class MemberSubscriptionController {
                         PaymentDto paymentDto = new PaymentDto();
                         paymentDto.setMemberId(memberSubscription.getMember().getId());
                         paymentDto.setDescription(memberSubscription.getMembership().getName());
-                        paymentDto.setAmount(memberSubscription.getMembership().getPrice().longValue());
+                        paymentDto.setAmount(memberSubscription.getMembership().getPrice());
                         paymentDto.setPaymentGateway("paypal");
                         paymentDto.setType(1);
                         paymentDto.setShouldReload(true);
@@ -248,7 +248,7 @@ public class MemberSubscriptionController {
                     PaymentDto paymentDto = new PaymentDto();
                     paymentDto.setMemberId(memberSubscription.getMember().getId());
                     paymentDto.setDescription(memberSubscription.getMembership().getName());
-                    paymentDto.setAmount(memberSubscription.getMembership().getPrice().longValue());
+                    paymentDto.setAmount(memberSubscription.getMembership().getPrice());
                     paymentDto.setPaymentGateway("cash");
                     paymentDto.setType(1);
                     Payment curPayment = paymentService.save(paymentDto);
@@ -295,7 +295,7 @@ public class MemberSubscriptionController {
                 PaymentDto paymentDto = new PaymentDto();
                 paymentDto.setMemberId(curMemberSub.getMember().getId());
                 paymentDto.setDescription(curMemberSub.getMembership().getName());
-                paymentDto.setAmount(curMemberSub.getMembership().getPrice().longValue());
+                paymentDto.setAmount(curMemberSub.getMembership().getPrice());
                 paymentDto.setPaymentGateway("paypal");
                 paymentDto.setType(1);
                 paymentDto.setShouldReload(true);
@@ -336,7 +336,7 @@ public class MemberSubscriptionController {
                 PaymentDto paymentDto = new PaymentDto();
                 paymentDto.setMemberId(memberId);
                 paymentDto.setDescription(curMemberSub.getMembership().getName());
-                paymentDto.setAmount(curMemberSub.getMembership().getPrice().longValue());
+                paymentDto.setAmount(curMemberSub.getMembership().getPrice());
                 paymentDto.setPaymentGateway("cash");
                 paymentDto.setType(1);
                 Payment curPayment = paymentService.save(paymentDto);
