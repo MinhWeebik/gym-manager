@@ -9,6 +9,7 @@ import com.ringme.cms.model.gym.RawCheckInLog;
 import com.ringme.cms.repository.gym.MemberRepository;
 import com.ringme.cms.repository.gym.MemberSubscriptionRepository;
 import com.ringme.cms.repository.gym.RawCheckInLogRepository;
+import com.ringme.cms.service.gym.CheckInService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -18,10 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 import javax.naming.directory.InvalidAttributesException;
 import java.time.format.DateTimeFormatter;
@@ -41,6 +39,7 @@ public class CheckinController {
     private final MemberRepository memberRepository;
     private final SimpMessagingTemplate messagingTemplate;
     private final RawCheckInLogRepository rawCheckInLogRepository;
+    private final CheckInService checkInService;
 
     @Value("${queue.checkin}")
     private String queueCheckin;
@@ -204,6 +203,22 @@ public class CheckinController {
         } catch (Exception e) {
             log.error("Exception: {}", e.getMessage(), e);
             return "404";
+        }
+    }
+
+    @GetMapping("/graph-data")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> graphData()
+    {
+        try
+        {
+            Map<String, Object> data = checkInService.getGraphData();
+            return ResponseEntity.ok(data);
+        }
+        catch (Exception e)
+        {
+            log.error("Error: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 }

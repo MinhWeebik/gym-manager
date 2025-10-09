@@ -2,6 +2,8 @@ package com.ringme.cms.service.gym;
 
 import com.ringme.cms.dto.gym.PreviousOrderDto;
 import com.ringme.cms.dto.gym.ProductDto;
+import com.ringme.cms.dto.gym.SubscriptionDonutGraphData;
+import com.ringme.cms.model.gym.Membership;
 import com.ringme.cms.model.gym.Product;
 import com.ringme.cms.model.gym.ProductOrder;
 import com.ringme.cms.model.gym.ProductOrderItem;
@@ -18,10 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 @Log4j2
@@ -49,7 +48,7 @@ public class ProductOrderService {
             map.put("products",dtos);
             map.put("type", type);
             map.put("orderId", savedData.getId());
-                rabbitTemplate.convertAndSend(queueCheckout, map);
+            rabbitTemplate.convertAndSend(queueCheckout, map);
             return savedData.getId();
         }
         catch(Exception ex)
@@ -87,5 +86,31 @@ public class ProductOrderService {
         previousOrderDto.setTax(totalTax);
         previousOrderDto.setTotal(totalPrice.add(totalTax));
         return previousOrderDto;
+    }
+
+    public List<SubscriptionDonutGraphData> getDonutGraphData(String range)
+    {
+        List<SubscriptionDonutGraphData> data = new ArrayList<>();
+        List<Product> products = productRepository.getAllProduct();
+        for(Product item :  products)
+        {
+            BigDecimal amount = new BigDecimal(0);
+            if(range.equals("month"))
+            {
+                amount = productOrderRepository.getMonthlyDonutData(item.getId());
+            }
+            else{
+                amount = productOrderRepository.getYearlyDonutData(item.getId());
+            }
+            if(amount!= null && amount.compareTo(BigDecimal.ZERO) > 0)
+            {
+                SubscriptionDonutGraphData donutGraphData = new SubscriptionDonutGraphData();
+                donutGraphData.setRevenue(amount);
+                donutGraphData.setSource(item.getName());
+                data.add(donutGraphData);
+            }
+        }
+        data = data.stream().sorted(Comparator.comparing(SubscriptionDonutGraphData::getRevenue).reversed()).toList();
+        return data;
     }
 }

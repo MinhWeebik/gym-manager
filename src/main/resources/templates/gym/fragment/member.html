@@ -41,16 +41,18 @@
                 </div>
                 <div class="modal-footer">
 
-                    <button type="button" class="btn btn-danger" th:disabled="${model.isRecurring == 0
-              or model.paypalSubscriptionId == null
-              or model.paypalSubscriptionId == ''
+                    <button type="button" class="btn btn-danger" th:if="${
+                    !(model.paypalSubscriptionId == null
+                    or model.paypalSubscriptionId == ''
+                    or !#strings.startsWith(model.paypalSubscriptionId, 'I-'))
+                    }" th:disabled="${model.isRecurring == 0
+              or model.statusSubscription != 1}" th:onclick="|event.stopPropagation(); cancelSubscription()|">Hủy định kỳ</button>
+                    <button type="button" class="btn btn-primary" th:if="${
+                    !(model.paypalSubscriptionId == null
+                    or model.paypalSubscriptionId == ''
+                    or !#strings.startsWith(model.paypalSubscriptionId, 'I-'))
+                    }" th:disabled="${model.isRecurring == 1
               or model.statusSubscription != 1
-              or !#strings.startsWith(model.paypalSubscriptionId, 'I-')}" th:onclick="|event.stopPropagation(); cancelSubscription()|">Hủy định kỳ</button>
-                    <button type="button" class="btn btn-primary" th:disabled="${model.isRecurring == 1
-              or model.paypalSubscriptionId == null
-              or model.paypalSubscriptionId == ''
-              or model.statusSubscription != 1
-              or !#strings.startsWith(model.paypalSubscriptionId, 'I-')
               or allowResub == null}" th:onclick="|event.stopPropagation(); reSubscribe()|">Đăng ký định kỳ lại</button>
                     <button type="submit" class="btn btn-success mr-2">Lưu</button>
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>

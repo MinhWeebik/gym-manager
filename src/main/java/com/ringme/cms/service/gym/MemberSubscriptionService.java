@@ -2,25 +2,23 @@ package com.ringme.cms.service.gym;
 
 import com.ringme.cms.dto.gym.MemberSubscriptionDto;
 import com.ringme.cms.dto.gym.RecalculateDto;
+import com.ringme.cms.dto.gym.SubscriptionDonutGraphData;
 import com.ringme.cms.model.gym.Member;
 import com.ringme.cms.model.gym.MemberSubscription;
 import com.ringme.cms.model.gym.Membership;
 import com.ringme.cms.model.gym.Trainer;
-import com.ringme.cms.repository.gym.MemberRepository;
-import com.ringme.cms.repository.gym.MemberSubscriptionRepository;
-import com.ringme.cms.repository.gym.MembershipRepository;
-import com.ringme.cms.repository.gym.TrainerRepository;
+import com.ringme.cms.repository.gym.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -38,6 +36,8 @@ public class MemberSubscriptionService {
     private final PaypalSubscriptionService  paypalSubscriptionService;
 
     private final TrainerRepository trainerRepository;
+
+    private final RawMemberSubscriptionRepository  rawMemberSubscriptionRepository;
 
     public MemberSubscription save(MemberSubscriptionDto formDto) throws Exception {
         try {
@@ -154,7 +154,7 @@ public class MemberSubscriptionService {
     public Long resub(Long id, Integer status)
     {
         MemberSubscription memberSubscription = memberSubscriptionRepository.findById(id).orElseThrow();
-        memberSubscription.setStatus(1);
+        memberSubscription.setStatus(status);
         if(memberSubscription.getMembership().getType() == 1)
         {
             memberSubscription.setNumberOfVisit(0);
@@ -176,7 +176,7 @@ public class MemberSubscriptionService {
             newEndDate = newStartDate.plusMonths(memberSubscription.getMembership().getDuration());
         }
         memberSubscription.setStartAt(newStartDate);
-        memberSubscription.setEndAt(newEndDate);
+;        memberSubscription.setEndAt(newEndDate);
         memberSubscriptionRepository.save(memberSubscription);
         return memberId;
     }
@@ -207,6 +207,32 @@ public class MemberSubscriptionService {
                 }
             }
         }
+    }
+
+    public List<SubscriptionDonutGraphData> getDonutGraphData(String range)
+    {
+        List<SubscriptionDonutGraphData> data = new ArrayList<>();
+        List<Membership> memberships = membershipRepository.getAllMembership();
+        for(Membership item :  memberships)
+        {
+            BigDecimal amount = new BigDecimal(0);
+            if(range.equals("month"))
+            {
+                amount = rawMemberSubscriptionRepository.getMonthlyDonutData(item.getId());
+            }
+            else{
+                amount = rawMemberSubscriptionRepository.getYearlyDonutData(item.getId());
+            }
+            if(amount!= null && amount.compareTo(BigDecimal.ZERO) > 0)
+            {
+                SubscriptionDonutGraphData donutGraphData = new SubscriptionDonutGraphData();
+                donutGraphData.setRevenue(amount);
+                donutGraphData.setSource(item.getName());
+                data.add(donutGraphData);
+            }
+        }
+        data = data.stream().sorted(Comparator.comparing(SubscriptionDonutGraphData::getRevenue).reversed()).toList();
+        return data;
     }
 }
 

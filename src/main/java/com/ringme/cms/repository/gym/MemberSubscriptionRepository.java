@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Repository
@@ -137,4 +138,15 @@ public interface MemberSubscriptionRepository extends JpaRepository<MemberSubscr
 
     @Query(value = "SELECT * FROM member_subscriptions WHERE status = 1 AND trainer_id = :id", nativeQuery = true)
     List<MemberSubscription> findByTrainerId(@Param("id") Long id);
+
+    @Query(value = "SELECT COUNT(*) FROM member_subscriptions WHERE status = 1 AND MONTH(updated_at) = MONTH(CURDATE())", nativeQuery = true)
+    Integer getThisMonthSoldData();
+
+    @Query(value = "SELECT SUM(m.price) AS total_price FROM member_subscriptions ms INNER JOIN membership m ON m.id = ms.membership_id \n" +
+            "WHERE ms.status = 1 AND m.id = :membershipId AND MONTH(ms.updated_at) = MONTH(CURDATE())", nativeQuery = true)
+    BigDecimal getMonthlyDonutData(@Param("membershipId") Long membershipId);
+
+    @Query(value = "SELECT SUM(m.price) AS total_price FROM member_subscriptions ms INNER JOIN membership m ON m.id = ms.membership_id \n" +
+            "WHERE ms.status = 1 AND m.id = :membershipId AND YEAR(ms.updated_at) = YEAR(CURDATE())", nativeQuery = true)
+    BigDecimal getYearlyDonutData(@Param("membershipId") Long membershipId);
 }

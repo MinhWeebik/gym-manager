@@ -11,6 +11,7 @@ import javassist.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.modelmapper.ModelMapper;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -58,6 +59,12 @@ public class PaymentController {
     private final SimpMessagingTemplate messagingTemplate;
 
     private final ProductOrderRepository productOrderRepository;
+
+    private final RabbitTemplate rabbitTemplate;
+
+    @Value("${queue.membership.checkout}")
+    private String queueMembershipCheckout;
+
     @GetMapping("/create")
     public String update(@RequestParam(value = "id") Long memberId, ModelMap model) {
         log.info("member id: {}", memberId);
@@ -251,6 +258,11 @@ public class PaymentController {
                 if (memberSubscription != null && memberSubscription.getStatus() == 2) {
                     memberSubscription.setStatus(1);
                     memberSubscriptionRepository.save(memberSubscription);
+                    Map<String,Object> map = new HashMap<>();
+                    map.put("paymentId",paymentModel.getId());
+                    map.put("eventType", "PURCHASE");
+                    map.put("memberSubscriptionId", memberSubscription.getId());
+                    rabbitTemplate.convertAndSend(queueMembershipCheckout, map);
                 }
                 return "gym/payment/success";
             } else {
@@ -374,7 +386,7 @@ public class PaymentController {
     }
 
     @GetMapping("/member-pament-graph-data")
-    public ResponseEntity<Map<String, Object>> getMemberPaymentGraphData(@RequestParam(name = "id") Long memberId)
+    public ResponseEntity<Map<String, Object>> getMemberPaymentGraphData(@RequestParam(name = "id", required = false) Long memberId)
     {
         try
         {

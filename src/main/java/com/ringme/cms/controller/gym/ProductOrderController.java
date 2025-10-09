@@ -2,6 +2,7 @@ package com.ringme.cms.controller.gym;
 
 import com.ringme.cms.dto.gym.PaymentDto;
 import com.ringme.cms.dto.gym.ProductDto;
+import com.ringme.cms.dto.gym.SubscriptionDonutGraphData;
 import com.ringme.cms.service.gym.ProductOrderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -54,6 +55,22 @@ public class ProductOrderController {
             map.put("data", productOrderService.getPreviousOrder());
             map.put("message", "success");
             return ResponseEntity.ok(map);
+        }
+        catch (Exception e)
+        {
+            log.error("Error: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @GetMapping("/donut-graph-data")
+    @ResponseBody
+    public ResponseEntity<List<SubscriptionDonutGraphData>> graphData(@RequestParam(name = "range") String range)
+    {
+        try
+        {
+            List<SubscriptionDonutGraphData> data = productOrderService.getDonutGraphData(range);
+            return ResponseEntity.ok(data);
         }
         catch (Exception e)
         {

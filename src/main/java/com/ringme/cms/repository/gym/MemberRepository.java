@@ -170,4 +170,7 @@ public interface MemberRepository extends JpaRepository<Member,Long> {
                 @Param("memberId") Long memberId,
                 @Param("trainerId") Long trainerId
         );
+
+    @Query(value = "SELECT COUNT(*) FROM member WHERE status = 1", nativeQuery = true)
+    Integer getMemberAmount();
 }

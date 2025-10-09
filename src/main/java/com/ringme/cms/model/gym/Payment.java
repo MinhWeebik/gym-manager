@@ -26,7 +26,8 @@ import java.util.List;
                 "    DATE_FORMAT(transaction_date, '%Y-%m') AS payment_month, " +
                 "    SUM(CASE WHEN type = 1 THEN amount WHEN type = 0 THEN -amount ELSE 0 END) AS net_total_amount " +
                 "FROM payment " +
-                "WHERE YEAR(transaction_date) = YEAR(CURDATE()) AND type IN (0, 1) AND status = 1 AND member_id = :memberId " +
+                "WHERE YEAR(transaction_date) = YEAR(CURDATE()) AND type IN (0, 1) AND status = 1 " +
+                "AND (:memberId IS NULL OR member_id = :memberId) " +
                 "GROUP BY payment_month ORDER BY payment_month ASC",
         resultSetMapping = "MonthlyPaymentMapping"
 )

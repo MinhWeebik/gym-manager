@@ -34,4 +34,7 @@ public interface MembershipRepository extends JpaRepository<Membership, Long> {
     Page<Membership> getAll(@Param("name") String name,
                             @Param("status") Integer status,
                             @Param("type") Integer type, Pageable pageable);
+
+    @Query(value = "SELECT * FROM membership WHERE status = 1", nativeQuery = true)
+    List<Membership> getAllMembership();
 }

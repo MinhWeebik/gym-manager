@@ -13,4 +13,16 @@ public interface RawCheckInLogRepository extends JpaRepository<RawCheckInLog, Lo
 
     @Query(value = "SELECT * FROM raw_check_in_log WHERE member_id = :memberId ORDER BY created_at DESC LIMIT 20", nativeQuery = true)
     List<RawCheckInLog> getLogByMemberId(@Param("memberId") Long memberId);
+
+    @Query(value = "SELECT COUNT(DISTINCT member_id) AS visit_count\n" +
+            "FROM raw_check_in_log\n" +
+            "WHERE created_at >= CURDATE()\n" +
+            "  AND created_at < CURDATE() + INTERVAL 1 DAY;\n", nativeQuery = true)
+    Integer getTodayVisit();
+
+    @Query(value  = "SELECT COUNT(*) AS visit_count " +
+            "FROM raw_check_in_log " +
+            "WHERE YEAR(created_at) = YEAR(CURDATE()) " +
+            "  AND MONTH(created_at) = :month ", nativeQuery = true)
+    Integer getDataByMonth(@Param("month") Integer month);
 }

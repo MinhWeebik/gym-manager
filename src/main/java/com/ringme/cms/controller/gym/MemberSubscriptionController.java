@@ -5,6 +5,7 @@ import com.paypal.orders.Order;
 import com.ringme.cms.dto.gym.MemberSubscriptionDto;
 import com.ringme.cms.dto.gym.PaymentDto;
 import com.ringme.cms.dto.gym.RecalculateDto;
+import com.ringme.cms.dto.gym.SubscriptionDonutGraphData;
 import com.ringme.cms.model.gym.MemberSubscription;
 import com.ringme.cms.model.gym.Payment;
 import com.ringme.cms.repository.gym.MemberRepository;
@@ -15,7 +16,10 @@ import com.ringme.cms.utils.AppUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.modelmapper.ModelMapper;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.repository.query.Param;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
@@ -26,10 +30,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.time.format.DateTimeFormatter;
-import java.util.Base64;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Controller
 @Log4j2
@@ -38,6 +39,9 @@ import java.util.Map;
 public class MemberSubscriptionController {
     @Value("${ipv4.address}")
     private String ipv4;
+
+    @Value("${queue.membership.checkout}")
+    private String queueMembershipCheckout;
 
     private final MemberSubscriptionRepository memberSubscriptionRepository;
 
@@ -51,6 +55,7 @@ public class MemberSubscriptionController {
     private final QrCodeService qrCodeService;
     private final PaypalSubscriptionService  paypalSubscriptionService;
     private final MemberRepository memberRepository;
+    private final RabbitTemplate rabbitTemplate;
 
     @GetMapping("/update")
     public String update(@RequestParam(value = "id") Long id, ModelMap model) {
@@ -252,6 +257,11 @@ public class MemberSubscriptionController {
                     paymentDto.setPaymentGateway("cash");
                     paymentDto.setType(1);
                     Payment curPayment = paymentService.save(paymentDto);
+                    Map<String,Object> map = new HashMap<>();
+                    map.put("paymentId",curPayment.getId());
+                    map.put("eventType", "PURCHASE");
+                    map.put("memberSubscriptionId", memberSubscription.getId());
+                    rabbitTemplate.convertAndSend(queueMembershipCheckout, map);
                     redirectAttributes.addFlashAttribute("success", "Thêm thành công!");
                     return AppUtils.goBack(request).orElse("redirect:/member/detail?id=" + memberSubscription.getMember().getId() + "&tab=2");
                 }
@@ -292,6 +302,7 @@ public class MemberSubscriptionController {
             if(paymentGateway.equalsIgnoreCase("paypal"))
             {
                 memberId = memberSubscriptionService.resub(id, 2);
+                curMemberSub = memberSubscriptionRepository.findById(id).orElseThrow();
                 PaymentDto paymentDto = new PaymentDto();
                 paymentDto.setMemberId(curMemberSub.getMember().getId());
                 paymentDto.setDescription(curMemberSub.getMembership().getName());
@@ -340,6 +351,11 @@ public class MemberSubscriptionController {
                 paymentDto.setPaymentGateway("cash");
                 paymentDto.setType(1);
                 Payment curPayment = paymentService.save(paymentDto);
+                Map<String,Object> map = new HashMap<>();
+                map.put("paymentId",curPayment.getId());
+                map.put("eventType", "PURCHASE");
+                map.put("memberSubscriptionId", curMemberSub.getId());
+                rabbitTemplate.convertAndSend(queueMembershipCheckout, map);
                 redirectAttributes.addFlashAttribute("success", "Đăng ký lại thành công");
                 return AppUtils.goBack(request).orElse("redirect:/member/detail?id=" + memberId + "&tab=2");
             }
@@ -350,6 +366,22 @@ public class MemberSubscriptionController {
             log.error("Exception: {}", e.getMessage(), e);
             redirectAttributes.addFlashAttribute("error", "Đăng ký lại thất bại");
             return AppUtils.goBack(request).orElse("redirect:/member/detail?id=" + memberId + "&tab=2");
+        }
+    }
+
+    @GetMapping("/donut-graph-data")
+    @ResponseBody
+    public ResponseEntity<List<SubscriptionDonutGraphData>> graphData(@RequestParam(name = "range") String range)
+    {
+        try
+        {
+            List<SubscriptionDonutGraphData> data = memberSubscriptionService.getDonutGraphData(range);
+            return ResponseEntity.ok(data);
+        }
+        catch (Exception e)
+        {
+            log.error("Error: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 }

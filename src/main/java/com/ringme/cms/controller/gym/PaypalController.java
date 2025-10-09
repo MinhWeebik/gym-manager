@@ -12,6 +12,7 @@ import com.ringme.cms.service.gym.PaymentService;
 import com.ringme.cms.service.gym.PaypalSubscriptionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -43,6 +44,10 @@ public class PaypalController
     @Value("${paypal.product.id}")
     private String DEFAULT_PRODUCT_ID;
 
+    private final RabbitTemplate rabbitTemplate;
+    @Value("${queue.membership.checkout}")
+    private String queueMembershipCheckout;
+
     @PostMapping("/webhook")
     public ResponseEntity<String> handleWebhook(@RequestHeader Map<String, String> headers, @RequestBody String payload) {
         try {
@@ -70,6 +75,11 @@ public class PaypalController
                         memberSubscription.setStartAt(LocalDate.now());
                         memberSubscription.setEndAt(LocalDate.now().plusMonths(memberSubscription.getMembership().getDuration()));
                         memberSubscriptionRepository.save(memberSubscription);
+                        Map<String,Object> map = new HashMap<>();
+                        map.put("paymentId",curPayment.getId());
+                        map.put("eventType", "RENEWAL");
+                        map.put("memberSubscriptionId", memberSubscription.getId());
+                        rabbitTemplate.convertAndSend(queueMembershipCheckout, map);
                     }
                 }
             }

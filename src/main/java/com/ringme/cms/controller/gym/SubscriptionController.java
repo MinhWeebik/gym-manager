@@ -9,13 +9,17 @@ import com.ringme.cms.repository.gym.PaymentRepository;
 import com.ringme.cms.service.gym.PaypalSubscriptionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @Log4j2
@@ -27,6 +31,9 @@ public class SubscriptionController {
     private final PaymentRepository  paymentRepository;
     private final MemberSubscriptionRepository memberSubscriptionRepository;
     private final MemberRepository memberRepository;
+    private final RabbitTemplate rabbitTemplate;
+    @Value("${queue.membership.checkout}")
+    private String queueMembershipCheckout;
 
     @GetMapping("/success")
     public String subscriptionSuccess(@RequestParam("subscription_id") String subscriptionId) {
@@ -45,6 +52,11 @@ public class SubscriptionController {
                 if (memberSubscription != null && memberSubscription.getStatus() == 2) {
                     memberSubscription.setStatus(1);
                     memberSubscriptionRepository.save(memberSubscription);
+                    Map<String,Object> map = new HashMap<>();
+                    map.put("paymentId",paymentModel.getId());
+                    map.put("eventType", "PURCHASE");
+                    map.put("memberSubscriptionId", memberSubscription.getId());
+                    rabbitTemplate.convertAndSend(queueMembershipCheckout, map);
                 }
                 return "gym/payment/success";
             } else {

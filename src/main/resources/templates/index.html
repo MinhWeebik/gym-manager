@@ -10,11 +10,392 @@
 <!-- Main content -->
 <div class="content" layout:fragment="page_content">
     <div class="container-fluid">
-        Hello
+        <div class="row">
+            <div class="col-lg-3 col-6">
+                <!-- small box -->
+                <div class="small-box bg-info">
+                    <div class="inner">
+                        <h3 th:text="${memberAmount}"></h3>
+
+                        <p>Số thành viên</p>
+                    </div>
+                    <div class="icon">
+                        <i class="ion ion-person"></i>
+                    </div>
+                </div>
+            </div>
+            <!-- ./col -->
+            <div class="col-lg-3 col-6">
+                <!-- small box -->
+                <div class="small-box bg-success">
+                    <div class="inner">
+                        <h3 th:text="${todayVisit}"></h3>
+
+                        <p>Số người ghé hôm nay</p>
+                    </div>
+                    <div class="icon">
+                        <i class="ion ion-ios-calendar"></i>
+                    </div>
+                </div>
+            </div>
+            <!-- ./col -->
+            <div class="col-lg-3 col-6">
+                <!-- small box -->
+                <div class="small-box bg-warning">
+                    <div class="inner">
+                        <h3 th:text="${thisMonthSubSold}"></h3>
+
+                        <p>Số gói bán tháng này</p>
+                    </div>
+                    <div class="icon">
+                        <i class="ion ion-cash"></i>
+                    </div>
+                </div>
+            </div>
+            <!-- ./col -->
+            <div class="col-lg-3 col-6">
+                <!-- small box -->
+                <div class="small-box bg-danger">
+                    <div class="inner">
+                        <h3 th:text="${thisMonthProductSold}"></h3>
+
+                        <p>Số sản phẩm bán tháng này</p>
+                    </div>
+                    <div class="icon">
+                        <i class="ion ion-cube"></i>
+                    </div>
+                </div>
+            </div>
+            <!-- ./col -->
+        </div>
+        <div class="row">
+            <!-- Left col -->
+            <section class="col-lg-7 connectedSortable">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-chart-pie mr-1"></i>
+                            Thu nhập
+                        </h3>
+                        <div class="card-tools">
+                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                        </div>
+                    </div><!-- /.card-header -->
+                    <div class="card-body">
+                        <div style="position: relative;">
+                            <canvas id="totalPaymentChart"></canvas>
+                        </div>
+                    </div><!-- /.card-body -->
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fa fa-calendar"></i>
+                            Số lượt ghé thăm
+                        </h3>
+                        <div class="card-tools">
+                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                        </div>
+                    </div><!-- /.card-header -->
+                    <div class="card-body">
+                        <div style="position: relative;">
+                            <canvas id="totalVisitChart"></canvas>
+                        </div>
+                    </div><!-- /.card-body -->
+                </div>
+            </section>
+            <section class="col-lg-5 connectedSortable">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-sack-dollar"></i>
+                            Doanh thu các gói thành viên
+                        </h3>
+                        <div class="card-tools">
+                            <ul class="nav nav-pills ml-auto">
+                                <li class="nav-item">
+                                    <a class="nav-link active" onclick="loadChartData('month')" data-toggle="tab">Tháng</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" onclick="loadChartData('year')" data-toggle="tab">Năm</a>
+                                </li>
+                            </ul>
+
+                        </div>
+                    </div><!-- /.card-header -->
+                    <div class="card-body">
+                        <div style="position: relative;">
+                            <canvas id="revenueDonutChart"></canvas>
+                        </div>
+                    </div><!-- /.card-body -->
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-cart-shopping"></i>
+                            Doanh thu các sản phẩm
+                        </h3>
+                        <div class="card-tools">
+                            <ul class="nav nav-pills ml-auto">
+                                <li class="nav-item">
+                                    <a class="nav-link active" onclick="loadProductChartData('month')" data-toggle="tab">Tháng</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" onclick="loadProductChartData('year')" data-toggle="tab">Năm</a>
+                                </li>
+                            </ul>
+
+                        </div>
+                    </div><!-- /.card-header -->
+                    <div class="card-body">
+                        <div style="position: relative;">
+                            <canvas id="productDonutChart"></canvas>
+                        </div>
+                    </div><!-- /.card-body -->
+                </div>
+            </section>
+        </div>
     </div>
 </div>
 <!-- PAGE JAVASCRIPT CODE -->
 <script layout:fragment="content_page_script">
+    let totalSaleChartInstance;
+    let totalVisitChartInstance;
+    let revenueDonutChartInstance;
+    let productDonutChartInstance;
+    let range = 'month';
+    let productRange = 'month';
+    $(function () {
+        // Make the dashboard widgets sortable Using jQuery UI
+        $('.connectedSortable').sortable({
+            placeholder: 'sort-highlight',
+            connectWith: '.connectedSortable',
+            handle: '.card-header',
+            forcePlaceholderSize: true,
+            zIndex: 999999,
+            stop: function (event, ui) {
+                // 'ui.item' is the jQuery object for the card that was just moved
+                const movedCard = ui.item;
+
+                // Check if the card we just moved contains our specific chart canvas
+                if (movedCard.find('#totalPaymentChart').length > 0) {
+                    renderChart();
+                }
+                else if(movedCard.find('#totalVisitChart').length > 0) {
+                    renderVisitChart()
+                }
+                else if(movedCard.find('#revenueDonutChart').length > 0) {
+                    loadChartData(range)
+                }
+
+                else if(movedCard.find('#productDonutChart').length > 0) {
+                    loadProductChartData(productRange)
+                }
+            }
+        });
+
+        // Optional: Add a move cursor to the card headers
+        $('.connectedSortable .card-header').css('cursor', 'move');
+
+    });
+
+    function renderRevenueDonutChart(rawData) {
+        const ctx = document.getElementById('revenueDonutChart').getContext('2d');
+        const labels = rawData.map(item => item.source);
+        const data = rawData.map(item => item.revenue);
+
+        if (revenueDonutChartInstance) {
+            revenueDonutChartInstance.destroy();
+        }
+
+        // STEP 3: Create the new chart instance
+        revenueDonutChartInstance = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Revenue',
+                    data: data,
+                    backgroundColor: ['#007bff', '#28a745', '#ffc107'],
+                    borderColor: '#ffffff',
+                    borderWidth: 3
+                }]
+            },
+            options: { /* ... your options from before ... */ }
+        });
+    }
+
+    function loadChartData(rangeInput) {
+
+        range = rangeInput
+
+        $.ajax({
+            url: 'http://localhost:8086/nexia-cms/subscription/donut-graph-data?range=' + range,
+            method: 'GET',
+            dataType: 'json'
+        })
+            .done(function (data) {
+                renderRevenueDonutChart(data);
+            })
+            .fail(function (jqXHR, textStatus, errorThrown) {
+                console.error("AJAX Error:", textStatus, errorThrown);
+            })
+    }
+
+    function renderProductDonutChart(rawData) {
+        const ctx = document.getElementById('productDonutChart').getContext('2d');
+        const labels = rawData.map(item => item.source);
+        const data = rawData.map(item => item.revenue);
+
+        if (productDonutChartInstance) {
+            productDonutChartInstance.destroy();
+        }
+
+        // STEP 3: Create the new chart instance
+        productDonutChartInstance = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Revenue',
+                    data: data,
+                    backgroundColor: ['#007bff', '#28a745', '#ffc107'],
+                    borderColor: '#ffffff',
+                    borderWidth: 3
+                }]
+            },
+            options: { /* ... your options from before ... */ }
+        });
+    }
+
+    function loadProductChartData(rangeInput) {
+
+        productRange = rangeInput
+
+        $.ajax({
+            url: 'http://localhost:8086/nexia-cms/product-order/donut-graph-data?range=' + productRange,
+            method: 'GET',
+            dataType: 'json'
+        })
+            .done(function (data) {
+                renderProductDonutChart(data);
+            })
+            .fail(function (jqXHR, textStatus, errorThrown) {
+                console.error("AJAX Error:", textStatus, errorThrown);
+            })
+    }
+
+    async function renderChart() {
+        if(totalSaleChartInstance)
+        {
+            totalSaleChartInstance.destroy();
+        }
+        const ctx = document.getElementById('totalPaymentChart').getContext('2d');
+        const chartOptions = {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            },
+            plugins: {
+                title: {
+                    display: false
+                },
+                legend: {
+                    display: true,
+                    position: 'top'
+                }
+            },
+            responsive: true,
+        };
+
+        totalSaleChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: [],
+                datasets: []
+            },
+            options: chartOptions
+        });
+
+        try {
+            const response = await fetch(`http://localhost:8086/nexia-cms/payment/member-pament-graph-data`);
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
+            const apiData = await response.json();
+
+            totalSaleChartInstance.data.labels = apiData.labels;
+            totalSaleChartInstance.data.datasets = apiData.datasets;
+            totalSaleChartInstance.update();
+
+        } catch (error) {
+            console.error("Failed to fetch chart data:", error);
+        }
+    }
+
+    async function renderVisitChart() {
+        if(totalVisitChartInstance)
+        {
+            totalVisitChartInstance.destroy();
+        }
+        const ctx = document.getElementById('totalVisitChart').getContext('2d');
+        const chartOptions = {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            },
+            plugins: {
+                title: {
+                    display: false
+                },
+                legend: {
+                    display: true,
+                    position: 'top'
+                }
+            },
+            responsive: true,
+        };
+
+        totalVisitChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: [],
+                datasets: []
+            },
+            options: chartOptions
+        });
+
+        try {
+            const response = await fetch(`http://localhost:8086/nexia-cms/check-in/graph-data`);
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
+            const apiData = await response.json();
+
+            totalVisitChartInstance.data.labels = apiData.labels;
+            totalVisitChartInstance.data.datasets = apiData.datasets;
+            totalVisitChartInstance.update();
+
+        } catch (error) {
+            console.error("Failed to fetch chart data:", error);
+        }
+    }
+    renderVisitChart();
+    renderChart();
+    loadChartData(range);
+    loadProductChartData(productRange)
 </script>
 </body>
 </html>

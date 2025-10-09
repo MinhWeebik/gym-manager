@@ -2,6 +2,7 @@ package com.ringme.cms.controller.sys;
 
 
 import com.ringme.cms.dto.sys.UserSecurity;
+import com.ringme.cms.repository.gym.*;
 import com.ringme.cms.service.sys.UserService;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +10,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.client.RestTemplate;
@@ -25,6 +27,16 @@ public class LoginController {
     RestTemplate restTemplate;
     @Autowired
     private UserService userService;
+    @Autowired
+    private MemberRepository memberRepository;
+    @Autowired
+    private RawCheckInLogRepository  rawCheckInLogRepository;
+    @Autowired
+    private MemberSubscriptionRepository memberSubscriptionRepository;
+    @Autowired
+    private ProductOrderRepository productOrderRepository;
+    @Autowired
+    private RawMemberSubscriptionRepository rawMemberSubscriptionRepository;
 
     @GetMapping("/login")
     public String login(Model model, HttpServletRequest request, String username, String password) {
@@ -70,7 +82,11 @@ public class LoginController {
     }
 
     @GetMapping("/index")
-    public String index(HttpServletRequest httpServletRequest, Model model) {
+    public String index(HttpServletRequest httpServletRequest, ModelMap model) {
+        model.put("memberAmount", memberRepository.getMemberAmount());
+        model.put("todayVisit", rawCheckInLogRepository.getTodayVisit());
+        model.put("thisMonthSubSold", rawMemberSubscriptionRepository.getThisMonthSoldData());
+        model.put("thisMonthProductSold", productOrderRepository.getThisMonthSoldData());
         return "index";
     }
 }
