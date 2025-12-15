@@ -86,7 +86,8 @@ public class SecurityConfig {
                         "/sockjs-node/**",           // SockJS node
                         "/check-in-websocket/**",
                         "/paypal-websocket/**",
-                        "/check-in/**").permitAll()
+                        "/check-in/**",
+                        "/setup-password").permitAll()
                 .antMatchers("/**").authenticated().and()
 
                 .addFilterBefore(captchaFilter(), UsernamePasswordAuthenticationFilter.class)

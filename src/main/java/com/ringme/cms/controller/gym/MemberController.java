@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.modelmapper.ModelMapper;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -221,6 +222,11 @@ public class MemberController
                 }
                 totalScheduleRecord = appointmentInstanceRepository.getTotalRecord(scheduleStatus, id);
             }
+            boolean isReset = true;
+            if((member.getPassword()==null || member.getPassword().isEmpty()) && member.getStatus()==0)
+            {
+                isReset = false;
+            }
             model.put("image", member.getImageUrl());
             model.put("model", formDto);
             model.put("tab", tab);
@@ -239,6 +245,7 @@ public class MemberController
             model.put("scheduleType", scheduleType);
             model.put("scheduleStatus", scheduleStatus);
             model.put("schedule", scheduleList);
+            model.put("isReset", isReset);
             return "gym/member/detail";
         } catch (Exception e) {
             log.error("Exception: {}", e.getMessage(), e);
@@ -264,7 +271,14 @@ public class MemberController
                 redirectAttributes.addFlashAttribute("success", "Cập nhật thành công!");
             }
             return AppUtils.goBack(request).orElse("redirect:/member/detail?id=" + formDto.getId());
-        } catch (Exception e) {
+        }
+        catch (DuplicateKeyException e)
+        {
+            log.error("Exception: {}", e.getMessage(), e);
+            return AppUtils.goBackWithError(request, redirectAttributes, "model", bindingResult, formDto, e.getMessage())
+                    .orElse("redirect:/member/detail?id=" + formDto.getId());
+        }
+        catch (Exception e) {
             log.error("Exception: {}", e.getMessage(), e);
             return AppUtils.goBackWithError(request, redirectAttributes, "model", bindingResult, formDto, "Error in server!")
                     .orElse("redirect:/member/detail?id=" + formDto.getId());
@@ -311,6 +325,38 @@ public class MemberController
         {
             log.error("Error: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @GetMapping("/resend-token")
+    public String resendToken(@RequestParam(name = "id") Long id,
+                       RedirectAttributes redirectAttributes,
+                       HttpServletRequest request) {
+        try {
+            memberService.resendToken(id, "resend");
+            redirectAttributes.addFlashAttribute("success", "Gửi lại mã đặt mật khẩu thành công");
+            return AppUtils.goBack(request).orElse("redirect:/member/detail?id=" + id);
+        }
+        catch (Exception e) {
+            log.error("Exception: {}", e.getMessage(), e);
+            redirectAttributes.addFlashAttribute("error", "Gửi lại mã đặt mật khẩu thất bại");
+            return AppUtils.goBack(request).orElse("redirect:/member/detail?id=" + id);
+        }
+    }
+
+    @GetMapping("/reset-password")
+    public String resetPassword(@RequestParam(name = "id") Long id,
+                       RedirectAttributes redirectAttributes,
+                       HttpServletRequest request) {
+        try {
+            memberService.resendToken(id, "reset");
+            redirectAttributes.addFlashAttribute("success", "Đã gửi mã reset mật khẩu");
+            return AppUtils.goBack(request).orElse("redirect:/member/detail?id=" + id);
+        }
+        catch (Exception e) {
+            log.error("Exception: {}", e.getMessage(), e);
+            redirectAttributes.addFlashAttribute("error", "Gửi mã reset mật khẩu thất bại");
+            return AppUtils.goBack(request).orElse("redirect:/member/detail?id=" + id);
         }
     }
 }

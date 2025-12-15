@@ -191,4 +191,10 @@ public interface MemberRepository extends JpaRepository<Member,Long> {
     @Query(value = "UPDATE member m INNER JOIN attendance a ON a.member_id = m.id SET m.coin = m.coin + :coin WHERE a.scheduled_class_instance_id IN :ids", nativeQuery = true)
     void bulkUpdateCoin(@Param("ids") List<Long> ids,
                     @Param("coin") Integer coin);
+
+    @Query(value = "SELECT * FROM member WHERE email = :email AND status = 1 AND (:id IS NULL OR id != :id)", nativeQuery = true)
+    Optional<Member> findByEmail(@Param("email") String email, @Param("id") Long id);
+
+    @Query(value = "SELECT * FROM member WHERE phone_number = :phoneNumber AND status = 1 AND (:id IS NULL OR id != :id)", nativeQuery = true)
+    Optional<Member> findByPhoneNumber(@Param("phoneNumber") String phoneNumber, @Param("id") Long id);
 }

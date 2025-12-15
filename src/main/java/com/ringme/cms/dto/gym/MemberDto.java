@@ -43,6 +43,7 @@ public class MemberDto {
     private String city;
     private String district;
     private String note;
+    private boolean isReset;
     private List<MemberSubscription> normalSubscription = new ArrayList<>();
     private List<MemberSubscription> addonSubscription = new ArrayList<>();
     private List<MemberSubscription> oldSubscription = new ArrayList<>();

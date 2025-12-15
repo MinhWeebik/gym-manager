@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Lỗi Liên Kết | Iron Gym</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .card {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+        .icon-box {
+            background-color: #ffebee;
+            color: #d32f2f;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+        }
+        h2 { color: #333; margin-bottom: 10px; }
+        p { color: #666; line-height: 1.5; margin-bottom: 25px; }
+        .btn {
+            background-color: #555;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: bold;
+            display: inline-block;
+        }
+        .btn:hover { background-color: #333; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div class="icon-box">
+        <!-- Error X Icon -->
+        <svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+    </div>
+    <h2>Liên kết không hợp lệ</h2>
+    <p>
+        Rất tiếc, đường dẫn này đã hết hạn hoặc không tồn tại.
+        <br><br>
+        Vui lòng liên hệ quầy lễ tân để nhận đường dẫn kích hoạt mới.
+    </p>
+</div>
+
+</body>
+</html>

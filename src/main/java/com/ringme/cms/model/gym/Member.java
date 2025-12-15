@@ -73,6 +73,9 @@ public class Member {
     @Column(name = "coin")
     private Integer coin;
 
+    @Column(name = "password")
+    private String password;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
@@ -90,4 +93,7 @@ public class Member {
 
     @OneToMany(mappedBy = "member", fetch = FetchType.LAZY)
     private List<Appointment> appointments;
+
+    @OneToOne(mappedBy = "member", fetch = FetchType.EAGER)
+    private VerificationToken verificationToken;
 }
