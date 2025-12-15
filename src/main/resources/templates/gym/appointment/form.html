@@ -362,7 +362,7 @@
 
     curForm.on('submit', function(event) {
         console.log(isRecurrentUpdated, curRecurrentType, id, isTimeUpdated, onlyTimeChanged)
-        if(!id)
+        if(!id || (isRecurrentUpdated && curRecurrentType === 'NONE'))
         {
             curForm[0].submit();
         }

@@ -174,8 +174,8 @@ public class MemberSubscriptionController {
                                 Double.parseDouble(paymentDto.getAmount().toString()),
                                 "USD",
                                 paymentDto.getDescription(),
-                                "http://" + ipv4  + ":8086/nexia-cms/payment/cancel/" + curPayment.getId(),
-                                "http://" + ipv4  + ":8086/nexia-cms/payment/success"
+                                "https://" + ipv4  + "/nexia-cms/payment/cancel/" + curPayment.getId(),
+                                "https://" + ipv4  + "/nexia-cms/payment/success"
                         );
 
                         String approvalLink = paypalService.getApprovalLink(order)
@@ -200,7 +200,7 @@ public class MemberSubscriptionController {
                         return "redirect:/member/detail?id=" + paymentDto.getMemberId() + "&tab=" + paymentDto.getTab();
                     }
                     else if(formDto.getIsRecurring() == 1){
-                        String baseUrl = "http://" + ipv4  + ":8086/nexia-cms"; // Your base URL
+                        String baseUrl = "https://" + ipv4  + "/nexia-cms"; // Your base URL
                         String returnUrl = baseUrl + "/subscription/success";
                         String approvalLink = "";
                         String planId = memberSubscription.getMembership().getPaypalPlanId();
@@ -316,8 +316,8 @@ public class MemberSubscriptionController {
                         Double.parseDouble(paymentDto.getAmount().toString()),
                         "USD",
                         paymentDto.getDescription(),
-                        "http://" + ipv4  + ":8086/nexia-cms/payment/cancel/" + curPayment.getId(),
-                        "http://" + ipv4  + ":8086/nexia-cms/payment/success"
+                        "https://" + ipv4  + "/nexia-cms/payment/cancel/" + curPayment.getId(),
+                        "https://" + ipv4  + "/nexia-cms/payment/success"
                 );
 
                 String approvalLink = paypalService.getApprovalLink(order)

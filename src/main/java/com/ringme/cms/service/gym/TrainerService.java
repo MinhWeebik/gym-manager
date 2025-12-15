@@ -41,6 +41,8 @@ public class TrainerService {
 
     private final MemberSubscriptionRepository  memberSubscriptionRepository;
 
+    private final ImageBBService imageBBService;
+
     public List<AjaxSearchDto> ajaxSearchTrainer(String input) {
         return Helper.listAjax(trainerRepository.ajaxSearchTrainer(Helper.processStringSearch(input)),1);
     }
@@ -70,8 +72,8 @@ public class TrainerService {
             trainer.setHireDate(LocalDateTime.parse(formDto.getHireDateString(), dateTimeFormatter));
 
             if (formDto.getImageUpload() != null && !formDto.getImageUpload().isEmpty()) {
-                Path fileName = uploadFile.createImageFile(formDto.getImageUpload(), "trainer");
-                trainer.setImageUrl(File.separator + fileName);
+                String fileName = imageBBService.uploadImage(formDto.getImageUpload());
+                trainer.setImageUrl(fileName);
             }
             trainerRepository.save(trainer);
         } catch (Exception e) {

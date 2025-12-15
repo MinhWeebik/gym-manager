@@ -174,7 +174,7 @@
     });
 
     function updateEvent(event, revertFunc, delta) {
-         if(event.type == 1 || event.type == 2 || (event.type == 0 && event.recurring == false) ) {
+         if(event.recurring == false) {
              Swal.fire({
                  title: 'Xác nhận thay đổi',
                  text: "Bạn có chắc chắn muốn di chuyển lịch tập này không?",
@@ -223,7 +223,7 @@
                  }
              });
          }
-         else if(event.type == 0 && event.recurring == true){
+         else if(event.recurring == true){
              const newStart = event.start;
              const oldStart = newStart.clone().subtract(delta);
              const areDatesTheSame = newStart.isSame(oldStart, 'day');

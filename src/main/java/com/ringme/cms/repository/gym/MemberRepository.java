@@ -5,6 +5,7 @@ import com.ringme.cms.model.gym.MemberSubscription;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -81,7 +82,7 @@ public interface MemberRepository extends JpaRepository<Member,Long> {
     @Query(value = "SELECT m.* " +
             "FROM attendance a " +
             "INNER JOIN member m ON m.id = a.member_id " +
-            "WHERE a.scheduled_class_id = :id " +
+            "WHERE a.scheduled_class_instance_id = :id " +
             "  AND a.booking_time = :date " +
             "  AND (LOWER(:name) IS NULL OR CONCAT(m.first_name, ' ', m.last_name) LIKE LOWER(CONCAT('%', :name, '%'))) " +
             "  AND (:gender IS NULL OR m.gender = :gender) " +
@@ -173,4 +174,21 @@ public interface MemberRepository extends JpaRepository<Member,Long> {
 
     @Query(value = "SELECT COUNT(*) FROM member WHERE status = 1", nativeQuery = true)
     Integer getMemberAmount();
+
+    @Modifying
+    @Query(value = "UPDATE member m " +
+            "INNER JOIN ( " +
+            "    SELECT a.member_id, SUM(sci.price) as total_price " +
+            "    FROM attendance a " +
+            "    INNER JOIN scheduled_class_instance sci ON sci.id = a.scheduled_class_instance_id " +
+            "    WHERE sci.id IN :ids " +
+            "    GROUP BY a.member_id " +
+            ") AS refund_data ON m.id = refund_data.member_id " +
+            "SET m.coin = m.coin + refund_data.total_price", nativeQuery = true)
+    void refundCoin(@Param("ids") List<Long> ids);
+
+    @Modifying
+    @Query(value = "UPDATE member m INNER JOIN attendance a ON a.member_id = m.id SET m.coin = m.coin + :coin WHERE a.scheduled_class_instance_id IN :ids", nativeQuery = true)
+    void bulkUpdateCoin(@Param("ids") List<Long> ids,
+                    @Param("coin") Integer coin);
 }

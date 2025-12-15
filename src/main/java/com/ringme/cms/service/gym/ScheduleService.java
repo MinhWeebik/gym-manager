@@ -94,6 +94,7 @@ public class ScheduleService {
 
 //    @Scheduled(cron = "0 * * * * ?")
     @Scheduled(cron = "0 */15 * * * *")
+    @Transactional
     public void checkExpiredClass()
     {
         log.info("Checking expired class at {}", LocalDateTime.now());
@@ -103,7 +104,7 @@ public class ScheduleService {
             List<Attendance> todayClass = attendanceRepository.getTodayClass();
             for (Attendance item : todayClass)
             {
-                if(item.getScheduledClass().getTo().isBefore(time))
+                if(item.getScheduledClassInstance().getTo().isBefore(time))
                 {
                     item.setStatus(-1);
                     attendanceRepository.save(item);

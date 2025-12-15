@@ -105,7 +105,7 @@
                     <a th:href="@{'/member/detail?id=' + ${member.id}}" style="text-decoration:none;">
                         <div class="border square bg-light" th:classappend="${member.getStatus() == 0 ? 'disable-member' : ''}">
                             <div class="member-image-container">
-                                <img th:src="${@environment.getProperty('domain.nginx')} + ${member.imageUrl}" class="rounded-circle" th:if="${member.imageUrl!=null}"/>
+                                <img th:src="${member.imageUrl}" class="rounded-circle" th:if="${member.imageUrl!=null}"/>
                                 <img th:src="@{/img/no_pfp_male.jpg}" class="rounded-circle"
                                      th:if="${member.imageUrl == null and member.gender == 1}" />
                                 <img th:src="@{/img/no_pfp_female.jpg}" class="rounded-circle"

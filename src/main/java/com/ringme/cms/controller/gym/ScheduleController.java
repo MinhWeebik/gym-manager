@@ -53,6 +53,8 @@ public class ScheduleController {
     private final AppointmentRepository appointmentRepository;
     private final AppointmentInstanceService appointmentInstanceService;
     private final AppointmentInstanceRepository appointmentInstanceRepository;
+    private final ScheduledClassInstanceService scheduledClassInstanceService;
+    private final ScheduledClassInstanceRepository scheduledClassInstanceRepository;
 
     @RequestMapping(value = "/index")
     private String index() {
@@ -80,15 +82,12 @@ public class ScheduleController {
                 }
             }
             List<CalenderEventDto> calenderEventDtoList = new ArrayList<>();
-            List<ScheduledClass> scheduledClasses;
-            List<ScheduledClass> repeatedSchedule;
+            List<ScheduledClassInstance> scheduledClassInstances = new ArrayList<>();
             if(trainerId == null){
-                scheduledClasses = scheduledClassService.getAllScheduledClasses(startTime,endTime, null);
-                repeatedSchedule = scheduledClassService.getAllRepeatedSchedule(startTime,endTime, null);
+                scheduledClassInstances = scheduledClassInstanceService.getAllInstances(startTime, endTime, null);
             }
             else {
-                scheduledClasses = scheduledClassService.getAllScheduledClasses(startTime,endTime, trainerId);
-                repeatedSchedule = scheduledClassService.getAllRepeatedSchedule(startTime,endTime, trainerId);
+                scheduledClassInstances = scheduledClassInstanceService.getAllInstances(startTime, endTime, trainerId);
                 List<AppointmentInstance> appointmentInstances = appointmentInstanceService.getAllAppointmentService(startTime, endTime, trainerId);
                 for(AppointmentInstance appointmentInstance : appointmentInstances){
                     Appointment item = appointmentInstance.getAppointment();
@@ -105,371 +104,20 @@ public class ScheduleController {
                 }
 
             }
-            for(ScheduledClass scheduledClass : scheduledClasses){
-                Integer numberOfAttendances = attendanceRepository.getNumberOfAttendance(scheduledClass.getId(), scheduledClass.getDate());
+            for(ScheduledClassInstance scheduledClassInstance : scheduledClassInstances){
+                ScheduledClass scheduledClass = scheduledClassInstance.getScheduledClass();
+                Integer numberOfAttendances = attendanceRepository.getNumberOfAttendance(scheduledClassInstance.getId());
                 CalenderEventDto item = new CalenderEventDto();
-                item.setEventName(scheduledClass.getClasses().getName() + " (" + numberOfAttendances  + "/" + scheduledClass.getCapacity() + ")");
+                item.setEventName(scheduledClass.getClasses().getName() + " (" + numberOfAttendances  + "/" + scheduledClassInstance.getCapacity() + ")");
                 item.setCategoryColor(scheduledClass.getBackgroundColor());
                 item.setCategoryColorBorder(scheduledClass.getBackgroundColor());
-                item.setEventId(scheduledClass.getId().toString());
-                item.setStartTime(scheduledClass.getDate().atTime(scheduledClass.getFrom()));
-                item.setEndTime(scheduledClass.getDate().atTime(scheduledClass.getTo()));
+                item.setEventId(scheduledClassInstance.getId().toString());
+                item.setStartTime(scheduledClassInstance.getDate().atTime(scheduledClassInstance.getFrom()));
+                item.setEndTime(scheduledClassInstance.getDate().atTime(scheduledClassInstance.getTo()));
+                item.setRecurring(scheduledClassInstance.getIsRepeat() == 1);
                 item.setType(1);
                 calenderEventDtoList.add(item);
             }
-            for(ScheduledClass item : repeatedSchedule)
-            {
-                if(item.getRepeat() == RecurrenceType.WEEKLY)
-                {
-                    DayOfWeek dayOfWeek = item.getDate().getDayOfWeek();
-                    List<LocalDate> dayOfWeekList = new ArrayList<>();
-                    LocalDate firstCloseDOW = startTime.with(TemporalAdjusters.nextOrSame(dayOfWeek));
-                    while (!firstCloseDOW.isAfter(endTime)) {
-                        dayOfWeekList.add(firstCloseDOW);
-                        firstCloseDOW = firstCloseDOW.plusWeeks(1);
-                    }
-
-                    dayOfWeekList.removeIf(date -> date.isBefore(item.getDate()));
-                    if(item.getEndRecur()!=null)
-                    {
-                        dayOfWeekList.removeIf(date -> date.isAfter(item.getEndRecur()));
-                    }
-                    for(LocalDate dayOfWeekItem : dayOfWeekList )
-                    {
-                        Integer numberOfAttendances = attendanceRepository.getNumberOfAttendance(item.getId(), dayOfWeekItem);
-                        CalenderEventDto calenderEventDto = new CalenderEventDto();
-                        calenderEventDto.setEventName(item.getClasses().getName() + " (" + numberOfAttendances  + "/" + item.getCapacity() + ")");
-                        calenderEventDto.setCategoryColor(item.getBackgroundColor());
-                        calenderEventDto.setCategoryColorBorder(item.getBackgroundColor());
-                        calenderEventDto.setEventId(item.getId().toString());
-                        calenderEventDto.setStartTime(dayOfWeekItem.atTime(item.getFrom()));
-                        calenderEventDto.setEndTime(dayOfWeekItem.atTime(item.getTo()));
-                        calenderEventDto.setRecurring(true);
-                        calenderEventDto.setType(1);
-                        calenderEventDtoList.add(calenderEventDto);
-                    }
-                }
-                else if(item.getRepeat() == RecurrenceType.FORTNIGHTLY)
-                {
-                    calenderEventDtoList.addAll(ProcessWeeklyWithInterval(2, item, startTime, endTime));
-
-                }
-                else if(item.getRepeat() == RecurrenceType.THREE_WEEKLY)
-                {
-                    calenderEventDtoList.addAll(ProcessWeeklyWithInterval(3, item, startTime, endTime));
-                }
-                else if(item.getRepeat() == RecurrenceType.FOUR_WEEKLY)
-                {
-                    calenderEventDtoList.addAll(ProcessWeeklyWithInterval(4, item, startTime, endTime));
-                }
-                else if(item.getRepeat() == RecurrenceType.SIX_WEEKLY)
-                {
-                    calenderEventDtoList.addAll(ProcessWeeklyWithInterval(6, item, startTime, endTime));
-                }
-                else if(item.getRepeat() == RecurrenceType.EIGHT_WEEKLY)
-                {
-                    calenderEventDtoList.addAll(ProcessWeeklyWithInterval(8, item, startTime, endTime));
-                }
-                else if(item.getRepeat() == RecurrenceType.MONTHLY)
-                {
-                    int date = item.getDate().getDayOfMonth();
-                    LocalDate monthIterator = startTime.withDayOfMonth(1);
-                    while(!monthIterator.isAfter(endTime))
-                    {
-                        YearMonth currentMonth = YearMonth.from(monthIterator);
-                        if (currentMonth.isValidDay(date)) {
-                            LocalDate occurrenceDate = currentMonth.atDay(date);
-                            if (!occurrenceDate.isBefore(item.getDate()) &&
-                                    (item.getEndRecur() == null || !occurrenceDate.isAfter(item.getEndRecur())) &&
-                                    !occurrenceDate.isBefore(startTime) && !occurrenceDate.isAfter(endTime)) {
-                                Integer numberOfAttendances = attendanceRepository.getNumberOfAttendance(item.getId(), occurrenceDate);
-                                CalenderEventDto calenderEventDto = new CalenderEventDto();
-                                calenderEventDto.setEventName(item.getClasses().getName() + " (" + numberOfAttendances  + "/" + item.getCapacity() + ")");
-                                calenderEventDto.setCategoryColor(item.getBackgroundColor());
-                                calenderEventDto.setCategoryColorBorder(item.getBackgroundColor());
-                                calenderEventDto.setEventId(item.getId().toString());
-                                calenderEventDto.setStartTime(occurrenceDate.atTime(item.getFrom()));
-                                calenderEventDto.setEndTime(occurrenceDate.atTime(item.getTo()));
-                                calenderEventDto.setRecurring(true);
-                                calenderEventDto.setType(1);
-                                calenderEventDtoList.add(calenderEventDto);
-                            }
-
-                        }
-                        monthIterator = monthIterator.plusMonths(1);
-                    }
-                }
-                else if(item.getRepeat() == RecurrenceType.DAILY)
-                {
-                    LocalDate currentDate = startTime;
-                    while(!currentDate.isAfter(endTime))
-                    {
-                        if (!currentDate.isBefore(item.getDate()) &&
-                                (item.getEndRecur() == null || !currentDate.isAfter(item.getEndRecur())) &&
-                                !currentDate.isBefore(startTime) && !currentDate.isAfter(endTime)) {
-                            Integer numberOfAttendances = attendanceRepository.getNumberOfAttendance(item.getId(), currentDate);
-                            CalenderEventDto calenderEventDto = new CalenderEventDto();
-                            calenderEventDto.setEventName(item.getClasses().getName() + " (" + numberOfAttendances  + "/" + item.getCapacity() + ")");
-                            calenderEventDto.setCategoryColor(item.getBackgroundColor());
-                            calenderEventDto.setCategoryColorBorder(item.getBackgroundColor());
-                            calenderEventDto.setEventId(item.getId().toString());
-                            calenderEventDto.setStartTime(currentDate.atTime(item.getFrom()));
-                            calenderEventDto.setEndTime(currentDate.atTime(item.getTo()));
-                            calenderEventDto.setRecurring(true);
-                            calenderEventDto.setType(1);
-                            calenderEventDtoList.add(calenderEventDto);
-                        }
-                        currentDate = currentDate.plusDays(1);
-                    }
-                }
-            }
-            List<BlockedTime> noRepeatBlockedTime = blockedTimeService.getAllNonRepeated(startTime, endTime);
-            for (BlockedTime item : noRepeatBlockedTime) {
-                CalenderEventDto calenderEventDto = new CalenderEventDto();
-                calenderEventDto.setEventName("");
-                calenderEventDto.setCategoryColor("rgba(170, 170, 170, 0.5)");
-                calenderEventDto.setCategoryColorBorder("rgba(170, 170, 170, 0.5)");
-                calenderEventDto.setEventId("blocked-" + item.getId());
-                calenderEventDto.setStartTime(item.getDate().atTime(item.getFrom()));
-                calenderEventDto.setEndTime(item.getDate().atTime(item.getTo()));
-                calenderEventDto.setRecurring(false);
-                calenderEventDto.setType(2);
-                calenderEventDto.setOverlap(false);
-                calenderEventDtoList.add(calenderEventDto);
-            }
-            List<BlockedTime> repeatBlockedTime = blockedTimeService.getAllRepeated(startTime, endTime);
-            for(BlockedTime item : repeatBlockedTime) {
-                if(item.getRepeat() == RecurrenceType.WEEKLY)
-                {
-                    DayOfWeek dayOfWeek = item.getDate().getDayOfWeek();
-                    List<LocalDate> dayOfWeekList = new ArrayList<>();
-                    LocalDate firstCloseDOW = startTime.with(TemporalAdjusters.nextOrSame(dayOfWeek));
-                    while (!firstCloseDOW.isAfter(endTime)) {
-                        dayOfWeekList.add(firstCloseDOW);
-                        firstCloseDOW = firstCloseDOW.plusWeeks(1);
-                    }
-
-                    dayOfWeekList.removeIf(date -> date.isBefore(item.getDate()));
-                    if(item.getEndRecur()!=null)
-                    {
-                        dayOfWeekList.removeIf(date -> date.isAfter(item.getEndRecur()));
-                    }
-                    for(LocalDate dayOfWeekItem : dayOfWeekList )
-                    {
-                        calenderEventDtoList.removeIf(calenderEventDto -> {
-                            if(calenderEventDto.getType() < 2)
-                            {
-                                if(calenderEventDto.getStartTime().isBefore(dayOfWeekItem.atTime(item.getTo())) &&
-                                        calenderEventDto.getEndTime().isAfter(dayOfWeekItem.atTime(item.getFrom())))
-                                {
-                                    return true;
-                                }
-                            }
-                            return false;
-                        });
-                        CalenderEventDto calenderEventDto = new CalenderEventDto();
-                        calenderEventDto.setEventName("");
-                        calenderEventDto.setCategoryColor("rgba(170, 170, 170, 0.5)");
-                        calenderEventDto.setCategoryColorBorder("rgba(170, 170, 170, 0.5)");
-                        calenderEventDto.setEventId("blocked-" + item.getId());
-                        calenderEventDto.setStartTime(dayOfWeekItem.atTime(item.getFrom()));
-                        calenderEventDto.setEndTime(dayOfWeekItem.atTime(item.getTo()));
-                        calenderEventDto.setRecurring(false);
-                        calenderEventDto.setType(2);
-                        calenderEventDto.setOverlap(false);
-                        calenderEventDtoList.add(calenderEventDto);
-                    }
-                }
-                else if(item.getRepeat() == RecurrenceType.FORTNIGHTLY)
-                {
-                    List<CalenderEventDto> tempList = ProcessWeeklyBlockedWithInterval(2, item, startTime, endTime);
-                    calenderEventDtoList.removeIf(calenderEventDto -> {
-                        if(calenderEventDto.getType() < 2)
-                        {
-                            for(CalenderEventDto dtoItem : tempList)
-                            {
-                                if(calenderEventDto.getStartTime().isBefore(dtoItem.getEndTime()) &&
-                                        calenderEventDto.getEndTime().isAfter(dtoItem.getStartTime()))
-                                {
-                                    return true;
-                                }
-                            }
-                        }
-                        return false;
-                    });
-                    calenderEventDtoList.addAll(tempList);
-                }
-                else if(item.getRepeat() == RecurrenceType.THREE_WEEKLY)
-                {
-                    List<CalenderEventDto> tempList = ProcessWeeklyBlockedWithInterval(3, item, startTime, endTime);
-                    calenderEventDtoList.removeIf(calenderEventDto -> {
-                        if(calenderEventDto.getType() < 2)
-                        {
-                            for(CalenderEventDto dtoItem : tempList)
-                            {
-                                if(calenderEventDto.getStartTime().isBefore(dtoItem.getEndTime()) &&
-                                        calenderEventDto.getEndTime().isAfter(dtoItem.getStartTime()))
-                                {
-                                    return true;
-                                }
-                            }
-                        }
-                        return false;
-                    });
-                    calenderEventDtoList.addAll(tempList);
-                }
-                else if(item.getRepeat() == RecurrenceType.FOUR_WEEKLY)
-                {
-                    List<CalenderEventDto> tempList = ProcessWeeklyBlockedWithInterval(4, item, startTime, endTime);
-                    calenderEventDtoList.removeIf(calenderEventDto -> {
-                        if(calenderEventDto.getType() < 2)
-                        {
-                            for(CalenderEventDto dtoItem : tempList)
-                            {
-                                if(calenderEventDto.getStartTime().isBefore(dtoItem.getEndTime()) &&
-                                        calenderEventDto.getEndTime().isAfter(dtoItem.getStartTime()))
-                                {
-                                    return true;
-                                }
-                            }
-                        }
-                        return false;
-                    });
-                    calenderEventDtoList.addAll(tempList);
-                }
-                else if(item.getRepeat() == RecurrenceType.SIX_WEEKLY)
-                {
-                    List<CalenderEventDto> tempList = ProcessWeeklyBlockedWithInterval(6, item, startTime, endTime);
-                    calenderEventDtoList.removeIf(calenderEventDto -> {
-                        if(calenderEventDto.getType() < 2)
-                        {
-                            for(CalenderEventDto dtoItem : tempList)
-                            {
-                                if(calenderEventDto.getStartTime().isBefore(dtoItem.getEndTime()) &&
-                                        calenderEventDto.getEndTime().isAfter(dtoItem.getStartTime()))
-                                {
-                                    return true;
-                                }
-                            }
-                        }
-                        return false;
-                    });
-                    calenderEventDtoList.addAll(tempList);
-                }
-                else if(item.getRepeat() == RecurrenceType.EIGHT_WEEKLY)
-                {
-                    List<CalenderEventDto> tempList = ProcessWeeklyBlockedWithInterval(8, item, startTime, endTime);
-                    calenderEventDtoList.removeIf(calenderEventDto -> {
-                        if(calenderEventDto.getType() < 2)
-                        {
-                            for(CalenderEventDto dtoItem : tempList)
-                            {
-                                if(calenderEventDto.getStartTime().isBefore(dtoItem.getEndTime()) &&
-                                        calenderEventDto.getEndTime().isAfter(dtoItem.getStartTime()))
-                                {
-                                    return true;
-                                }
-                            }
-                        }
-                        return false;
-                    });
-                    calenderEventDtoList.addAll(tempList);
-                }
-                else if(item.getRepeat() == RecurrenceType.MONTHLY)
-                {
-                    int date = item.getDate().getDayOfMonth();
-                    LocalDate monthIterator = startTime.withDayOfMonth(1);
-                    while(!monthIterator.isAfter(endTime))
-                    {
-                        YearMonth currentMonth = YearMonth.from(monthIterator);
-                        if (currentMonth.isValidDay(date)) {
-                            LocalDate occurrenceDate = currentMonth.atDay(date);
-                            if (!occurrenceDate.isBefore(item.getDate()) &&
-                                    (item.getEndRecur() == null || !occurrenceDate.isAfter(item.getEndRecur())) &&
-                                    !occurrenceDate.isBefore(startTime) && !occurrenceDate.isAfter(endTime)) {
-
-                                calenderEventDtoList.removeIf(calenderEventDto -> {
-                                    if(calenderEventDto.getType() < 2)
-                                    {
-                                        if(calenderEventDto.getStartTime().isBefore(occurrenceDate.atTime(item.getTo())) &&
-                                                calenderEventDto.getEndTime().isAfter(occurrenceDate.atTime(item.getFrom())))
-                                        {
-                                            return true;
-                                        }
-                                    }
-                                    return false;
-                                });
-
-                                CalenderEventDto calenderEventDto = new CalenderEventDto();
-                                calenderEventDto.setEventName("");
-                                calenderEventDto.setCategoryColor("rgba(170, 170, 170, 0.5)");
-                                calenderEventDto.setCategoryColorBorder("rgba(170, 170, 170, 0.5)");
-                                calenderEventDto.setEventId("blocked-" + item.getId());
-                                calenderEventDto.setStartTime(occurrenceDate.atTime(item.getFrom()));
-                                calenderEventDto.setEndTime(occurrenceDate.atTime(item.getTo()));
-                                calenderEventDto.setRecurring(false);
-                                calenderEventDto.setType(2);
-                                calenderEventDto.setOverlap(false);
-                                calenderEventDtoList.add(calenderEventDto);
-                            }
-
-                        }
-                        monthIterator = monthIterator.plusMonths(1);
-                    }
-                }
-                else if(item.getRepeat() == RecurrenceType.DAILY)
-                {
-                    LocalDate currentDate = startTime;
-                    while(!currentDate.isAfter(endTime))
-                    {
-                        if (!currentDate.isBefore(item.getDate()) &&
-                                (item.getEndRecur() == null || !currentDate.isAfter(item.getEndRecur())) &&
-                                !currentDate.isBefore(startTime) && !currentDate.isAfter(endTime)) {
-
-                            LocalDate finalCurrentDate = currentDate;
-                            calenderEventDtoList.removeIf(calenderEventDto -> {
-                                if(calenderEventDto.getType() < 2)
-                                {
-                                    if(calenderEventDto.getStartTime().isBefore(finalCurrentDate.atTime(item.getTo())) &&
-                                            calenderEventDto.getEndTime().isAfter(finalCurrentDate.atTime(item.getFrom())))
-                                    {
-                                        return true;
-                                    }
-                                }
-                                return false;
-                            });
-
-                            CalenderEventDto calenderEventDto = new CalenderEventDto();
-                            calenderEventDto.setEventName("");
-                            calenderEventDto.setCategoryColor("rgba(170, 170, 170, 0.5)");
-                            calenderEventDto.setCategoryColorBorder("rgba(170, 170, 170, 0.5)");
-                            calenderEventDto.setEventId("blocked-" + item.getId());
-                            calenderEventDto.setStartTime(currentDate.atTime(item.getFrom()));
-                            calenderEventDto.setEndTime(currentDate.atTime(item.getTo()));
-                            calenderEventDto.setRecurring(false);
-                            calenderEventDto.setType(2);
-                            calenderEventDto.setOverlap(false);
-                            calenderEventDtoList.add(calenderEventDto);
-                        }
-                        currentDate = currentDate.plusDays(1);
-                    }
-                }
-            }
-            calenderEventDtoList.removeIf(item -> {
-                if(item.getType() < 2)
-                {
-                    for(BlockedTime noRepeat : noRepeatBlockedTime)
-                    {
-                        if(item.getStartTime().isBefore(noRepeat.getDate().atTime(noRepeat.getTo())) &&
-                                item.getEndTime().isAfter(noRepeat.getDate().atTime(noRepeat.getFrom())))
-                        {
-                            return true;
-                        }
-                    }
-
-                }
-                return false;
-            });
             return calenderEventDtoList;
         }
         catch (Exception e)
@@ -477,119 +125,6 @@ public class ScheduleController {
             log.error(e.getMessage());
             return new ArrayList<>();
         }
-    }
-
-    private List<CalenderEventDto> ProcessWeeklyWithInterval(Integer interval, ScheduledClass item, LocalDate startDate, LocalDate endDate)
-    {
-        List<CalenderEventDto> calenderEventDtoList = new ArrayList<>();
-        DayOfWeek dayOfWeek = item.getDate().getDayOfWeek();
-        List<LocalDate> dayOfWeekList = new ArrayList<>();
-        LocalDate firstCloseDOW = startDate.with(TemporalAdjusters.nextOrSame(dayOfWeek));
-        while (!firstCloseDOW.isAfter(endDate)) {
-            dayOfWeekList.add(firstCloseDOW);
-            firstCloseDOW = firstCloseDOW.plusWeeks(1);
-        }
-        dayOfWeekList = dayOfWeekList.stream()
-                .filter(candidate -> {
-                    long weeksBetween = ChronoUnit.WEEKS.between(item.getDate(), candidate);
-                    return weeksBetween >= 0 && weeksBetween % interval == 0;
-                })
-                .collect(Collectors.toList());
-        dayOfWeekList.removeIf(date -> date.isBefore(item.getDate()));
-        if(item.getEndRecur()!=null)
-        {
-            dayOfWeekList.removeIf(date -> date.isAfter(item.getEndRecur()));
-        }
-        for(LocalDate dayOfWeekItem : dayOfWeekList )
-        {
-            Integer numberOfAttendances = attendanceRepository.getNumberOfAttendance(item.getId(), dayOfWeekItem);
-            CalenderEventDto calenderEventDto = new CalenderEventDto();
-            calenderEventDto.setEventName(item.getClasses().getName() + " (" + numberOfAttendances  + "/" + item.getCapacity() + ")");
-            calenderEventDto.setCategoryColor(item.getBackgroundColor());
-            calenderEventDto.setCategoryColorBorder(item.getBackgroundColor());
-            calenderEventDto.setEventId(item.getId().toString());
-            calenderEventDto.setStartTime(dayOfWeekItem.atTime(item.getFrom()));
-            calenderEventDto.setEndTime(dayOfWeekItem.atTime(item.getTo()));
-            calenderEventDto.setRecurring(true);
-            calenderEventDto.setType(1);
-            calenderEventDtoList.add(calenderEventDto);
-        }
-        return calenderEventDtoList;
-    }
-
-    private List<CalenderEventDto> ProcessWeeklyAppointmentWithInterval(Integer interval, Appointment item, LocalDate startDate, LocalDate endDate)
-    {
-        List<CalenderEventDto> calenderEventDtoList = new ArrayList<>();
-        DayOfWeek dayOfWeek = item.getDate().getDayOfWeek();
-        List<LocalDate> dayOfWeekList = new ArrayList<>();
-        LocalDate firstCloseDOW = startDate.with(TemporalAdjusters.nextOrSame(dayOfWeek));
-        while (!firstCloseDOW.isAfter(endDate)) {
-            dayOfWeekList.add(firstCloseDOW);
-            firstCloseDOW = firstCloseDOW.plusWeeks(1);
-        }
-        dayOfWeekList = dayOfWeekList.stream()
-                .filter(candidate -> {
-                    long weeksBetween = ChronoUnit.WEEKS.between(item.getDate(), candidate);
-                    return weeksBetween >= 0 && weeksBetween % interval == 0;
-                })
-                .collect(Collectors.toList());
-        dayOfWeekList.removeIf(date -> date.isBefore(item.getDate()));
-        if(item.getEndRecur()!=null)
-        {
-            dayOfWeekList.removeIf(date -> date.isAfter(item.getEndRecur()));
-        }
-        for(LocalDate dayOfWeekItem : dayOfWeekList )
-        {
-            CalenderEventDto calenderEventDto = new CalenderEventDto();
-            calenderEventDto.setEventName("PT kèm riêng: " + item.getMember().getFirstName() + " " + item.getMember().getLastName());
-            calenderEventDto.setCategoryColor(item.getBackgroundColor());
-            calenderEventDto.setCategoryColorBorder(item.getBackgroundColor());
-            calenderEventDto.setEventId("appointment-" + item.getId().toString());
-            calenderEventDto.setStartTime(dayOfWeekItem.atTime(item.getFrom()));
-            calenderEventDto.setEndTime(dayOfWeekItem.atTime(item.getTo()));
-            calenderEventDto.setRecurring(true);
-            calenderEventDto.setType(0);
-            calenderEventDtoList.add(calenderEventDto);
-        }
-        return calenderEventDtoList;
-    }
-
-    private List<CalenderEventDto> ProcessWeeklyBlockedWithInterval(Integer interval, BlockedTime item, LocalDate startDate, LocalDate endDate)
-    {
-        List<CalenderEventDto> calenderEventDtoList = new ArrayList<>();
-        DayOfWeek dayOfWeek = item.getDate().getDayOfWeek();
-        List<LocalDate> dayOfWeekList = new ArrayList<>();
-        LocalDate firstCloseDOW = startDate.with(TemporalAdjusters.nextOrSame(dayOfWeek));
-        while (!firstCloseDOW.isAfter(endDate)) {
-            dayOfWeekList.add(firstCloseDOW);
-            firstCloseDOW = firstCloseDOW.plusWeeks(1);
-        }
-        dayOfWeekList = dayOfWeekList.stream()
-                .filter(candidate -> {
-                    long weeksBetween = ChronoUnit.WEEKS.between(item.getDate(), candidate);
-                    return weeksBetween >= 0 && weeksBetween % interval == 0;
-                })
-                .collect(Collectors.toList());
-        dayOfWeekList.removeIf(date -> date.isBefore(item.getDate()));
-        if(item.getEndRecur()!=null)
-        {
-            dayOfWeekList.removeIf(date -> date.isAfter(item.getEndRecur()));
-        }
-        for(LocalDate dayOfWeekItem : dayOfWeekList )
-        {
-            CalenderEventDto calenderEventDto = new CalenderEventDto();
-            calenderEventDto.setEventName("");
-            calenderEventDto.setCategoryColor("rgba(170, 170, 170, 0.5)");
-            calenderEventDto.setCategoryColorBorder("rgba(170, 170, 170, 0.5)");
-            calenderEventDto.setEventId("blocked-" + item.getId());
-            calenderEventDto.setStartTime(dayOfWeekItem.atTime(item.getFrom()));
-            calenderEventDto.setEndTime(dayOfWeekItem.atTime(item.getTo()));
-            calenderEventDto.setRecurring(false);
-            calenderEventDto.setType(2);
-            calenderEventDto.setOverlap(false);
-            calenderEventDtoList.add(calenderEventDto);
-        }
-        return calenderEventDtoList;
     }
 
     @PutMapping("/update/{id}/{type}/{deleteType}")
@@ -603,7 +138,8 @@ public class ScheduleController {
         try {
             if(type == 1)
             {
-                scheduledClassService.updateScheduledClass(id, eventDto);
+//                scheduledClassService.updateScheduledClass(id, eventDto);
+                scheduledClassInstanceService.updateInstance(id, eventDto, deleteType);
             }
 //            else if(type == 2)
 //            {
@@ -687,11 +223,25 @@ public class ScheduleController {
         try {
             if(type == 1)
             {
-                ScheduledClass scheduledClass = scheduledClassRepository.findById(id).orElseThrow();
+                ScheduledClassInstance scheduledClassInstance = scheduledClassInstanceRepository.findById(id).orElseThrow();
+                ScheduledClass scheduledClass = scheduledClassInstance.getScheduledClass();
+                scheduledClass.setDate(scheduledClassInstance.getDate());
+                scheduledClass.setFrom(scheduledClassInstance.getFrom());
+                scheduledClass.setTo(scheduledClassInstance.getTo());
+                scheduledClass.setStatus(scheduledClassInstance.getStatus());
+                scheduledClass.setPrice(scheduledClassInstance.getPrice());
+                scheduledClass.setCapacity(scheduledClassInstance.getCapacity());
+                scheduledClass.setTrainer(scheduledClassInstance.getTrainer());
                 model.put("model", scheduledClass);
-                LocalDateTime dateTime = LocalDateTime.parse(date);
-                Integer numberOfAttendances = attendanceRepository.getNumberOfAttendance(scheduledClass.getId(), dateTime.toLocalDate());
+                model.put("scheduledClassInstanceId", scheduledClassInstance.getId());
+                Integer numberOfAttendances = attendanceRepository.getNumberOfAttendance(scheduledClassInstance.getId());
                 model.put("numberOfAttendances", numberOfAttendances);
+                LocalDateTime threshold = LocalDateTime.now();
+                if(threshold.isAfter(scheduledClassInstance.getDate().atTime(scheduledClassInstance.getFrom())))
+                {
+                    model.put("allowCancelAndUpdate", false);
+                }
+                else model.put("allowCancelAndUpdate", true);
             }
             else if(type == 0)
             {
@@ -743,22 +293,38 @@ public class ScheduleController {
         model.put("title", id != null ? "Sửa lớp" : "Thêm lớp");
         ScheduleDto formDto = (ScheduleDto) model.getOrDefault("form", new ScheduleDto());
         if (id != null) {
-            ScheduledClass scheduledClass = scheduledClassRepository.findById(id).orElseThrow();
+            ScheduledClassInstance scheduledClassInstance = scheduledClassInstanceRepository.findById(id).orElseThrow();
+            ScheduledClass scheduledClass = scheduledClassInstance.getScheduledClass();
             if (!model.containsAttribute("form")) {
-                formDto = modelMapper.map(scheduledClass, ScheduleDto.class);
+                formDto = modelMapper.map(scheduledClassInstance, ScheduleDto.class);
                 formDto.setClassId(scheduledClass.getClasses().getId());
-                formDto.setTrainerId(scheduledClass.getTrainer().getId());
+                formDto.setTrainerId(scheduledClassInstance.getTrainer().getId());
                 DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
                 DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
-                formDto.setStartDateStr(scheduledClass.getDate().format(dateFormatter));
-                formDto.setFromStr(scheduledClass.getFrom().format(timeFormatter));
-                formDto.setToStr(scheduledClass.getTo().format(timeFormatter));
+                formDto.setStartDateStr(scheduledClassInstance.getDate().format(dateFormatter));
+                formDto.setFromStr(scheduledClassInstance.getFrom().format(timeFormatter));
+                formDto.setToStr(scheduledClassInstance.getTo().format(timeFormatter));
                 formDto.setView(view);
                 formDto.setDate(date);
+                formDto.setNote(scheduledClass.getNote());
+                formDto.setBackgroundColor(scheduledClass.getBackgroundColor());
+                formDto.setRepeat(scheduledClass.getRepeat().toString());
+                formDto.setScheduledClassInstanceId(id);
                 if(scheduledClass.getEndRecur()!=null)
                 {
                     formDto.setEndRecurStr(scheduledClass.getEndRecur().format(dateFormatter));
                 }
+                model.put("isRecurring", !scheduledClass.getRepeat().equals(RecurrenceType.NONE));
+                if(!scheduledClass.getRepeat().equals(RecurrenceType.NONE))
+                {
+                    model.put("initialDateStr", scheduledClassInstance.getDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+                    model.put("initialFromStr", scheduledClassInstance.getFrom().format(DateTimeFormatter.ofPattern("HH:mm")));
+                    model.put("initialToStr", scheduledClassInstance.getTo().format(DateTimeFormatter.ofPattern("HH:mm")));
+                }
+                model.put("initialTrainerId", scheduledClassInstance.getTrainer().getId());
+                model.put("initialCapacity",  scheduledClassInstance.getCapacity());
+                model.put("initialPrice",  scheduledClassInstance.getPrice());
+                model.put("initialRecurringType", scheduledClass.getRepeat().toString());
             }
         }
         else {
@@ -853,6 +419,7 @@ public class ScheduleController {
 
     @PostMapping("/save-class")
     public String save(@RequestParam(name = "returnTrainerId", required = false) Long returnTrainerId,
+                       @RequestParam(name = "updateType", required = false) String updateType,
                        @Valid @ModelAttribute("form") ScheduleDto formDto,
                        BindingResult bindingResult,
                        RedirectAttributes redirectAttributes,
@@ -864,7 +431,7 @@ public class ScheduleController {
                                 + formDto.getDate() + "&startDate=" + formDto.getStartDateStr() + "&startTime="
                                 + formDto.getFromStr() + "&endTime=" + formDto.getToStr());
             }
-            scheduledClassService.saveClass(formDto);
+            scheduledClassService.saveClass(formDto, updateType);
             String trainerIdString = "";
             if(returnTrainerId!=null){
                 trainerIdString =  "&trainerId=" + returnTrainerId;
@@ -928,50 +495,66 @@ public class ScheduleController {
         }
     }
 
-    @PostMapping(value = {"/delete-class/{id}/{type}"})
-    public String delete(@PathVariable(required = true) Long id,
-                         @PathVariable Integer type,
-                         HttpServletRequest request,
-                         RedirectAttributes redirectAttributes) {
+//    @PostMapping(value = {"/delete-class/{id}/{type}"})
+//    public String delete(@PathVariable(required = true) Long id,
+//                         @PathVariable Integer type,
+//                         HttpServletRequest request,
+//                         RedirectAttributes redirectAttributes) {
+//        log.info("id: {}", id);
+//        try {
+//            if(type == 1)
+//            {
+//                LocalDateTime now = LocalDateTime.now();
+//                LocalDate currentDate = now.toLocalDate();
+//                LocalTime currentTime = now.toLocalTime();
+//                ScheduledClass scheduledClass = scheduledClassRepository.findById(id).orElseThrow();
+//                List<Attendance> attendanceList = attendanceRepository.findByScheduleIdAndDate(id, null);
+//                for(Attendance attendance : attendanceList)
+//                {
+//                    if(attendance.getBookingTime().equals(currentDate)) {
+//                        if(scheduledClass.getFrom().isAfter(currentTime) || scheduledClass.getTo().isAfter(currentTime))
+//                        {
+//                            Member member = memberRepository.findById(attendance.getMember().getId()).orElseThrow();
+//                            member.setCoin(member.getCoin()+scheduledClass.getPrice());
+//                            memberRepository.save(member);
+//                        }
+//                    }
+//                    else if(attendance.getBookingTime().isAfter(currentDate)) {
+//                        Member member = memberRepository.findById(attendance.getMember().getId()).orElseThrow();
+//                        member.setCoin(member.getCoin()+scheduledClass.getPrice());
+//                        memberRepository.save(member);
+//                    }
+//                    attendance.setStatus(0);
+//                    attendanceRepository.save(attendance);
+//                }
+//                scheduledClass.setStatus(0);
+//                scheduledClassRepository.save(scheduledClass);
+//            }
+//            else if(type == 2)
+//            {
+//                BlockedTime blockedTime = blockedTimeRepository.findById(id).orElseThrow();
+//                blockedTimeRepository.delete(blockedTime);
+//            }
+//            else if(type == 0){
+//
+//
+//            }
+//            redirectAttributes.addFlashAttribute("success", "Xóa thành công!");
+//        } catch (Exception e) {
+//            log.error("Exception: {}", e.getMessage(), e);
+//            redirectAttributes.addFlashAttribute("error", "Error in server!");
+//        }
+//        return AppUtils.goBack(request).orElse("redirect:/schedule/index");
+//    }
+
+    @PostMapping(value = {"delete-class/{id}/{type}"})
+    public String deleteClass(@PathVariable(required = true) Long id,
+                                    @PathVariable String type,
+                                    HttpServletRequest request,
+                                    RedirectAttributes redirectAttributes) {
         log.info("id: {}", id);
         try {
-            if(type == 1)
-            {
-                LocalDateTime now = LocalDateTime.now();
-                LocalDate currentDate = now.toLocalDate();
-                LocalTime currentTime = now.toLocalTime();
-                ScheduledClass scheduledClass = scheduledClassRepository.findById(id).orElseThrow();
-                List<Attendance> attendanceList = attendanceRepository.findByScheduleIdAndDate(id, null);
-                for(Attendance attendance : attendanceList)
-                {
-                    if(attendance.getBookingTime().equals(currentDate)) {
-                        if(scheduledClass.getFrom().isAfter(currentTime) || scheduledClass.getTo().isAfter(currentTime))
-                        {
-                            Member member = memberRepository.findById(attendance.getMember().getId()).orElseThrow();
-                            member.setCoin(member.getCoin()+scheduledClass.getPrice());
-                            memberRepository.save(member);
-                        }
-                    }
-                    else if(attendance.getBookingTime().isAfter(currentDate)) {
-                        Member member = memberRepository.findById(attendance.getMember().getId()).orElseThrow();
-                        member.setCoin(member.getCoin()+scheduledClass.getPrice());
-                        memberRepository.save(member);
-                    }
-                    attendance.setStatus(0);
-                    attendanceRepository.save(attendance);
-                }
-                scheduledClass.setStatus(0);
-                scheduledClassRepository.save(scheduledClass);
-            }
-            else if(type == 2)
-            {
-                BlockedTime blockedTime = blockedTimeRepository.findById(id).orElseThrow();
-                blockedTimeRepository.delete(blockedTime);
-            }
-            else if(type == 0){
-
-
-            }
+            scheduledClassService.delete(id, type);
             redirectAttributes.addFlashAttribute("success", "Xóa thành công!");
         } catch (Exception e) {
             log.error("Exception: {}", e.getMessage(), e);
@@ -1132,15 +715,15 @@ public class ScheduleController {
             for(Member member : object){
                 member.setStatus(attendanceService.checkMemberStatus(id, member.getId(), dateStr));
             }
-            ScheduledClass scheduledClass = scheduledClassRepository.findById(id).orElseThrow();
+            ScheduledClassInstance scheduledClassInstance = scheduledClassInstanceRepository.findById(id).orElseThrow();
             LocalDateTime dateTime = LocalDateTime.parse(dateStr);
             String formatted = dateTime.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-            model.put("title", scheduledClass.getClasses().getName()
+            model.put("title", scheduledClassInstance.getScheduledClass().getClasses().getName()
                     + " vào " + formatted + " "
-                    + scheduledClass.getFrom().format(DateTimeFormatter.ofPattern("HH:mm")) + " - "
-                    + scheduledClass.getTo().format(DateTimeFormatter.ofPattern("HH:mm")));
+                    + scheduledClassInstance.getFrom().format(DateTimeFormatter.ofPattern("HH:mm")) + " - "
+                    + scheduledClassInstance.getTo().format(DateTimeFormatter.ofPattern("HH:mm")));
             boolean allowAdd = false;
-            if(now.isBefore(dateTime.toLocalDate().atTime(scheduledClass.getFrom())))
+            if(now.isBefore(dateTime.toLocalDate().atTime(scheduledClassInstance.getFrom())))
             {
                 allowAdd = true;
             }
@@ -1158,7 +741,7 @@ public class ScheduleController {
             model.put("dateStr", dateStr);
             model.put("trainerId", trainerId);
             model.put("allowAdd", allowAdd);
-            model.put("signUpAmount", scheduledClass.getPrice());
+            model.put("signUpAmount", scheduledClassInstance.getPrice());
             return "gym/attendance/index";
         }
         catch (Exception e)

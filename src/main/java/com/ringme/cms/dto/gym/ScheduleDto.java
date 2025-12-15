@@ -28,6 +28,6 @@ public class ScheduleDto {
     private Integer price;
     private String view;
     private String date;
-    private String appointmentInstanceId;
+    private Long scheduledClassInstanceId;
 
 }

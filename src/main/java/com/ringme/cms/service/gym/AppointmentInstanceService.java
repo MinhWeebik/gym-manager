@@ -134,7 +134,12 @@ public class AppointmentInstanceService {
             formDto.setFromStr(dto.getStartTime().toLocalTime().format(timeFormatter));
             formDto.setToStr(dto.getEndTime().toLocalTime().format(timeFormatter));
             formDto.setRepeat(appointment.getRepeat().toString());
-            formDto.setEndRecurStr(appointment.getEndRecur().format(dateFormatter));
+            String endRecurStr = null;
+            if(appointment.getEndRecur()!=null)
+            {
+                endRecurStr = appointment.getEndRecur().format(dateFormatter);
+            }
+            formDto.setEndRecurStr(endRecurStr);
             formDto.setTrainerId(appointment.getTrainer().getId());
             formDto.setMemberId(appointment.getMember().getId());
             appointmentService.addAppointmentInstances(formDto, appointment.getMember(), appointment);

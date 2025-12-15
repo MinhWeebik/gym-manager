@@ -191,14 +191,14 @@ public class MemberController
                 List<Attendance> attendances = attendancePage.getContent();
                 for(Attendance attendance : attendances)
                 {
-                    ScheduledClass scheduledClass = attendance.getScheduledClass();
+                    ScheduledClassInstance scheduledClassInstance = attendance.getScheduledClassInstance();
                     MemberScheduleDto memberScheduleDto = new MemberScheduleDto();
-                    memberScheduleDto.setDate(attendance.getBookingTime());
-                    memberScheduleDto.setFrom(scheduledClass.getFrom());
-                    memberScheduleDto.setTo(scheduledClass.getTo());
+                    memberScheduleDto.setDate(scheduledClassInstance.getDate());
+                    memberScheduleDto.setFrom(scheduledClassInstance.getFrom());
+                    memberScheduleDto.setTo(scheduledClassInstance.getTo());
                     memberScheduleDto.setType(0);
                     memberScheduleDto.setStatus(attendance.getStatus());
-                    memberScheduleDto.setName(scheduledClass.getClasses().getName());
+                    memberScheduleDto.setName(scheduledClassInstance.getScheduledClass().getClasses().getName());
                     scheduleList.add(memberScheduleDto);
                 }
                 totalScheduleRecord = attendanceRepository.getTotalRecord(scheduleStatus, id);

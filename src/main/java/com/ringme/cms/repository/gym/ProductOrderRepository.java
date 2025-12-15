@@ -14,7 +14,11 @@ import java.util.List;
 @Repository
 public interface ProductOrderRepository extends JpaRepository<ProductOrder,Long> {
 
-    @Query(value = "SELECT SUM(poi.quantity) AS total FROM product_order po INNER JOIN product_order_item poi ON poi.order_id = po.id WHERE po.status = 1 AND MONTH(po.order_time) = MONTH(CURDATE())" ,nativeQuery = true)
+    @Query(value = "SELECT COALESCE(SUM(poi.quantity), 0) AS total \n" +
+            "FROM product_order po \n" +
+            "INNER JOIN product_order_item poi ON poi.order_id = po.id \n" +
+            "WHERE po.status = 1 \n" +
+            "AND MONTH(po.order_time) = MONTH(CURDATE())" ,nativeQuery = true)
     Integer getThisMonthSoldData();
 
     @Query(value = "SELECT SUM(p.price * poi.quantity) AS total FROM product_order po INNER JOIN product_order_item poi ON poi.order_id = po.id INNER JOIN product p ON p.id = poi.product_id \n" +

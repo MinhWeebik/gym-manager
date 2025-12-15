@@ -75,6 +75,9 @@ public class Trainer {
     private List<ScheduledClass> scheduledClasses;
 
     @OneToMany(mappedBy = "trainer", fetch = FetchType.LAZY)
+    private List<ScheduledClassInstance> scheduledClassInstances;
+
+    @OneToMany(mappedBy = "trainer", fetch = FetchType.LAZY)
     private List<Appointment> appointments;
 
     @OneToMany(mappedBy = "trainer", fetch = FetchType.LAZY)

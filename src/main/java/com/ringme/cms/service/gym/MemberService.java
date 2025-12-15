@@ -42,6 +42,8 @@ public class MemberService {
 
     private final UploadFile uploadFile;
 
+    private final ImageBBService imageBBService;
+
     public Page<Member> getPage(String name, Integer status, Integer gender,String email,
                                 String phoneNumber, String orderBy, String member, Integer pageNo,Integer pageSize)
     {
@@ -118,6 +120,7 @@ public class MemberService {
                 member.setStatus(1);
                 member.setCreatedAt(LocalDateTime.now());
                 member.setUpdatedAt(LocalDateTime.now());
+                member.setCoin(0);
                 UUID newId = UuidCreator.getTimeOrderedEpoch();
                 member.setUuid(newId.toString());
             } else {
@@ -130,8 +133,8 @@ public class MemberService {
             member.setDateOfBirth(LocalDate.parse(formDto.getDateOfBirthString(), formatter));
 
             if (formDto.getImageUpload() != null && !formDto.getImageUpload().isEmpty()) {
-                Path fileName = uploadFile.createImageFile(formDto.getImageUpload(), "member");
-                member.setImageUrl(File.separator + fileName);
+                String fileName = imageBBService.uploadImage(formDto.getImageUpload());
+                member.setImageUrl(fileName);
             }
             memberRepository.save(member);
         } catch (Exception e) {

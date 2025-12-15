@@ -127,8 +127,8 @@ public class PaymentController {
                         Double.parseDouble(formDto.getAmount().toString()),
                         "USD",
                         formDto.getDescription(),
-                        "http://" + ipv4  + ":8086/nexia-cms/payment/cancel/" + curPayment.getId(),
-                        "http://" + ipv4  + ":8086/nexia-cms/payment/success"
+                        "https://" + ipv4  + "/nexia-cms/payment/cancel/" + curPayment.getId(),
+                        "https://" + ipv4  + "/nexia-cms/payment/success"
                 );
 
                 String approvalLink = paypalService.getApprovalLink(order)
@@ -190,8 +190,8 @@ public class PaymentController {
                     Double.parseDouble(formDto.getAmount().toString()),
                     "USD",
                     formDto.getDescription(),
-                    "http://" + ipv4  + ":8086/nexia-cms/payment/cancel/" + curPayment.getId(),
-                    "http://" + ipv4  + ":8086/nexia-cms/payment/success"
+                    "https://" + ipv4  + "/nexia-cms/payment/cancel/" + curPayment.getId(),
+                    "https://" + ipv4  + "/nexia-cms/payment/success"
             );
 
             String approvalLink = paypalService.getApprovalLink(order)
@@ -433,8 +433,8 @@ public class PaymentController {
                         Double.parseDouble(formDto.getAmount().toString()),
                         "USD",
                         formDto.getDescription(),
-                        "http://" + ipv4  + ":8086/nexia-cms/payment/cancel/" + curPayment.getId(),
-                        "http://" + ipv4  + ":8086/nexia-cms/payment/success"
+                        "https://" + ipv4  + "/nexia-cms/payment/cancel/" + curPayment.getId(),
+                        "https://" + ipv4  + "/nexia-cms/payment/success"
                 );
 
                 String approvalLink = paypalService.getApprovalLink(order)

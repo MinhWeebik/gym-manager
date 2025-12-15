@@ -40,6 +40,6 @@ public class Attendance {
     private Member member;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "scheduled_class_id")
-    private ScheduledClass scheduledClass;
+    @JoinColumn(name = "scheduled_class_instance_id")
+    private ScheduledClassInstance scheduledClassInstance;
 }
